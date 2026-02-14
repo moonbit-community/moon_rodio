@@ -262,3 +262,23 @@ test "rodio::source::uniform_source_iterator" {
   assert_eq(vals[1], 0.0)
   assert_true(vals[2] > 0.99 && vals[2] < 1.01)
 }
+
+///|
+test "rodio::source::from_iter_sources" {
+  let a = to_dyn(SamplesBuffer::new(1, 44_100, [1.0, 2.0]))
+  let b = to_dyn(SamplesBuffer::new(1, 44_100, [3.0]))
+  let it = from_source_iter([a, b])
+  assert_eq(it.channels(), 1)
+  assert_eq(it.sample_rate(), 44_100)
+  assert_eq(collect_n(it, 10), [1.0, 2.0, 3.0])
+}
+
+///|
+test "rodio::source::function_chain" {
+  let src = SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0, 4.0])
+  let out = take_duration(
+    delay(amplify(src, 2.0), @moon_cpal.Duration::from_secs((1 : UInt64))),
+    @moon_cpal.Duration::from_secs((2 : UInt64)),
+  )
+  assert_eq(collect_n(out, 10), [0.0, 0.0, 2.0, 4.0])
+}

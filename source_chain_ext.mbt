@@ -151,3 +151,94 @@ pub impl Source for UniformSourceIterator with sample_rate(
 ) {
   self.sample_rate()
 }
+
+///|
+pub struct FromIter {
+  sources : Ref[Array[DynSource]]
+  current : Ref[DynSource]
+  has_current : Ref[Bool]
+}
+
+///|
+pub fn from_source_iter(sources : Array[DynSource]) -> FromIter {
+  if sources.is_empty() {
+    {
+      sources: @ref.new([]),
+      current: @ref.new(make_empty_dyn_source(1, hz_44100)),
+      has_current: @ref.new(false),
+    }
+  } else {
+    let xs = sources
+    let first = xs.remove(0)
+    {
+      sources: @ref.new(xs),
+      current: @ref.new(first),
+      has_current: @ref.new(true),
+    }
+  }
+}
+
+///|
+fn FromIter::pull_next_source(self : FromIter) -> Bool {
+  if self.sources.val.is_empty() {
+    self.has_current.val = false
+    false
+  } else {
+    self.current.val = self.sources.val.remove(0)
+    self.has_current.val = true
+    true
+  }
+}
+
+///|
+pub fn FromIter::next(self : FromIter) -> Sample? {
+  while true {
+    if !self.has_current.val && !self.pull_next_source() {
+      return None
+    }
+
+    match self.current.val.next() {
+      None => self.has_current.val = false
+      Some(v) => return Some(v)
+    }
+  }
+
+  None
+}
+
+///|
+pub fn FromIter::channels(self : FromIter) -> ChannelCount {
+  if self.has_current.val {
+    self.current.val.channels()
+  } else if self.sources.val.is_empty() {
+    1
+  } else {
+    self.sources.val[0].channels()
+  }
+}
+
+///|
+pub fn FromIter::sample_rate(self : FromIter) -> SampleRate {
+  if self.has_current.val {
+    self.current.val.sample_rate()
+  } else if self.sources.val.is_empty() {
+    hz_44100
+  } else {
+    self.sources.val[0].sample_rate()
+  }
+}
+
+///|
+pub impl Source for FromIter with next(self : FromIter) {
+  self.next()
+}
+
+///|
+pub impl Source for FromIter with channels(self : FromIter) {
+  self.channels()
+}
+
+///|
+pub impl Source for FromIter with sample_rate(self : FromIter) {
+  self.sample_rate()
+}

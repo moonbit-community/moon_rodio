@@ -40,6 +40,8 @@ pub fn[S : Source] from_factory(() -> S?) -> FromFactoryIter[S]
 
 pub fn from_iter(Int, Int, Array[Double]) -> SamplesBuffer
 
+pub fn from_source_iter(Array[DynSource]) -> FromIter
+
 pub fn[S : Source] limit(S, Double, Double) -> DynSource
 
 pub fn[S : Source] linear_gain_ramp(S, Double, Double, @core.Duration) -> DynSource
@@ -190,6 +192,16 @@ pub fn[S] FromFactoryIter::channels(Self[S]) -> Int
 pub fn[S : Source] FromFactoryIter::next(Self[S]) -> Double?
 pub fn[S] FromFactoryIter::sample_rate(Self[S]) -> Int
 pub impl[S : Source] Source for FromFactoryIter[S]
+
+pub struct FromIter {
+  sources : Ref[Array[DynSource]]
+  current : Ref[DynSource]
+  has_current : Ref[Bool]
+}
+pub fn FromIter::channels(Self) -> Int
+pub fn FromIter::next(Self) -> Double?
+pub fn FromIter::sample_rate(Self) -> Int
+pub impl Source for FromIter
 
 pub struct Mixer {
   has_pending : Ref[Bool]
