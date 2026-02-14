@@ -15,6 +15,9 @@ pub trait Source {
   next(Self) -> Sample?
   channels(Self) -> ChannelCount
   sample_rate(Self) -> SampleRate
+  current_span_len(Self) -> Int?
+  total_duration(Self) -> @moon_cpal.Duration?
+  try_seek(Self, pos : @moon_cpal.Duration) -> Unit raise SeekError
 }
 
 ///|
@@ -63,6 +66,24 @@ pub impl Source for DynSource with channels(self : DynSource) {
 ///|
 pub impl Source for DynSource with sample_rate(self : DynSource) {
   self.sample_rate()
+}
+
+///|
+pub impl Source for DynSource with current_span_len(_self : DynSource) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for DynSource with total_duration(_self : DynSource) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for DynSource with try_seek(
+  _self : DynSource,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
 }
 
 ///|
@@ -115,6 +136,45 @@ pub fn SamplesBuffer::next(self : SamplesBuffer) -> Sample? {
 }
 
 ///|
+fn duration_from_sample_count(
+  total_samples : Int,
+  channels : ChannelCount,
+  sample_rate : SampleRate,
+) -> @moon_cpal.Duration? {
+  if total_samples < 0 || channels <= 0 || sample_rate <= 0 {
+    return None
+  }
+  let frames = total_samples / channels
+  let secs = frames / sample_rate
+  Some(@moon_cpal.Duration::from_secs(secs.to_uint64()))
+}
+
+///|
+fn sample_index_from_duration(
+  pos : @moon_cpal.Duration,
+  channels : ChannelCount,
+  sample_rate : SampleRate,
+) -> Int {
+  let secs = pos.secs.to_int()
+  secs * sample_rate * channels
+}
+
+///|
+fn source_default_current_span_len() -> Int? {
+  None
+}
+
+///|
+fn source_default_total_duration() -> @moon_cpal.Duration? {
+  None
+}
+
+///|
+fn source_default_try_seek(_pos : @moon_cpal.Duration) -> Unit raise SeekError {
+  raise SeekError::NotSupported
+}
+
+///|
 pub fn SamplesBuffer::amplify(
   self : SamplesBuffer,
   factor : Sample,
@@ -145,6 +205,45 @@ pub impl Source for SamplesBuffer with channels(self : SamplesBuffer) {
 ///|
 pub impl Source for SamplesBuffer with sample_rate(self : SamplesBuffer) {
   self.sample_rate()
+}
+
+///|
+pub impl Source for SamplesBuffer with current_span_len(self : SamplesBuffer) {
+  let remaining = self.samples.length() - self.cursor.val
+  if remaining <= 0 {
+    Some(0)
+  } else {
+    Some(remaining)
+  }
+}
+
+///|
+pub impl Source for SamplesBuffer with total_duration(self : SamplesBuffer) {
+  duration_from_sample_count(
+    self.samples.length(),
+    self.channels(),
+    self.sample_rate(),
+  )
+}
+
+///|
+pub impl Source for SamplesBuffer with try_seek(
+  self : SamplesBuffer,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  let target = sample_index_from_duration(
+    pos,
+    self.channels(),
+    self.sample_rate(),
+  )
+  let clamped = if target < 0 {
+    0
+  } else if target > self.samples.length() {
+    self.samples.length()
+  } else {
+    target
+  }
+  self.cursor.val = clamped
 }
 
 ///|

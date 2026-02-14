@@ -61,6 +61,21 @@ pub impl Source for Done with sample_rate(self : Done) {
 }
 
 ///|
+pub impl Source for Done with current_span_len(_self : Done) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for Done with total_duration(_self : Done) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for Done with try_seek(_self : Done, pos : @moon_cpal.Duration) -> Unit raise SeekError {
+  source_default_try_seek(pos)
+}
+
+///|
 pub struct EmptyCallback {
   callback : () -> Unit
   called : Ref[Bool]
@@ -103,6 +118,24 @@ pub impl Source for EmptyCallback with channels(self : EmptyCallback) {
 ///|
 pub impl Source for EmptyCallback with sample_rate(self : EmptyCallback) {
   self.sample_rate()
+}
+
+///|
+pub impl Source for EmptyCallback with current_span_len(_self : EmptyCallback) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for EmptyCallback with total_duration(_self : EmptyCallback) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for EmptyCallback with try_seek(
+  _self : EmptyCallback,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
 }
 
 ///|
@@ -172,6 +205,28 @@ pub impl Source for UniformSourceIterator with sample_rate(
   self : UniformSourceIterator,
 ) {
   self.sample_rate()
+}
+
+///|
+pub impl Source for UniformSourceIterator with current_span_len(
+  _self : UniformSourceIterator,
+) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for UniformSourceIterator with total_duration(
+  _self : UniformSourceIterator,
+) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for UniformSourceIterator with try_seek(
+  _self : UniformSourceIterator,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
 }
 
 ///|
@@ -272,4 +327,22 @@ pub impl Source for FromIter with channels(self : FromIter) {
 ///|
 pub impl Source for FromIter with sample_rate(self : FromIter) {
   self.sample_rate()
+}
+
+///|
+pub impl Source for FromIter with current_span_len(_self : FromIter) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for FromIter with total_duration(_self : FromIter) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for FromIter with try_seek(
+  _self : FromIter,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
 }

@@ -12,6 +12,7 @@ pub suberror PlayError {
 ///|
 pub struct Decoder {
   inner : @decoder.DecodedSamples
+  seekable : Bool
 }
 
 ///|
@@ -116,6 +117,7 @@ pub struct LoopedDecoder {
   sample_rate : SampleRate
   samples : Array[Sample]
   cursor : Ref[Int]
+  seekable : Bool
 }
 
 ///|
@@ -154,21 +156,21 @@ fn DecoderBuilder::decoder_builder_build(
     None => None
     Some(hint) => hinted_decode(data, hint)
   }
-  match hinted {
-    Some(decoder) => return decoder
-    None => ()
+  let decoded = match hinted {
+    Some(decoder) => decoder
+    None => {
+      let mime_hint = match self.settings.mime_type {
+        None => None
+        Some(hint) => hinted_decode(data, hint)
+      }
+      match mime_hint {
+        Some(decoder) => decoder
+        None => Decoder::new(data)
+      }
+    }
   }
 
-  let mime_hint = match self.settings.mime_type {
-    None => None
-    Some(hint) => hinted_decode(data, hint)
-  }
-  match mime_hint {
-    Some(decoder) => return decoder
-    None => ()
-  }
-
-  Decoder::new(data)
+  { ..decoded, seekable: self.settings.is_seekable }
 }
 
 ///|
@@ -182,6 +184,7 @@ pub fn DecoderBuilder::build(
 fn to_looped_decoder(decoder : Decoder) -> LoopedDecoder {
   let channels = decoder.channels()
   let sample_rate = decoder.sample_rate()
+  let seekable = decoder.seekable
   let samples : Array[Sample] = []
   while true {
     match decoder.next() {
@@ -189,7 +192,7 @@ fn to_looped_decoder(decoder : Decoder) -> LoopedDecoder {
       Some(s) => samples.push(s)
     }
   }
-  { channels, sample_rate, samples, cursor: @ref.new(0) }
+  { channels, sample_rate, samples, cursor: @ref.new(0), seekable }
 }
 
 ///|
@@ -234,6 +237,47 @@ pub impl Source for LoopedDecoder with channels(self : LoopedDecoder) {
 ///|
 pub impl Source for LoopedDecoder with sample_rate(self : LoopedDecoder) {
   self.sample_rate()
+}
+
+///|
+pub impl Source for LoopedDecoder with current_span_len(_self : LoopedDecoder) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for LoopedDecoder with total_duration(self : LoopedDecoder) {
+  duration_from_sample_count(
+    self.samples.length(),
+    self.channels(),
+    self.sample_rate(),
+  )
+}
+
+///|
+pub impl Source for LoopedDecoder with try_seek(
+  self : LoopedDecoder,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  if !self.seekable {
+    raise SeekError::NotSupported
+  }
+  if self.samples.is_empty() {
+    return
+  }
+  let max_index = self.samples.length() - 1
+  let target = sample_index_from_duration(
+    pos,
+    self.channels(),
+    self.sample_rate(),
+  )
+  let clamped = if target < 0 {
+    0
+  } else if target > max_index {
+    max_index
+  } else {
+    target
+  }
+  self.cursor.val = clamped
 }
 
 ///|
@@ -294,7 +338,7 @@ fn decode_wav_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
   } noraise {
     src => src
   }
-  { inner: decoded }
+  { inner: decoded, seekable: true }
 }
 
 ///|
@@ -304,7 +348,7 @@ fn decode_flac_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
   } noraise {
     src => src
   }
-  { inner: decoded }
+  { inner: decoded, seekable: true }
 }
 
 ///|
@@ -314,7 +358,7 @@ fn decode_vorbis_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
   } noraise {
     src => src
   }
-  { inner: decoded }
+  { inner: decoded, seekable: true }
 }
 
 ///|
@@ -324,7 +368,7 @@ fn decode_mp3_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
   } noraise {
     src => src
   }
-  { inner: decoded }
+  { inner: decoded, seekable: true }
 }
 
 ///|
@@ -380,6 +424,30 @@ pub fn Decoder::new_looped(bytes : Bytes) -> LoopedDecoder raise DecoderError {
 }
 
 ///|
+pub async fn Decoder::try_from_file(
+  path : StringView,
+) -> Decoder raise DecoderError {
+  let bytes = try @fs.read_file(path).binary() catch {
+    _ => raise DecoderError::UnknownFormat
+  } noraise {
+    bs => bs
+  }
+  Decoder::new(bytes)
+}
+
+///|
+pub async fn Decoder::try_from_file_looped(
+  path : StringView,
+) -> LoopedDecoder raise DecoderError {
+  let bytes = try @fs.read_file(path).binary() catch {
+    _ => raise DecoderError::UnknownFormat
+  } noraise {
+    bs => bs
+  }
+  Decoder::new_looped(bytes)
+}
+
+///|
 pub fn Decoder::new_wav(bytes : Bytes) -> Decoder raise DecoderError {
   decode_wav_or_raise(bytes)
 }
@@ -427,6 +495,41 @@ pub impl Source for Decoder with channels(self : Decoder) {
 ///|
 pub impl Source for Decoder with sample_rate(self : Decoder) {
   self.sample_rate()
+}
+
+///|
+pub impl Source for Decoder with current_span_len(self : Decoder) {
+  let remaining = self.inner.len() - self.inner.position()
+  if remaining <= 0 {
+    Some(0)
+  } else {
+    Some(remaining)
+  }
+}
+
+///|
+pub impl Source for Decoder with total_duration(self : Decoder) {
+  duration_from_sample_count(
+    self.inner.len(),
+    self.channels(),
+    self.sample_rate(),
+  )
+}
+
+///|
+pub impl Source for Decoder with try_seek(
+  self : Decoder,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  if !self.seekable {
+    raise SeekError::NotSupported
+  }
+  let target = sample_index_from_duration(
+    pos,
+    self.channels(),
+    self.sample_rate(),
+  )
+  self.inner.seek_to(target)
 }
 
 ///|

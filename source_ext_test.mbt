@@ -55,6 +55,35 @@ test "rodio::source::empty_and_zero" {
 }
 
 ///|
+test "rodio::source::metadata_and_seek_on_samples_buffer" {
+  let src = SamplesBuffer::new(2, 4, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+
+  assert_eq(src.current_span_len(), Some(6))
+  let total = src.total_duration().unwrap()
+  assert_eq(total.secs, (0 : UInt64))
+
+  src.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
+  assert_eq(src.current_span_len(), Some(0))
+  assert_eq(src.next(), None)
+
+  src.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
+  assert_eq(src.current_span_len(), Some(6))
+  assert_eq(src.next(), Some(1.0))
+}
+
+///|
+test "rodio::source::default_try_seek_not_supported" {
+  let src = SineWave::new(440.0)
+  let got_not_supported = try {
+    src.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
+    false
+  } catch {
+    SeekError::NotSupported => true
+  }
+  assert_true(got_not_supported)
+}
+
+///|
 test "rodio::source::amplify_take" {
   let src = SamplesBuffer::new(1, 44_100, [1.0, -2.0, 3.0, -4.0])
   let amp = amplify(src, 0.5)

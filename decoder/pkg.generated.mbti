@@ -32,9 +32,12 @@ pub struct DecodedSamples {
   cursor : Ref[Int]
 }
 pub fn DecodedSamples::channels(Self) -> Int
+pub fn DecodedSamples::len(Self) -> Int
 pub fn DecodedSamples::new(Int, Int, Array[Double]) -> Self
 pub fn DecodedSamples::next(Self) -> Double?
+pub fn DecodedSamples::position(Self) -> Int
 pub fn DecodedSamples::sample_rate(Self) -> Int
+pub fn DecodedSamples::seek_to(Self, Int) -> Unit
 
 // Type aliases
 

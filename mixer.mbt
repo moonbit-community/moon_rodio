@@ -122,3 +122,21 @@ pub impl Source for MixerSource with channels(self : MixerSource) {
 pub impl Source for MixerSource with sample_rate(self : MixerSource) {
   self.sample_rate()
 }
+
+///|
+pub impl Source for MixerSource with current_span_len(_self : MixerSource) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for MixerSource with total_duration(_self : MixerSource) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for MixerSource with try_seek(
+  _self : MixerSource,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
+}

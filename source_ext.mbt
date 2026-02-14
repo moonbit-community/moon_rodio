@@ -85,6 +85,26 @@ pub impl Source for SignalGenerator with sample_rate(self : SignalGenerator) {
 }
 
 ///|
+pub impl Source for SignalGenerator with current_span_len(
+  _self : SignalGenerator,
+) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for SignalGenerator with total_duration(_self : SignalGenerator) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for SignalGenerator with try_seek(
+  _self : SignalGenerator,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
+}
+
+///|
 pub struct SineWave {
   inner : SignalGenerator
 }
@@ -122,6 +142,24 @@ pub impl Source for SineWave with channels(self : SineWave) {
 ///|
 pub impl Source for SineWave with sample_rate(self : SineWave) {
   self.sample_rate()
+}
+
+///|
+pub impl Source for SineWave with current_span_len(_self : SineWave) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for SineWave with total_duration(_self : SineWave) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for SineWave with try_seek(
+  _self : SineWave,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
 }
 
 ///|
@@ -165,6 +203,24 @@ pub impl Source for SquareWave with sample_rate(self : SquareWave) {
 }
 
 ///|
+pub impl Source for SquareWave with current_span_len(_self : SquareWave) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for SquareWave with total_duration(_self : SquareWave) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for SquareWave with try_seek(
+  _self : SquareWave,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
+}
+
+///|
 pub struct SawtoothWave {
   inner : SignalGenerator
 }
@@ -205,6 +261,24 @@ pub impl Source for SawtoothWave with sample_rate(self : SawtoothWave) {
 }
 
 ///|
+pub impl Source for SawtoothWave with current_span_len(_self : SawtoothWave) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for SawtoothWave with total_duration(_self : SawtoothWave) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for SawtoothWave with try_seek(
+  _self : SawtoothWave,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
+}
+
+///|
 pub struct TriangleWave {
   inner : SignalGenerator
 }
@@ -242,6 +316,24 @@ pub impl Source for TriangleWave with channels(self : TriangleWave) {
 ///|
 pub impl Source for TriangleWave with sample_rate(self : TriangleWave) {
   self.sample_rate()
+}
+
+///|
+pub impl Source for TriangleWave with current_span_len(_self : TriangleWave) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for TriangleWave with total_duration(_self : TriangleWave) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for TriangleWave with try_seek(
+  _self : TriangleWave,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
 }
 
 ///|

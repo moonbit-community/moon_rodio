@@ -72,6 +72,24 @@ pub impl Source for TrackPosition with sample_rate(self : TrackPosition) {
 }
 
 ///|
+pub impl Source for TrackPosition with current_span_len(_self : TrackPosition) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for TrackPosition with total_duration(_self : TrackPosition) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for TrackPosition with try_seek(
+  _self : TrackPosition,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
+}
+
+///|
 pub struct PeriodicAccess {
   input : DynSource
   every_samples : Int
@@ -181,4 +199,22 @@ pub impl Source for PeriodicAccess with channels(self : PeriodicAccess) {
 ///|
 pub impl Source for PeriodicAccess with sample_rate(self : PeriodicAccess) {
   self.sample_rate()
+}
+
+///|
+pub impl Source for PeriodicAccess with current_span_len(_self : PeriodicAccess) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for PeriodicAccess with total_duration(_self : PeriodicAccess) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for PeriodicAccess with try_seek(
+  _self : PeriodicAccess,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
 }

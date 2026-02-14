@@ -53,6 +53,28 @@ pub impl Source for ChannelCountConverter with sample_rate(
 }
 
 ///|
+pub impl Source for ChannelCountConverter with current_span_len(
+  _self : ChannelCountConverter,
+) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for ChannelCountConverter with total_duration(
+  _self : ChannelCountConverter,
+) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for ChannelCountConverter with try_seek(
+  _self : ChannelCountConverter,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
+}
+
+///|
 pub struct SampleRateConverter {
   inner : DynSource
   to : SampleRate
@@ -105,6 +127,28 @@ pub impl Source for SampleRateConverter with sample_rate(
 }
 
 ///|
+pub impl Source for SampleRateConverter with current_span_len(
+  _self : SampleRateConverter,
+) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for SampleRateConverter with total_duration(
+  _self : SampleRateConverter,
+) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for SampleRateConverter with try_seek(
+  _self : SampleRateConverter,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
+}
+
+///|
 pub struct SampleTypeConverter {
   inner : DynSource
 }
@@ -141,4 +185,26 @@ pub impl Source for SampleTypeConverter with sample_rate(
   self : SampleTypeConverter,
 ) {
   self.inner.sample_rate()
+}
+
+///|
+pub impl Source for SampleTypeConverter with current_span_len(
+  _self : SampleTypeConverter,
+) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for SampleTypeConverter with total_duration(
+  _self : SampleTypeConverter,
+) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for SampleTypeConverter with try_seek(
+  _self : SampleTypeConverter,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
 }

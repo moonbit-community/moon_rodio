@@ -81,6 +81,42 @@ pub impl Source for Chirp with sample_rate(self : Chirp) {
 }
 
 ///|
+pub impl Source for Chirp with current_span_len(self : Chirp) {
+  let remaining = self.total_samples - self.elapsed_samples.val
+  if remaining <= 0 {
+    Some(0)
+  } else {
+    Some(remaining)
+  }
+}
+
+///|
+pub impl Source for Chirp with total_duration(self : Chirp) {
+  duration_from_sample_count(
+    self.total_samples,
+    self.channels(),
+    self.sample_rate(),
+  )
+}
+
+///|
+pub impl Source for Chirp with try_seek(self : Chirp, pos : @moon_cpal.Duration) -> Unit raise SeekError {
+  let target = sample_index_from_duration(
+    pos,
+    self.channels(),
+    self.sample_rate(),
+  )
+  let clamped = if target < 0 {
+    0
+  } else if target > self.total_samples {
+    self.total_samples
+  } else {
+    target
+  }
+  self.elapsed_samples.val = clamped
+}
+
+///|
 pub struct FromFactoryIter[S] {
   factory : () -> S?
   current : Ref[DynSource?]
@@ -164,4 +200,26 @@ pub impl[S : Source] Source for FromFactoryIter[S] with sample_rate(
   self : FromFactoryIter[S],
 ) {
   self.sample_rate()
+}
+
+///|
+pub impl[S : Source] Source for FromFactoryIter[S] with current_span_len(
+  _self : FromFactoryIter[S],
+) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl[S : Source] Source for FromFactoryIter[S] with total_duration(
+  _self : FromFactoryIter[S],
+) {
+  source_default_total_duration()
+}
+
+///|
+pub impl[S : Source] Source for FromFactoryIter[S] with try_seek(
+  _self : FromFactoryIter[S],
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
 }

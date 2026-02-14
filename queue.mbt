@@ -252,3 +252,25 @@ pub impl Source for SourcesQueueOutput with sample_rate(
 ) {
   self.sample_rate()
 }
+
+///|
+pub impl Source for SourcesQueueOutput with current_span_len(
+  _self : SourcesQueueOutput,
+) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for SourcesQueueOutput with total_duration(
+  _self : SourcesQueueOutput,
+) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for SourcesQueueOutput with try_seek(
+  _self : SourcesQueueOutput,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
+}

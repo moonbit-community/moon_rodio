@@ -870,3 +870,183 @@ pub impl Source for Brownian with channels(self : Brownian) {
 pub impl Source for Brownian with sample_rate(self : Brownian) {
   self.sample_rate()
 }
+
+///|
+pub impl Source for AutomaticGainControl with current_span_len(
+  _self : AutomaticGainControl,
+) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for AutomaticGainControl with total_duration(
+  _self : AutomaticGainControl,
+) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for AutomaticGainControl with try_seek(
+  _self : AutomaticGainControl,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
+}
+
+///|
+pub impl Source for BltFilter with current_span_len(_self : BltFilter) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for BltFilter with total_duration(_self : BltFilter) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for BltFilter with try_seek(
+  _self : BltFilter,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
+}
+
+///|
+pub impl Source for WhiteUniform with current_span_len(_self : WhiteUniform) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for WhiteUniform with total_duration(_self : WhiteUniform) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for WhiteUniform with try_seek(
+  _self : WhiteUniform,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
+}
+
+///|
+pub impl Source for Pink with current_span_len(_self : Pink) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for Pink with total_duration(_self : Pink) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for Pink with try_seek(_self : Pink, pos : @moon_cpal.Duration) -> Unit raise SeekError {
+  source_default_try_seek(pos)
+}
+
+///|
+pub impl Source for WhiteTriangular with current_span_len(
+  _self : WhiteTriangular,
+) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for WhiteTriangular with total_duration(_self : WhiteTriangular) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for WhiteTriangular with try_seek(
+  _self : WhiteTriangular,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
+}
+
+///|
+pub impl Source for WhiteGaussian with current_span_len(_self : WhiteGaussian) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for WhiteGaussian with total_duration(_self : WhiteGaussian) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for WhiteGaussian with try_seek(
+  _self : WhiteGaussian,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
+}
+
+///|
+pub impl Source for Velvet with current_span_len(_self : Velvet) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for Velvet with total_duration(_self : Velvet) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for Velvet with try_seek(
+  _self : Velvet,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
+}
+
+///|
+pub impl Source for Blue with current_span_len(_self : Blue) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for Blue with total_duration(_self : Blue) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for Blue with try_seek(_self : Blue, pos : @moon_cpal.Duration) -> Unit raise SeekError {
+  source_default_try_seek(pos)
+}
+
+///|
+pub impl Source for Violet with current_span_len(_self : Violet) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for Violet with total_duration(_self : Violet) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for Violet with try_seek(
+  _self : Violet,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
+}
+
+///|
+pub impl Source for Brownian with current_span_len(_self : Brownian) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for Brownian with total_duration(_self : Brownian) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for Brownian with try_seek(
+  _self : Brownian,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  source_default_try_seek(pos)
+}

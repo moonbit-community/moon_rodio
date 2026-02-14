@@ -314,6 +314,7 @@ pub impl Source for Crossfade
 
 pub struct Decoder {
   inner : @decoder.DecodedSamples
+  seekable : Bool
 }
 pub fn Decoder::builder() -> DecoderBuilder
 pub fn Decoder::channels(Self) -> Int
@@ -325,6 +326,8 @@ pub fn Decoder::new_vorbis(Bytes) -> Self raise DecoderError
 pub fn Decoder::new_wav(Bytes) -> Self raise DecoderError
 pub fn Decoder::next(Self) -> Double?
 pub fn Decoder::sample_rate(Self) -> Int
+pub async fn Decoder::try_from_file(StringView) -> Self raise DecoderError
+pub async fn Decoder::try_from_file_looped(StringView) -> LoopedDecoder raise DecoderError
 pub impl Source for Decoder
 
 pub struct DecoderBuilder {
@@ -509,6 +512,7 @@ pub struct LoopedDecoder {
   sample_rate : Int
   samples : Array[Double]
   cursor : Ref[Int]
+  seekable : Bool
 }
 pub fn LoopedDecoder::channels(Self) -> Int
 pub fn LoopedDecoder::next(Self) -> Double?
@@ -1044,5 +1048,8 @@ pub trait Source {
   next(Self) -> Double?
   channels(Self) -> Int
   sample_rate(Self) -> Int
+  current_span_len(Self) -> Int?
+  total_duration(Self) -> @core.Duration?
+  try_seek(Self, @core.Duration) -> Unit raise SeekError
 }
 

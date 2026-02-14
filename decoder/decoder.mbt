@@ -43,3 +43,27 @@ pub fn DecodedSamples::next(self : DecodedSamples) -> Double? {
     Some(value)
   }
 }
+
+///|
+pub fn DecodedSamples::len(self : DecodedSamples) -> Int {
+  self.samples.length()
+}
+
+///|
+pub fn DecodedSamples::position(self : DecodedSamples) -> Int {
+  self.cursor.val
+}
+
+///|
+pub fn DecodedSamples::seek_to(
+  self : DecodedSamples,
+  sample_index : Int,
+) -> Unit {
+  if sample_index <= 0 {
+    self.cursor.val = 0
+  } else if sample_index >= self.samples.length() {
+    self.cursor.val = self.samples.length()
+  } else {
+    self.cursor.val = sample_index
+  }
+}

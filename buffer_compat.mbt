@@ -62,6 +62,49 @@ pub impl Source for StaticSamplesBuffer with sample_rate(
 }
 
 ///|
+pub impl Source for StaticSamplesBuffer with current_span_len(
+  self : StaticSamplesBuffer,
+) {
+  let remaining = self.samples.length() - self.cursor.val
+  if remaining <= 0 {
+    Some(0)
+  } else {
+    Some(remaining)
+  }
+}
+
+///|
+pub impl Source for StaticSamplesBuffer with total_duration(
+  self : StaticSamplesBuffer,
+) {
+  duration_from_sample_count(
+    self.samples.length(),
+    self.channels(),
+    self.sample_rate(),
+  )
+}
+
+///|
+pub impl Source for StaticSamplesBuffer with try_seek(
+  self : StaticSamplesBuffer,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  let target = sample_index_from_duration(
+    pos,
+    self.channels(),
+    self.sample_rate(),
+  )
+  let clamped = if target < 0 {
+    0
+  } else if target > self.samples.length() {
+    self.samples.length()
+  } else {
+    target
+  }
+  self.cursor.val = clamped
+}
+
+///|
 pub fn buffer_from_iter(
   channels : ChannelCount,
   sample_rate : SampleRate,

@@ -162,3 +162,77 @@ test "rodio::decoder_api::looped_decoder_repeats" {
   assert_eq(looped.next(), Some(0.0))
   assert_true(looped.next().unwrap() > 0.99)
 }
+
+///|
+test "rodio::decoder_api::builder_seekability_controls_try_seek" {
+  let non_seekable = Decoder::builder()
+    .with_data(wav_mono([0, 10_000, 20_000, 30_000], 16))
+    .build()
+  let err = try {
+    non_seekable.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
+    false
+  } catch {
+    SeekError::NotSupported => true
+  }
+  assert_true(err)
+
+  let seekable = Decoder::builder()
+    .with_data(wav_mono([0, 10_000, 20_000, 30_000], 16))
+    .with_seekable(true)
+    .build()
+  seekable.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
+  assert_eq(seekable.next(), None)
+
+  let disabled_again = Decoder::builder()
+    .with_data(wav_mono([0, 10_000, 20_000, 30_000], 16))
+    .with_byte_len(52)
+    .with_seekable(false)
+    .build()
+  let err2 = try {
+    disabled_again.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
+    false
+  } catch {
+    SeekError::NotSupported => true
+  }
+  assert_true(err2)
+}
+
+///|
+test "rodio::decoder_api::metadata_methods" {
+  let d = Decoder::new(wav_mono([0, 32767], 16))
+  assert_eq(d.current_span_len(), Some(2))
+  let total = d.total_duration().unwrap()
+  assert_eq(total.secs, (0 : UInt64))
+  assert_eq(d.next(), Some(0.0))
+  assert_eq(d.current_span_len(), Some(1))
+}
+
+///|
+#cfg(target="native")
+async test "rodio::decoder_api::try_from_file_variants" {
+  let path = "rodio_decoder_try_from_file_test.wav"
+  if @fs.exists(path) {
+    @fs.remove(path)
+  }
+  @fs.write_file(
+    path,
+    wav_mono([0, 12000, -12000], 16),
+    create=0o644,
+    truncate=true,
+  )
+
+  let d = Decoder::try_from_file(path)
+  assert_eq(d.channels(), 1)
+  assert_eq(d.sample_rate(), 44_100)
+  assert_eq(d.next(), Some(0.0))
+
+  let looped = Decoder::try_from_file_looped(path)
+  assert_eq(looped.channels(), 1)
+  assert_eq(looped.sample_rate(), 44_100)
+  assert_eq(looped.next(), Some(0.0))
+  assert_true(looped.next().unwrap() > 0.35)
+  assert_true(looped.next().unwrap() < -0.35)
+  assert_eq(looped.next(), Some(0.0))
+
+  @fs.remove(path)
+}
