@@ -534,6 +534,14 @@ pub fn Pink::next(Self) -> Double?
 pub fn Pink::sample_rate(Self) -> Int
 pub impl Source for Pink
 
+pub struct QueueSignal {
+  done : Ref[Bool]
+}
+pub fn QueueSignal::is_done(Self) -> Bool
+pub fn QueueSignal::mark_done(Self) -> Unit
+
+type QueuedSource
+
 pub struct Repeat {
   inner : DynSource
 }
@@ -601,6 +609,7 @@ pub struct Sink {
   queue_tx : SourcesQueueInput
   controls : SinkControls
   detached : Ref[Bool]
+  last_signal : Ref[QueueSignal?]
 }
 pub fn[S : Source] Sink::append(Self, S) -> Unit
 pub fn Sink::clear(Self) -> Unit
@@ -654,11 +663,12 @@ pub fn Skippable::skip(Self) -> Unit
 pub impl Source for Skippable
 
 pub struct SourcesQueueInput {
-  next_sounds : Ref[Array[DynSource]]
+  next_sounds : Ref[Array[QueuedSource]]
   keep_alive_if_empty : Ref[Bool]
   reset_version : Ref[Int]
 }
 pub fn[S : Source] SourcesQueueInput::append(Self, S) -> Unit
+pub fn[S : Source] SourcesQueueInput::append_with_signal(Self, S) -> QueueSignal
 pub fn SourcesQueueInput::clear(Self) -> Int
 pub fn SourcesQueueInput::set_keep_alive_if_empty(Self, Bool) -> Unit
 
@@ -668,6 +678,7 @@ pub struct SourcesQueueOutput {
   prefetched : Ref[Double?]
   has_prefetched : Ref[Bool]
   seen_reset_version : Ref[Int]
+  signal_after_end : Ref[QueueSignal?]
   input : SourcesQueueInput
 }
 pub fn SourcesQueueOutput::channels(Self) -> Int

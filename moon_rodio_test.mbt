@@ -146,3 +146,15 @@ test "rodio::queue::tests::no_delay_when_added" {
   assert_eq(rx.next(), Some(10.0))
   assert_eq(rx.next(), Some(-10.0))
 }
+
+///|
+test "rodio::queue::tests::append_with_signal" {
+  let (tx, rx) = @moon_rodio.queue(false)
+  let signal = tx.append_with_signal(
+    @moon_rodio.SamplesBuffer::new(1, 1, [7.0]),
+  )
+  assert_true(!signal.is_done())
+  assert_eq(rx.next(), Some(7.0))
+  assert_eq(rx.next(), None)
+  assert_true(signal.is_done())
+}

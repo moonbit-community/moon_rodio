@@ -2,8 +2,29 @@
 let threshold : Int = 512
 
 ///|
+pub struct QueueSignal {
+  done : Ref[Bool]
+}
+
+///|
+pub fn QueueSignal::is_done(self : QueueSignal) -> Bool {
+  self.done.val
+}
+
+///|
+pub fn QueueSignal::mark_done(self : QueueSignal) -> Unit {
+  self.done.val = true
+}
+
+///|
+struct QueuedSource {
+  source : DynSource
+  signal : QueueSignal?
+}
+
+///|
 pub struct SourcesQueueInput {
-  next_sounds : Ref[Array[DynSource]]
+  next_sounds : Ref[Array[QueuedSource]]
   keep_alive_if_empty : Ref[Bool]
   reset_version : Ref[Int]
 }
@@ -15,6 +36,7 @@ pub struct SourcesQueueOutput {
   prefetched : Ref[Sample?]
   has_prefetched : Ref[Bool]
   seen_reset_version : Ref[Int]
+  signal_after_end : Ref[QueueSignal?]
   input : SourcesQueueInput
 }
 
@@ -33,6 +55,7 @@ pub fn queue(
     prefetched: @ref.new(None),
     has_prefetched: @ref.new(false),
     seen_reset_version: @ref.new(0),
+    signal_after_end: @ref.new(None),
     input,
   }
   (input, output)
@@ -43,7 +66,17 @@ pub fn[S : Source] SourcesQueueInput::append(
   self : SourcesQueueInput,
   source : S,
 ) -> Unit {
-  self.next_sounds.val.push(to_dyn(source))
+  self.next_sounds.val.push({ source: to_dyn(source), signal: None })
+}
+
+///|
+pub fn[S : Source] SourcesQueueInput::append_with_signal(
+  self : SourcesQueueInput,
+  source : S,
+) -> QueueSignal {
+  let signal = { done: @ref.new(false) }
+  self.next_sounds.val.push({ source: to_dyn(source), signal: Some(signal) })
+  signal
 }
 
 ///|
@@ -57,6 +90,12 @@ pub fn SourcesQueueInput::set_keep_alive_if_empty(
 ///|
 pub fn SourcesQueueInput::clear(self : SourcesQueueInput) -> Int {
   let len = self.next_sounds.val.length()
+  for entry in self.next_sounds.val {
+    match entry.signal {
+      Some(signal) => signal.mark_done()
+      None => ()
+    }
+  }
   self.next_sounds.val.clear()
   self.reset_version.val += 1
   len
@@ -65,6 +104,11 @@ pub fn SourcesQueueInput::clear(self : SourcesQueueInput) -> Int {
 ///|
 fn SourcesQueueOutput::sync_reset(self : SourcesQueueOutput) -> Unit {
   if self.seen_reset_version.val != self.input.reset_version.val {
+    match self.signal_after_end.val {
+      Some(signal) => signal.mark_done()
+      None => ()
+    }
+    self.signal_after_end.val = None
     self.current.val = make_empty_dyn_source(1, hz_44100)
     self.current_is_fallback.val = true
     self.prefetched.val = None
@@ -75,8 +119,16 @@ fn SourcesQueueOutput::sync_reset(self : SourcesQueueOutput) -> Unit {
 
 ///|
 fn SourcesQueueOutput::go_next(self : SourcesQueueOutput) -> Bool {
+  match self.signal_after_end.val {
+    Some(signal) => signal.mark_done()
+    None => ()
+  }
+  self.signal_after_end.val = None
+
   if !self.input.next_sounds.val.is_empty() {
-    self.current.val = self.input.next_sounds.val.remove(0)
+    let next = self.input.next_sounds.val.remove(0)
+    self.current.val = next.source
+    self.signal_after_end.val = next.signal
     self.current_is_fallback.val = false
     self.prefetched.val = None
     self.has_prefetched.val = false
@@ -100,7 +152,9 @@ fn SourcesQueueOutput::ensure_prefetched(self : SourcesQueueOutput) -> Bool {
 
   while true {
     if self.current_is_fallback.val && !self.input.next_sounds.val.is_empty() {
-      self.current.val = self.input.next_sounds.val.remove(0)
+      let next = self.input.next_sounds.val.remove(0)
+      self.current.val = next.source
+      self.signal_after_end.val = next.signal
       self.current_is_fallback.val = false
     }
 
@@ -122,7 +176,9 @@ fn SourcesQueueOutput::next_internal(self : SourcesQueueOutput) -> Sample? {
   self.sync_reset()
 
   if self.current_is_fallback.val && !self.input.next_sounds.val.is_empty() {
-    self.current.val = self.input.next_sounds.val.remove(0)
+    let next = self.input.next_sounds.val.remove(0)
+    self.current.val = next.source
+    self.signal_after_end.val = next.signal
     self.current_is_fallback.val = false
     self.prefetched.val = None
     self.has_prefetched.val = false
@@ -166,7 +222,7 @@ pub fn SourcesQueueOutput::skip_one(self : SourcesQueueOutput) -> Unit {
 pub fn SourcesQueueOutput::channels(self : SourcesQueueOutput) -> ChannelCount {
   self.sync_reset()
   if self.current_is_fallback.val && !self.input.next_sounds.val.is_empty() {
-    return self.input.next_sounds.val[0].channels()
+    return self.input.next_sounds.val[0].source.channels()
   }
   self.current.val.channels()
 }
@@ -175,7 +231,7 @@ pub fn SourcesQueueOutput::channels(self : SourcesQueueOutput) -> ChannelCount {
 pub fn SourcesQueueOutput::sample_rate(self : SourcesQueueOutput) -> SampleRate {
   self.sync_reset()
   if self.current_is_fallback.val && !self.input.next_sounds.val.is_empty() {
-    return self.input.next_sounds.val[0].sample_rate()
+    return self.input.next_sounds.val[0].source.sample_rate()
   }
   self.current.val.sample_rate()
 }

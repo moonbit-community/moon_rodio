@@ -22,6 +22,7 @@ pub struct Sink {
   queue_tx : SourcesQueueInput
   controls : SinkControls
   detached : Ref[Bool]
+  last_signal : Ref[QueueSignal?]
 }
 
 ///|
@@ -120,7 +121,12 @@ pub fn Sink::new() -> (Sink, ControlledQueueSource) {
     position_channels: @ref.new(1),
   }
   (
-    { queue_tx, controls, detached: @ref.new(false) },
+    {
+      queue_tx,
+      controls,
+      detached: @ref.new(false),
+      last_signal: @ref.new(None),
+    },
     { inner: queue_rx, controls },
   )
 }
@@ -142,7 +148,10 @@ pub fn[S : Source] Sink::append(self : Sink, source : S) -> Unit {
     self.controls.position_channels.val = speeded.channels()
   }
   self.controls.sound_count.val += 1
-  self.queue_tx.append(with_done_count(speeded, self.controls.sound_count))
+  let signal = self.queue_tx.append_with_signal(
+    with_done_count(speeded, self.controls.sound_count),
+  )
+  self.last_signal.val = Some(signal)
 }
 
 ///|
@@ -186,6 +195,7 @@ pub fn Sink::stop(self : Sink) -> Unit {
   self.controls.stopped.val = true
   self.controls.position_samples.val = 0
   self.controls.sound_count.val = 0
+  self.last_signal.val = None
   ignore(self.queue_tx.clear())
 }
 
@@ -193,6 +203,7 @@ pub fn Sink::stop(self : Sink) -> Unit {
 pub fn Sink::clear(self : Sink) -> Unit {
   self.controls.position_samples.val = 0
   self.controls.sound_count.val = 0
+  self.last_signal.val = None
   ignore(self.queue_tx.clear())
   self.pause()
 }
@@ -236,11 +247,13 @@ pub fn Sink::get_pos(self : Sink) -> @moon_cpal.Duration {
 
 ///|
 pub fn Sink::sleep_until_end(self : Sink) -> Unit {
-  let mut spin = 0
-  while !self.empty() {
-    spin += 1
-    if spin > 10_000_000 {
-      spin = 0
+  match self.last_signal.val {
+    None => ()
+    Some(signal) => {
+      while !signal.is_done() {
+
+      }
+      self.last_signal.val = None
     }
   }
 }
