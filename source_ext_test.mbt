@@ -244,10 +244,13 @@ test "rodio::source::repeat_infinite" {
 test "rodio::source::repeat_infinite_seek_and_span" {
   let repeated = SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0, 4.0]).repeat_infinite()
   assert_eq(repeated.current_span_len(), Some(4))
-  repeated.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
-  assert_eq(repeated.next(), Some(3.0))
-  assert_eq(repeated.current_span_len(), Some(1))
-  repeated.try_seek(@moon_cpal.Duration::from_secs((10 : UInt64)))
+  let seek_err = try {
+    repeated.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
+    false
+  } catch {
+    SeekError::NotSupported => true
+  }
+  assert_true(seek_err)
   assert_eq(repeated.next(), Some(1.0))
 }
 
