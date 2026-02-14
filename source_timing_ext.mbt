@@ -143,7 +143,7 @@ pub struct PeriodicAccess {
   input : DynSource
   every_samples : Int
   remaining : Ref[Int]
-  callback : () -> Unit
+  callback : (DynSource) -> Unit
 }
 
 ///|
@@ -172,6 +172,15 @@ pub fn[S : Source] periodic_access(
   every_samples : Int,
   callback : () -> Unit,
 ) -> PeriodicAccess {
+  periodic_access_with_source(source, every_samples, fn(_src) { callback() })
+}
+
+///|
+pub fn[S : Source] periodic_access_with_source(
+  source : S,
+  every_samples : Int,
+  callback : (DynSource) -> Unit,
+) -> PeriodicAccess {
   guard every_samples > 0 else { panic() }
   { input: to_dyn(source), every_samples, remaining: @ref.new(1), callback }
 }
@@ -182,12 +191,21 @@ pub fn[S : Source] periodic(
   period : @moon_cpal.Duration,
   callback : () -> Unit,
 ) -> PeriodicAccess {
+  periodic_with_source(source, period, fn(_src) { callback() })
+}
+
+///|
+pub fn[S : Source] periodic_with_source(
+  source : S,
+  period : @moon_cpal.Duration,
+  callback : (DynSource) -> Unit,
+) -> PeriodicAccess {
   let every = period_to_sample_count(
     period,
     source.channels(),
     source.sample_rate(),
   )
-  periodic_access(source, every, callback)
+  periodic_access_with_source(source, every, callback)
 }
 
 ///|
@@ -209,7 +227,7 @@ pub fn PeriodicAccess::into_inner(self : PeriodicAccess) -> DynSource {
 pub fn PeriodicAccess::next(self : PeriodicAccess) -> Sample? {
   self.remaining.val -= 1
   if self.remaining.val <= 0 {
-    (self.callback)()
+    (self.callback)(self.input)
     self.remaining.val = self.every_samples
   }
   self.input.next()

@@ -82,6 +82,10 @@ pub fn[S : Source] periodic(S, @core.Duration, () -> Unit) -> PeriodicAccess
 
 pub fn[S : Source] periodic_access(S, Int, () -> Unit) -> PeriodicAccess
 
+pub fn[S : Source] periodic_access_with_source(S, Int, (DynSource) -> Unit) -> PeriodicAccess
+
+pub fn[S : Source] periodic_with_source(S, @core.Duration, (DynSource) -> Unit) -> PeriodicAccess
+
 pub fn pink(Int) -> Pink
 
 pub fn play(Mixer, Bytes) -> Sink raise PlayError
@@ -628,7 +632,7 @@ pub struct PeriodicAccess {
   input : DynSource
   every_samples : Int
   remaining : Ref[Int]
-  callback : () -> Unit
+  callback : (DynSource) -> Unit
 }
 pub fn PeriodicAccess::channels(Self) -> Int
 pub fn PeriodicAccess::inner(Self) -> DynSource

@@ -372,6 +372,25 @@ test "rodio::source::periodic_alias" {
 }
 
 ///|
+test "rodio::source::periodic_access_with_source" {
+  let p = periodic_access_with_source(
+    SamplesBuffer::new(1, 1, [1.0, 2.0, 3.0, 4.0]),
+    2,
+    fn(src) {
+      ignore(
+        try {
+          src.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
+          Ok(())
+        } catch {
+          _ => Err(())
+        },
+      )
+    },
+  )
+  assert_eq(collect_n(p, 8), [1.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0, 2.0])
+}
+
+///|
 test "rodio::source::channel_volume" {
   let s = SamplesBuffer::new(2, 44_100, [2.0, 6.0, 4.0, 8.0])
   let out = channel_volume(s, [1.0, 0.5, 2.0])
