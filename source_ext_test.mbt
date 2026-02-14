@@ -103,9 +103,12 @@ test "rodio::source::empty_and_zero" {
   assert_eq(e_total.nanos, 0)
 
   let z = zero(1, 44_100)
+  z.try_seek(@moon_cpal.Duration::from_secs((123 : UInt64)))
   assert_eq(collect_n(z, 4), [0.0, 0.0, 0.0, 0.0])
 
   let zf = zero_samples(1, 44_100, 3)
+  assert_eq(zf.current_span_len(), Some(3))
+  zf.try_seek(@moon_cpal.Duration::from_secs((99 : UInt64)))
   assert_eq(collect_n(zf, 10), [0.0, 0.0, 0.0])
 }
 
@@ -140,7 +143,7 @@ test "rodio::source::duration_precision_and_subsecond_seek" {
 
 ///|
 test "rodio::source::default_try_seek_not_supported" {
-  let src = Zero::new(1, 44_100)
+  let src = Empty::new(1, 44_100)
   let got_not_supported = try {
     src.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
     false

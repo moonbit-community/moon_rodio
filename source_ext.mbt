@@ -353,7 +353,11 @@ pub fn empty(channels : ChannelCount, sample_rate : SampleRate) -> DynSource {
 pub fn zero(channels : ChannelCount, sample_rate : SampleRate) -> DynSource {
   guard channels > 0 else { panic() }
   guard sample_rate > 0 else { panic() }
-  DynSource::new(fn() { Some(0.0) }, channels, sample_rate)
+  DynSource::new(fn() { Some(0.0) }, channels, sample_rate, try_seek=fn(
+    _pos : @moon_cpal.Duration,
+  ) {
+    Ok(())
+  })
 }
 
 ///|
@@ -362,7 +366,25 @@ pub fn zero_samples(
   sample_rate : SampleRate,
   sample_count : Int,
 ) -> DynSource {
-  take(zero(channels, sample_rate), sample_count)
+  guard channels > 0 else { panic() }
+  guard sample_rate > 0 else { panic() }
+  let remaining = @ref.new(if sample_count < 0 { 0 } else { sample_count })
+  DynSource::new(
+    fn() {
+      if remaining.val <= 0 {
+        None
+      } else {
+        remaining.val -= 1
+        Some(0.0)
+      }
+    },
+    channels,
+    sample_rate,
+    current_span_len=fn() {
+      Some(if remaining.val <= 0 { 0 } else { remaining.val })
+    },
+    try_seek=fn(_pos : @moon_cpal.Duration) { Ok(()) },
+  )
 }
 
 ///|
