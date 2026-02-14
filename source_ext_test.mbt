@@ -66,6 +66,9 @@ test "rodio::source::triangle_wave" {
 test "rodio::source::empty_and_zero" {
   let e = empty(1, 44_100)
   assert_eq(e.next(), None)
+  let e_total = e.total_duration().unwrap()
+  assert_eq(e_total.secs, (0 : UInt64))
+  assert_eq(e_total.nanos, 0)
 
   let z = zero(1, 44_100)
   assert_eq(collect_n(z, 4), [0.0, 0.0, 0.0, 0.0])
@@ -586,6 +589,9 @@ test "rodio::source::empty_callback" {
   assert_eq(e.next(), None)
   assert_eq(e.next(), None)
   assert_eq(calls.val, 1)
+  let total = e.total_duration().unwrap()
+  assert_eq(total.secs, (0 : UInt64))
+  assert_eq(total.nanos, 0)
 }
 
 ///|

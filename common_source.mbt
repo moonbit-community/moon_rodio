@@ -426,7 +426,9 @@ fn make_empty_dyn_source(
   channels : ChannelCount,
   sample_rate : SampleRate,
 ) -> DynSource {
-  DynSource::new(fn() { None }, channels, sample_rate)
+  DynSource::new(fn() { None }, channels, sample_rate, total_duration=fn() {
+    Some(@moon_cpal.Duration::from_secs((0 : UInt64)))
+  })
 }
 
 ///|

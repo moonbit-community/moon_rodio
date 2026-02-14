@@ -127,7 +127,7 @@ pub impl Source for EmptyCallback with current_span_len(_self : EmptyCallback) {
 
 ///|
 pub impl Source for EmptyCallback with total_duration(_self : EmptyCallback) {
-  source_default_total_duration()
+  Some(@moon_cpal.Duration::from_secs((0 : UInt64)))
 }
 
 ///|
