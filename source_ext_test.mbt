@@ -63,6 +63,38 @@ test "rodio::source::triangle_wave" {
 }
 
 ///|
+test "rodio::source::signal_generator_waveforms" {
+  let square = SignalGenerator::from_function(2_000, 500.0, Function::square())
+  assert_eq(square.next(), Some(1.0))
+  assert_eq(square.next(), Some(1.0))
+  assert_eq(square.next(), Some(-1.0))
+  assert_eq(square.next(), Some(-1.0))
+
+  let triangle = SignalGenerator::from_function(
+    8_000,
+    1_000.0,
+    Function::triangle(),
+  )
+  assert_eq(triangle.next(), Some(-1.0))
+  assert_eq(triangle.next(), Some(-0.5))
+  assert_eq(triangle.next(), Some(0.0))
+  assert_eq(triangle.next(), Some(0.5))
+  assert_eq(triangle.next(), Some(1.0))
+  assert_eq(triangle.next(), Some(0.5))
+
+  let saw = SignalGenerator::from_function(200, 50.0, Function::sawtooth())
+  assert_eq(saw.next(), Some(0.0))
+  assert_eq(saw.next(), Some(0.5))
+  assert_eq(saw.next(), Some(-1.0))
+  assert_eq(saw.next(), Some(-0.5))
+
+  let sine = SignalGenerator::from_function(1_000, 100.0, Function::sine())
+  assert_eq(sine.next(), Some(0.0))
+  assert_true(sine.next().unwrap() > 0.58)
+  assert_true(sine.next().unwrap() > 0.94)
+}
+
+///|
 test "rodio::source::empty_and_zero" {
   let e = empty(1, 44_100)
   assert_eq(e.next(), None)
