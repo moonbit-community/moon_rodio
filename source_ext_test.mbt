@@ -375,6 +375,34 @@ test "rodio::source::periodic_alias" {
 }
 
 ///|
+test "rodio::source::periodic_stereo_access" {
+  let calls = @ref.new(0)
+  let p = periodic(
+    SamplesBuffer::new(2, 1, [10.0, -10.0, 10.0, -10.0, 20.0, -20.0]),
+    @moon_cpal.Duration::from_secs((1 : UInt64)),
+    fn() { calls.val += 1 },
+  )
+  assert_eq(p.next(), Some(10.0))
+  assert_eq(p.next(), Some(-10.0))
+  assert_eq(p.next(), Some(10.0))
+  assert_eq(p.next(), Some(-10.0))
+  assert_eq(p.next(), Some(20.0))
+  assert_eq(p.next(), Some(-20.0))
+  assert_eq(calls.val, 3)
+}
+
+///|
+test "rodio::source::periodic_fast_access_overflow" {
+  let p = periodic(
+    SamplesBuffer::new(1, 1, [10.0, -10.0, 10.0, -10.0, 20.0, -20.0]),
+    @moon_cpal.Duration::new((0 : UInt64), 5_000_000),
+    fn() { () },
+  )
+  ignore(p.next())
+  ignore(p.next())
+}
+
+///|
 test "rodio::source::periodic_access_with_source" {
   let p = periodic_access_with_source(
     SamplesBuffer::new(1, 1, [1.0, 2.0, 3.0, 4.0]),
