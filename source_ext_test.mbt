@@ -11,6 +11,26 @@ fn[S : Source] collect_n(source : S, n : Int) -> Array[Sample] {
 }
 
 ///|
+fn skip_duration_samples_left(
+  channels : ChannelCount,
+  sample_rate : SampleRate,
+  seconds : Int,
+  seconds_to_skip : Int,
+) -> Int {
+  let len = channels * sample_rate * seconds
+  let samples : Array[Sample] = []
+  for _ in 0..<len {
+    samples.push(0.0)
+  }
+  let src = SamplesBuffer::new(channels, sample_rate, samples)
+  let skipped = skip_duration(
+    src,
+    @moon_cpal.Duration::from_secs(seconds_to_skip.to_uint64()),
+  )
+  collect_n(skipped, len + 4).length()
+}
+
+///|
 test "rodio::source::sine_wave" {
   let s = SineWave::new(440.0)
   assert_eq(s.channels(), 1)
@@ -180,6 +200,15 @@ test "rodio::source::duration_filters" {
   let src3 = SamplesBuffer::new(1, 2, [9.0, 8.0])
   let d = delay(src3, @moon_cpal.Duration::from_secs((1 : UInt64)))
   assert_eq(collect_n(d, 6), [0.0, 0.0, 9.0, 8.0])
+}
+
+///|
+test "rodio::source::skip_duration_length_cases" {
+  assert_eq(skip_duration_samples_left(1, 44_100, 5, 3), 88_200)
+  assert_eq(skip_duration_samples_left(2, 44_100, 5, 3), 176_400)
+  assert_eq(skip_duration_samples_left(1, 44_100, 1, 5), 0)
+  assert_eq(skip_duration_samples_left(2, 44_100, 1, 1), 0)
+  assert_eq(skip_duration_samples_left(1, 96_000, 5, 0), 480_000)
 }
 
 ///|
@@ -382,6 +411,31 @@ test "rodio::source::linear_ramp_and_fades" {
     collect_n(fadeout(s6, @moon_cpal.Duration::from_secs((1 : UInt64))), 10),
     [1.0, 0.0],
   )
+
+  let seek_ramp = linear_gain_ramp(
+    SamplesBuffer::new(1, 1, [
+      0.0, 0.4, 0.8, 0.0, 0.4, 0.8, 0.0, 0.4, 0.8, 0.0, 0.4, 0.8,
+    ]),
+    0.0,
+    1.0,
+    @moon_cpal.Duration::from_secs((10 : UInt64)),
+  )
+  assert_eq(seek_ramp.next(), Some(0.0))
+  let a1 = seek_ramp.next().unwrap()
+  let a2 = seek_ramp.next().unwrap()
+  assert_true(a1 > 0.039 && a1 < 0.041)
+  assert_true(a2 > 0.159 && a2 < 0.161)
+
+  seek_ramp.try_seek(@moon_cpal.Duration::from_secs((5 : UInt64)))
+  let b0 = seek_ramp.next().unwrap()
+  assert_true(b0 > 0.39 && b0 < 0.41)
+  assert_eq(seek_ramp.next(), Some(0.0))
+  let b2 = seek_ramp.next().unwrap()
+  assert_true(b2 > 0.27 && b2 < 0.29)
+
+  seek_ramp.try_seek(@moon_cpal.Duration::from_secs((10 : UInt64)))
+  let c0 = seek_ramp.next().unwrap()
+  assert_true(c0 > 0.39 && c0 < 0.41)
 }
 
 ///|

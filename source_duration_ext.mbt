@@ -15,6 +15,80 @@ fn duration_to_sample_count(
 }
 
 ///|
+fn skip_samples(input : DynSource, count : Int) -> Unit {
+  let limit = if count < 0 { 0 } else { count }
+  for _ in 0..<limit {
+    if input.next() is None {
+      break
+    }
+  }
+}
+
+///|
+fn skip_duration_unchecked(
+  input : DynSource,
+  duration : @moon_cpal.Duration,
+) -> Unit {
+  let to_skip = duration_to_sample_count(
+    duration,
+    input.channels(),
+    input.sample_rate(),
+  )
+  skip_samples(input, to_skip)
+}
+
+///|
+fn skip_duration_span_aware(
+  input : DynSource,
+  duration : @moon_cpal.Duration,
+) -> Unit {
+  let remaining = @ref.new(duration)
+  while duration_compare(
+          remaining.val,
+          @moon_cpal.Duration::from_secs((0 : UInt64)),
+        ) >
+        0 {
+    match input.current_span_len() {
+      None => {
+        skip_duration_unchecked(input, remaining.val)
+        return
+      }
+      Some(span_len) => {
+        if span_len <= 0 {
+          return
+        }
+
+        let samples_to_skip = duration_to_sample_count(
+          remaining.val,
+          input.channels(),
+          input.sample_rate(),
+        )
+        if samples_to_skip <= 0 {
+          return
+        }
+
+        if samples_to_skip < span_len {
+          skip_samples(input, samples_to_skip)
+          return
+        }
+
+        skip_samples(input, span_len)
+        let skipped_duration = match
+          duration_from_sample_count(
+            span_len,
+            input.channels(),
+            input.sample_rate(),
+          ) {
+          Some(v) => v
+          None => @moon_cpal.Duration::from_secs((0 : UInt64))
+        }
+        remaining.val = duration_saturating_sub(remaining.val, skipped_duration)
+      }
+    }
+  }
+}
+
+///|
 pub fn[S : Source] buffered(source : S) -> SamplesBuffer {
   let src = to_dyn(source)
   let out : Array[Sample] = []
@@ -100,24 +174,12 @@ pub fn[S : Source] skip_duration(
   duration : @moon_cpal.Duration,
 ) -> DynSource {
   let src = to_dyn(source)
-  let channels = src.channels()
-  let sample_rate = src.sample_rate()
-  let remaining = @ref.new(
-    duration_to_sample_count(duration, channels, sample_rate),
-  )
+  skip_duration_span_aware(src, duration)
 
-  while remaining.val > 0 {
-    remaining.val -= 1
-    match src.next() {
-      None => break
-      Some(_) => ()
-    }
-  }
-
-  DynSource::new(
+  DynSource::new_dynamic(
     fn() { src.next() },
-    channels,
-    sample_rate,
+    fn() { src.channels() },
+    fn() { src.sample_rate() },
     current_span_len=fn() { src.current_span_len() },
     total_duration=fn() {
       src.total_duration().map(fn(v) { duration_saturating_sub(v, duration) })

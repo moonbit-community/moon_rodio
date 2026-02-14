@@ -15,6 +15,12 @@ fn gain_duration_to_sample_count(
 }
 
 ///|
+fn gain_duration_to_nanos(duration : @moon_cpal.Duration) -> Double {
+  Double::from_int(duration.secs.to_int()) * 1_000_000_000.0 +
+  Double::from_int(duration.nanos)
+}
+
+///|
 pub fn[S : Source] channel_volume(
   source : S,
   channel_factors : Array[Sample],
@@ -26,7 +32,7 @@ pub fn[S : Source] channel_volume(
   let current_channel = @ref.new(out_channels)
   let current_sample = @ref.new(None)
 
-  DynSource::new(
+  DynSource::new_dynamic(
     fn() {
       if current_channel.val >= out_channels {
         current_channel.val = 0
@@ -49,8 +55,8 @@ pub fn[S : Source] channel_volume(
       current_channel.val += 1
       result
     },
-    out_channels,
-    src.sample_rate(),
+    fn() { out_channels },
+    fn() { src.sample_rate() },
   )
 }
 
@@ -72,36 +78,51 @@ pub fn[S : Source] linear_gain_ramp_with_clamp(
   duration : @moon_cpal.Duration,
   clamp_end : Bool,
 ) -> DynSource {
+  guard duration.secs > (0 : UInt64) || duration.nanos > 0 else { panic() }
   let src = to_dyn(source)
-  let sample_count = gain_duration_to_sample_count(
-    duration,
-    src.channels(),
-    src.sample_rate(),
-  )
-  let idx = @ref.new(0)
+  let elapsed_ns = @ref.new(0.0)
+  let total_ns = gain_duration_to_nanos(duration)
+  let sample_idx = @ref.new(0)
 
-  DynSource::new(
+  DynSource::new_dynamic(
     fn() {
       match src.next() {
         None => None
         Some(v) => {
-          let factor = if sample_count <= 0 {
+          let remaining_ns = total_ns - elapsed_ns.val
+          let factor = if remaining_ns < 0.0 && clamp_end {
             end_gain
-          } else if idx.val >= sample_count && clamp_end {
-            end_gain
-          } else if idx.val >= sample_count {
+          } else if remaining_ns < 0.0 {
             1.0
           } else {
-            let t = Double::from_int(idx.val) / Double::from_int(sample_count)
-            start_gain + (end_gain - start_gain) * t
+            let p = elapsed_ns.val / total_ns
+            start_gain * (1.0 - p) + end_gain * p
           }
-          idx.val += 1
+
+          sample_idx.val += 1
+          let channels = src.channels()
+          if channels > 0 && sample_idx.val % channels == 0 {
+            elapsed_ns.val += 1_000_000_000.0 /
+              Double::from_int(src.sample_rate())
+          }
+
           Some(v * factor)
         }
       }
     },
-    src.channels(),
-    src.sample_rate(),
+    fn() { src.channels() },
+    fn() { src.sample_rate() },
+    current_span_len=fn() { src.current_span_len() },
+    total_duration=fn() { src.total_duration() },
+    try_seek=fn(pos : @moon_cpal.Duration) {
+      elapsed_ns.val = gain_duration_to_nanos(pos)
+      try {
+        src.try_seek(pos)
+        Ok(())
+      } catch {
+        err => Err(err)
+      }
+    },
   )
 }
 
