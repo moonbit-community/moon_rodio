@@ -11,7 +11,7 @@ test "rodio::buffer::static_samples_buffer" {
 
 ///|
 test "rodio::buffer::from_iter" {
-  let s = from_iter(1, 44_100, [1.0, 2.0])
+  let s = buffer_from_iter(1, 44_100, [1.0, 2.0])
   assert_eq(s.next(), Some(1.0))
   assert_eq(s.next(), Some(2.0))
   assert_eq(s.next(), None)

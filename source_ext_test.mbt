@@ -267,7 +267,7 @@ test "rodio::source::uniform_source_iterator" {
 test "rodio::source::from_iter_sources" {
   let a = to_dyn(SamplesBuffer::new(1, 44_100, [1.0, 2.0]))
   let b = to_dyn(SamplesBuffer::new(1, 44_100, [3.0]))
-  let it = from_source_iter([a, b])
+  let it = from_iter([a, b])
   assert_eq(it.channels(), 1)
   assert_eq(it.sample_rate(), 44_100)
   assert_eq(collect_n(it, 10), [1.0, 2.0, 3.0])

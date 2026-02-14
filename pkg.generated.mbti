@@ -16,6 +16,8 @@ pub fn[S : Source] amplify_normalized(S, Double) -> DynSource
 
 pub fn[S : Source] automatic_gain_control(S, Double, @core.Duration, @core.Duration, Double) -> AutomaticGainControl
 
+pub fn buffer_from_iter(Int, Int, Array[Double]) -> SamplesBuffer
+
 pub fn[S : Source] buffered(S) -> SamplesBuffer
 
 pub fn[S : Source] channel_volume(S, Array[Double]) -> DynSource
@@ -40,9 +42,7 @@ pub fn[S : Source] fade_out(S, @core.Duration) -> DynSource
 
 pub fn[S : Source] from_factory(() -> S?) -> FromFactoryIter[S]
 
-pub fn from_iter(Int, Int, Array[Double]) -> SamplesBuffer
-
-pub fn from_source_iter(Array[DynSource]) -> FromIter
+pub fn from_iter(Array[DynSource]) -> FromIter
 
 pub fn[S : Source] high_pass(S, Int) -> BltFilter
 

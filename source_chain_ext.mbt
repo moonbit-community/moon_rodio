@@ -160,7 +160,7 @@ pub struct FromIter {
 }
 
 ///|
-pub fn from_source_iter(sources : Array[DynSource]) -> FromIter {
+pub fn from_iter(sources : Array[DynSource]) -> FromIter {
   if sources.is_empty() {
     {
       sources: @ref.new([]),

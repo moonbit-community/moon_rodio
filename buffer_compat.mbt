@@ -62,7 +62,7 @@ pub impl Source for StaticSamplesBuffer with sample_rate(
 }
 
 ///|
-pub fn from_iter(
+pub fn buffer_from_iter(
   channels : ChannelCount,
   sample_rate : SampleRate,
   samples : Array[Sample],
