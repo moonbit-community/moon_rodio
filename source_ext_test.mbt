@@ -124,3 +124,24 @@ test "rodio::source::amplify_db_and_normalized" {
   let n1 = amplify_normalized(c, 1.0)
   assert_true(n1.next().unwrap() > 0.99)
 }
+
+///|
+test "rodio::source::track_position" {
+  let t = track_position(SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0]))
+  assert_eq(t.get_pos().secs, (0 : UInt64))
+  ignore(t.next())
+  ignore(t.next())
+  assert_eq(t.get_pos().secs, (1 : UInt64))
+}
+
+///|
+test "rodio::source::periodic_access" {
+  let call_count = @ref.new(0)
+  let p = periodic_access(
+    SamplesBuffer::new(1, 44_100, [1.0, 2.0, 3.0, 4.0, 5.0]),
+    2,
+    fn() { call_count.val += 1 },
+  )
+  assert_eq(collect_n(p, 10), [1.0, 2.0, 3.0, 4.0, 5.0])
+  assert_eq(call_count.val, 2)
+}

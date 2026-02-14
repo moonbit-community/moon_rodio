@@ -32,6 +32,8 @@ pub fn mixer(Int, Int) -> (Mixer, MixerSource)
 
 pub fn[S : Source] pausable(S, Bool) -> Pausable
 
+pub fn[S : Source] periodic_access(S, Int, () -> Unit) -> PeriodicAccess
+
 pub fn play(Mixer, Bytes) -> Sink raise PlayError
 
 pub fn queue(Bool) -> (SourcesQueueInput, SourcesQueueOutput)
@@ -53,6 +55,8 @@ pub fn[S : Source] take(S, Int) -> DynSource
 pub fn[S : Source] take_duration(S, @core.Duration) -> DynSource
 
 pub fn[S : Source] to_dyn(S) -> DynSource
+
+pub fn[S : Source] track_position(S) -> TrackPosition
 
 pub fn[S : Source] uniform(S, Int, Int) -> DynSource
 
@@ -198,6 +202,17 @@ pub fn Pausable::next(Self) -> Double?
 pub fn Pausable::sample_rate(Self) -> Int
 pub fn Pausable::set_paused(Self, Bool) -> Unit
 pub impl Source for Pausable
+
+pub struct PeriodicAccess {
+  input : DynSource
+  every_samples : Int
+  remaining : Ref[Int]
+  callback : () -> Unit
+}
+pub fn PeriodicAccess::channels(Self) -> Int
+pub fn PeriodicAccess::next(Self) -> Double?
+pub fn PeriodicAccess::sample_rate(Self) -> Int
+pub impl Source for PeriodicAccess
 
 pub struct SamplesBuffer {
   channels : Int
@@ -398,6 +413,16 @@ pub fn Stoppable::next(Self) -> Double?
 pub fn Stoppable::sample_rate(Self) -> Int
 pub fn Stoppable::stop(Self) -> Unit
 pub impl Source for Stoppable
+
+pub struct TrackPosition {
+  input : DynSource
+  played_samples : Ref[Int]
+}
+pub fn TrackPosition::channels(Self) -> Int
+pub fn TrackPosition::get_pos(Self) -> @core.Duration
+pub fn TrackPosition::next(Self) -> Double?
+pub fn TrackPosition::sample_rate(Self) -> Int
+pub impl Source for TrackPosition
 
 pub struct TriangleWave {
   inner : SignalGenerator
