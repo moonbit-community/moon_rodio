@@ -197,21 +197,21 @@ pub impl Source for SpatialSource with sample_rate(self : SpatialSource) {
 }
 
 ///|
-pub impl Source for SpatialSource with current_span_len(_self : SpatialSource) {
-  source_default_current_span_len()
+pub impl Source for SpatialSource with current_span_len(self : SpatialSource) {
+  self.input.current_span_len()
 }
 
 ///|
-pub impl Source for SpatialSource with total_duration(_self : SpatialSource) {
-  source_default_total_duration()
+pub impl Source for SpatialSource with total_duration(self : SpatialSource) {
+  self.input.total_duration()
 }
 
 ///|
 pub impl Source for SpatialSource with try_seek(
-  _self : SpatialSource,
+  self : SpatialSource,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  self.input.try_seek(pos)
 }
 
 ///|

@@ -240,17 +240,18 @@ pub impl Source for LoopedDecoder with sample_rate(self : LoopedDecoder) {
 }
 
 ///|
-pub impl Source for LoopedDecoder with current_span_len(_self : LoopedDecoder) {
-  source_default_current_span_len()
+pub impl Source for LoopedDecoder with current_span_len(self : LoopedDecoder) {
+  if self.samples.is_empty() {
+    None
+  } else {
+    Some(self.samples.length() - self.cursor.val)
+  }
 }
 
 ///|
 pub impl Source for LoopedDecoder with total_duration(self : LoopedDecoder) {
-  duration_from_sample_count(
-    self.samples.length(),
-    self.channels(),
-    self.sample_rate(),
-  )
+  ignore(self)
+  None
 }
 
 ///|
@@ -262,7 +263,7 @@ pub impl Source for LoopedDecoder with try_seek(
     raise SeekError::NotSupported
   }
   if self.samples.is_empty() {
-    return
+    raise SeekError::NotSupported
   }
   let max_index = self.samples.length() - 1
   let target = sample_index_from_duration(

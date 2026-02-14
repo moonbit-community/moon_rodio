@@ -81,12 +81,12 @@ pub impl Source for Pausable with sample_rate(self : Pausable) {
 
 ///|
 pub impl Source for Pausable with current_span_len(_self : Pausable) {
-  source_default_current_span_len()
+  _self.input.current_span_len()
 }
 
 ///|
 pub impl Source for Pausable with total_duration(_self : Pausable) {
-  source_default_total_duration()
+  _self.input.total_duration()
 }
 
 ///|
@@ -94,7 +94,7 @@ pub impl Source for Pausable with try_seek(
   _self : Pausable,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.input.try_seek(pos)
 }
 
 ///|
@@ -164,12 +164,12 @@ pub impl Source for Stoppable with sample_rate(self : Stoppable) {
 
 ///|
 pub impl Source for Stoppable with current_span_len(_self : Stoppable) {
-  source_default_current_span_len()
+  _self.input.current_span_len()
 }
 
 ///|
 pub impl Source for Stoppable with total_duration(_self : Stoppable) {
-  source_default_total_duration()
+  _self.input.total_duration()
 }
 
 ///|
@@ -177,7 +177,7 @@ pub impl Source for Stoppable with try_seek(
   _self : Stoppable,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.input.try_seek(pos)
 }
 
 ///|
@@ -247,12 +247,12 @@ pub impl Source for Skippable with sample_rate(self : Skippable) {
 
 ///|
 pub impl Source for Skippable with current_span_len(_self : Skippable) {
-  source_default_current_span_len()
+  _self.input.current_span_len()
 }
 
 ///|
 pub impl Source for Skippable with total_duration(_self : Skippable) {
-  source_default_total_duration()
+  _self.input.total_duration()
 }
 
 ///|
@@ -260,5 +260,5 @@ pub impl Source for Skippable with try_seek(
   _self : Skippable,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.input.try_seek(pos)
 }

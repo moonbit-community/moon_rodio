@@ -2,11 +2,16 @@
 pub struct TrackPosition {
   input : DynSource
   played_samples : Ref[Int]
+  offset_secs : Ref[Int]
 }
 
 ///|
 pub fn[S : Source] track_position(source : S) -> TrackPosition {
-  { input: to_dyn(source), played_samples: @ref.new(0) }
+  {
+    input: to_dyn(source),
+    played_samples: @ref.new(0),
+    offset_secs: @ref.new(0),
+  }
 }
 
 ///|
@@ -47,13 +52,14 @@ pub fn TrackPosition::sample_rate(self : TrackPosition) -> SampleRate {
 
 ///|
 pub fn TrackPosition::get_pos(self : TrackPosition) -> @moon_cpal.Duration {
+  let channels = self.input.channels()
   let sample_rate = self.input.sample_rate()
-  if sample_rate <= 0 {
+  if sample_rate <= 0 || channels <= 0 {
     return @moon_cpal.Duration::from_secs((0 : UInt64))
   }
-  @moon_cpal.Duration::from_secs(
-    (self.played_samples.val / sample_rate).to_uint64(),
-  )
+  let per_second = sample_rate * channels
+  let elapsed_secs = self.played_samples.val / per_second + self.offset_secs.val
+  @moon_cpal.Duration::from_secs(elapsed_secs.to_uint64())
 }
 
 ///|
@@ -73,20 +79,22 @@ pub impl Source for TrackPosition with sample_rate(self : TrackPosition) {
 
 ///|
 pub impl Source for TrackPosition with current_span_len(_self : TrackPosition) {
-  source_default_current_span_len()
+  _self.input.current_span_len()
 }
 
 ///|
 pub impl Source for TrackPosition with total_duration(_self : TrackPosition) {
-  source_default_total_duration()
+  _self.input.total_duration()
 }
 
 ///|
 pub impl Source for TrackPosition with try_seek(
-  _self : TrackPosition,
+  self : TrackPosition,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  self.input.try_seek(pos)
+  self.played_samples.val = 0
+  self.offset_secs.val = pos.secs.to_int()
 }
 
 ///|
@@ -124,12 +132,7 @@ pub fn[S : Source] periodic_access(
   callback : () -> Unit,
 ) -> PeriodicAccess {
   guard every_samples > 0 else { panic() }
-  {
-    input: to_dyn(source),
-    every_samples,
-    remaining: @ref.new(every_samples),
-    callback,
-  }
+  { input: to_dyn(source), every_samples, remaining: @ref.new(1), callback }
 }
 
 ///|
@@ -163,17 +166,12 @@ pub fn PeriodicAccess::into_inner(self : PeriodicAccess) -> DynSource {
 
 ///|
 pub fn PeriodicAccess::next(self : PeriodicAccess) -> Sample? {
-  match self.input.next() {
-    None => None
-    Some(v) => {
-      self.remaining.val -= 1
-      if self.remaining.val <= 0 {
-        (self.callback)()
-        self.remaining.val = self.every_samples
-      }
-      Some(v)
-    }
+  self.remaining.val -= 1
+  if self.remaining.val <= 0 {
+    (self.callback)()
+    self.remaining.val = self.every_samples
   }
+  self.input.next()
 }
 
 ///|
@@ -203,18 +201,18 @@ pub impl Source for PeriodicAccess with sample_rate(self : PeriodicAccess) {
 
 ///|
 pub impl Source for PeriodicAccess with current_span_len(_self : PeriodicAccess) {
-  source_default_current_span_len()
+  _self.input.current_span_len()
 }
 
 ///|
 pub impl Source for PeriodicAccess with total_duration(_self : PeriodicAccess) {
-  source_default_total_duration()
+  _self.input.total_duration()
 }
 
 ///|
 pub impl Source for PeriodicAccess with try_seek(
-  _self : PeriodicAccess,
+  self : PeriodicAccess,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  self.input.try_seek(pos)
 }

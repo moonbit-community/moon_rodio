@@ -187,6 +187,8 @@ test "rodio::source::track_position" {
   ignore(t.next())
   ignore(t.next())
   assert_eq(t.get_pos().secs, (1 : UInt64))
+  t.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
+  assert_eq(t.get_pos().secs, (1 : UInt64))
 }
 
 ///|
@@ -201,7 +203,7 @@ test "rodio::source::periodic_access" {
   assert_eq(p.inner_mut().sample_rate(), 44_100)
   assert_eq(p.into_inner().channels(), 1)
   assert_eq(collect_n(p, 10), [1.0, 2.0, 3.0, 4.0, 5.0])
-  assert_eq(call_count.val, 2)
+  assert_eq(call_count.val, 3)
 }
 
 ///|
@@ -213,7 +215,7 @@ test "rodio::source::periodic_alias" {
     fn() { calls.val += 1 },
   )
   assert_eq(collect_n(p, 10), [1.0, 2.0, 3.0, 4.0])
-  assert_eq(calls.val, 1)
+  assert_eq(calls.val, 2)
 }
 
 ///|
@@ -345,6 +347,16 @@ test "rodio::source::done" {
 }
 
 ///|
+test "rodio::source::done_metadata_and_seek_forwarding" {
+  let d = Done::new(SamplesBuffer::new(1, 4, [1.0, 2.0, 3.0, 4.0]), @ref.new(1))
+  assert_eq(d.current_span_len(), Some(4))
+  let total = d.total_duration().unwrap()
+  assert_eq(total.secs, (1 : UInt64))
+  d.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
+  assert_eq(d.next(), None)
+}
+
+///|
 test "rodio::source::empty_callback" {
   let calls = @ref.new(0)
   let e = EmptyCallback::new(fn() { calls.val += 1 })
@@ -360,6 +372,9 @@ test "rodio::source::uniform_source_iterator" {
   assert_eq(u.inner_mut().channels(), 2)
   assert_eq(u.channels(), 2)
   assert_eq(u.sample_rate(), 4)
+  assert_eq(u.current_span_len(), None)
+  let total = u.total_duration().unwrap()
+  assert_eq(total.secs, (1 : UInt64))
   let vals = collect_n(u, 10)
   assert_eq(vals[0], 0.0)
   assert_eq(vals[1], 0.0)
@@ -385,6 +400,14 @@ test "rodio::source::from_iter_generic_sources" {
   assert_eq(it.channels(), 1)
   assert_eq(it.sample_rate(), 44_100)
   assert_eq(collect_n(it, 10), [0.25, 0.5, 0.75])
+}
+
+///|
+test "rodio::source::from_iter_metadata_and_seek" {
+  let it = from_iter([SamplesBuffer::new(1, 4, [1.0, 2.0, 3.0, 4.0])])
+  assert_eq(it.current_span_len(), Some(4))
+  it.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
+  assert_eq(it.next(), None)
 }
 
 ///|

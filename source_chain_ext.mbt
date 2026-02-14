@@ -62,17 +62,17 @@ pub impl Source for Done with sample_rate(self : Done) {
 
 ///|
 pub impl Source for Done with current_span_len(_self : Done) {
-  source_default_current_span_len()
+  _self.input.current_span_len()
 }
 
 ///|
 pub impl Source for Done with total_duration(_self : Done) {
-  source_default_total_duration()
+  _self.input.total_duration()
 }
 
 ///|
 pub impl Source for Done with try_seek(_self : Done, pos : @moon_cpal.Duration) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.input.try_seek(pos)
 }
 
 ///|
@@ -143,6 +143,7 @@ pub struct UniformSourceIterator {
   input : DynSource
   target_channels : ChannelCount
   target_sample_rate : SampleRate
+  total_duration : @moon_cpal.Duration?
 }
 
 ///|
@@ -153,10 +154,12 @@ pub fn[S : Source] UniformSourceIterator::new(
 ) -> UniformSourceIterator {
   guard target_channels > 0 else { panic() }
   guard target_sample_rate > 0 else { panic() }
+  let total_duration = source.total_duration()
   {
     input: uniform_source(to_dyn(source), target_channels, target_sample_rate),
     target_channels,
     target_sample_rate,
+    total_duration,
   }
 }
 
@@ -216,17 +219,17 @@ pub impl Source for UniformSourceIterator with current_span_len(
 
 ///|
 pub impl Source for UniformSourceIterator with total_duration(
-  _self : UniformSourceIterator,
+  self : UniformSourceIterator,
 ) {
-  source_default_total_duration()
+  self.total_duration
 }
 
 ///|
 pub impl Source for UniformSourceIterator with try_seek(
-  _self : UniformSourceIterator,
+  self : UniformSourceIterator,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  self.input.try_seek(pos)
 }
 
 ///|
@@ -297,7 +300,7 @@ pub fn FromIter::channels(self : FromIter) -> ChannelCount {
   if self.has_current.val {
     self.current.val.channels()
   } else if self.sources.val.is_empty() {
-    1
+    2
   } else {
     self.sources.val[0].channels()
   }
@@ -331,7 +334,13 @@ pub impl Source for FromIter with sample_rate(self : FromIter) {
 
 ///|
 pub impl Source for FromIter with current_span_len(_self : FromIter) {
-  source_default_current_span_len()
+  if _self.has_current.val {
+    match _self.current.val.current_span_len() {
+      Some(v) => if v != 0 { return Some(v) }
+      None => ()
+    }
+  }
+  Some(10_240)
 }
 
 ///|
@@ -341,8 +350,12 @@ pub impl Source for FromIter with total_duration(_self : FromIter) {
 
 ///|
 pub impl Source for FromIter with try_seek(
-  _self : FromIter,
+  self : FromIter,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  if self.has_current.val {
+    self.current.val.try_seek(pos)
+  } else {
+    ()
+  }
 }

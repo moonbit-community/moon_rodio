@@ -875,14 +875,14 @@ pub impl Source for Brownian with sample_rate(self : Brownian) {
 pub impl Source for AutomaticGainControl with current_span_len(
   _self : AutomaticGainControl,
 ) {
-  source_default_current_span_len()
+  _self.input.current_span_len()
 }
 
 ///|
 pub impl Source for AutomaticGainControl with total_duration(
   _self : AutomaticGainControl,
 ) {
-  source_default_total_duration()
+  _self.input.total_duration()
 }
 
 ///|
@@ -890,17 +890,17 @@ pub impl Source for AutomaticGainControl with try_seek(
   _self : AutomaticGainControl,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.input.try_seek(pos)
 }
 
 ///|
 pub impl Source for BltFilter with current_span_len(_self : BltFilter) {
-  source_default_current_span_len()
+  _self.input.current_span_len()
 }
 
 ///|
 pub impl Source for BltFilter with total_duration(_self : BltFilter) {
-  source_default_total_duration()
+  _self.input.total_duration()
 }
 
 ///|
@@ -908,7 +908,7 @@ pub impl Source for BltFilter with try_seek(
   _self : BltFilter,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.input.try_seek(pos)
 }
 
 ///|

@@ -157,6 +157,8 @@ test "rodio::decoder_api::looped_decoder_repeats" {
 
   assert_eq(looped.channels(), 1)
   assert_eq(looped.sample_rate(), 44_100)
+  assert_eq(looped.current_span_len(), Some(2))
+  assert_eq(looped.total_duration(), None)
   assert_eq(looped.next(), Some(0.0))
   assert_true(looped.next().unwrap() > 0.99)
   assert_eq(looped.next(), Some(0.0))

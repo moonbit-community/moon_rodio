@@ -944,6 +944,7 @@ pub impl Source for TakeDuration
 pub struct TrackPosition {
   input : DynSource
   played_samples : Ref[Int]
+  offset_secs : Ref[Int]
 }
 pub fn TrackPosition::channels(Self) -> Int
 pub fn TrackPosition::get_pos(Self) -> @core.Duration
@@ -967,6 +968,7 @@ pub struct UniformSourceIterator {
   input : DynSource
   target_channels : Int
   target_sample_rate : Int
+  total_duration : @core.Duration?
 }
 pub fn UniformSourceIterator::channels(Self) -> Int
 pub fn UniformSourceIterator::inner_mut(Self) -> DynSource
