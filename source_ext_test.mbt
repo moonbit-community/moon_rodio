@@ -602,6 +602,19 @@ test "rodio::source::crossfade" {
     @moon_cpal.Duration::new((5 : UInt64), 1),
   )
   assert_eq(collect_n(y, 10).length(), 5)
+
+  let self_mix = crossfade(
+    SamplesBuffer::new(1, 1, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]),
+    SamplesBuffer::new(1, 1, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]),
+    @moon_cpal.Duration::new((5 : UInt64), 1),
+  )
+  let self_mix_out = collect_n(self_mix, 10)
+  assert_eq(self_mix_out.length(), 5)
+  assert_true(self_mix_out[0] > 0.999999 && self_mix_out[0] < 1.000001)
+  assert_true(self_mix_out[1] > 1.999999 && self_mix_out[1] < 2.000001)
+  assert_true(self_mix_out[2] > 2.999999 && self_mix_out[2] < 3.000001)
+  assert_true(self_mix_out[3] > 3.999999 && self_mix_out[3] < 4.000001)
+  assert_true(self_mix_out[4] > 4.999999 && self_mix_out[4] < 5.000001)
 }
 
 ///|
