@@ -15,6 +15,228 @@ pub struct Decoder {
 }
 
 ///|
+pub struct Settings {
+  byte_len : Int?
+  coarse_seek : Bool
+  gapless : Bool
+  hint : String?
+  mime_type : String?
+  is_seekable : Bool
+} derive(Show, Eq)
+
+///|
+pub fn Settings::default() -> Settings {
+  {
+    byte_len: None,
+    coarse_seek: false,
+    gapless: true,
+    hint: None,
+    mime_type: None,
+    is_seekable: false,
+  }
+}
+
+///|
+pub struct DecoderBuilder {
+  data : Bytes?
+  settings : Settings
+}
+
+///|
+pub fn DecoderBuilder::new() -> DecoderBuilder {
+  { data: None, settings: Settings::default() }
+}
+
+///|
+pub fn DecoderBuilder::with_data(
+  self : DecoderBuilder,
+  data : Bytes,
+) -> DecoderBuilder {
+  { ..self, data: Some(data) }
+}
+
+///|
+pub fn DecoderBuilder::with_byte_len(
+  self : DecoderBuilder,
+  byte_len : Int,
+) -> DecoderBuilder {
+  guard byte_len >= 0 else { panic() }
+  {
+    ..self,
+    settings: { ..self.settings, byte_len: Some(byte_len), is_seekable: true },
+  }
+}
+
+///|
+pub fn DecoderBuilder::with_coarse_seek(
+  self : DecoderBuilder,
+  coarse_seek : Bool,
+) -> DecoderBuilder {
+  { ..self, settings: { ..self.settings, coarse_seek, } }
+}
+
+///|
+pub fn DecoderBuilder::with_gapless(
+  self : DecoderBuilder,
+  gapless : Bool,
+) -> DecoderBuilder {
+  { ..self, settings: { ..self.settings, gapless, } }
+}
+
+///|
+pub fn DecoderBuilder::with_hint(
+  self : DecoderBuilder,
+  hint : StringView,
+) -> DecoderBuilder {
+  { ..self, settings: { ..self.settings, hint: Some(hint.to_string()) } }
+}
+
+///|
+pub fn DecoderBuilder::with_mime_type(
+  self : DecoderBuilder,
+  mime_type : StringView,
+) -> DecoderBuilder {
+  {
+    ..self,
+    settings: { ..self.settings, mime_type: Some(mime_type.to_string()) },
+  }
+}
+
+///|
+pub fn DecoderBuilder::with_seekable(
+  self : DecoderBuilder,
+  is_seekable : Bool,
+) -> DecoderBuilder {
+  { ..self, settings: { ..self.settings, is_seekable, } }
+}
+
+///|
+pub struct LoopedDecoder {
+  channels : ChannelCount
+  sample_rate : SampleRate
+  samples : Array[Sample]
+  cursor : Ref[Int]
+}
+
+///|
+fn hinted_decode(bytes : Bytes, hint : String) -> Decoder? {
+  if hint.contains("wav") || hint.contains("WAV") {
+    return Some(decode_wav_or_raise(bytes)) catch { _ => None }
+  }
+  if hint.contains("flac") || hint.contains("FLAC") {
+    return Some(decode_flac_or_raise(bytes)) catch { _ => None }
+  }
+  if hint.contains("ogg") ||
+    hint.contains("OGG") ||
+    hint.contains("vorbis") ||
+    hint.contains("VORBIS") {
+    return Some(decode_vorbis_or_raise(bytes)) catch { _ => None }
+  }
+  if hint.contains("mp3") ||
+    hint.contains("MP3") ||
+    hint.contains("mpeg") ||
+    hint.contains("MPEG") {
+    return Some(decode_mp3_or_raise(bytes)) catch { _ => None }
+  }
+  None
+}
+
+///|
+fn DecoderBuilder::decoder_builder_build(
+  self : DecoderBuilder,
+) -> Decoder raise DecoderError {
+  let data = match self.data {
+    None => raise DecoderError::UnknownFormat
+    Some(data) => data
+  }
+
+  let hinted = match self.settings.hint {
+    None => None
+    Some(hint) => hinted_decode(data, hint)
+  }
+  match hinted {
+    Some(decoder) => return decoder
+    None => ()
+  }
+
+  let mime_hint = match self.settings.mime_type {
+    None => None
+    Some(hint) => hinted_decode(data, hint)
+  }
+  match mime_hint {
+    Some(decoder) => return decoder
+    None => ()
+  }
+
+  Decoder::new(data)
+}
+
+///|
+pub fn DecoderBuilder::build(
+  self : DecoderBuilder,
+) -> Decoder raise DecoderError {
+  self.decoder_builder_build()
+}
+
+///|
+fn to_looped_decoder(decoder : Decoder) -> LoopedDecoder {
+  let channels = decoder.channels()
+  let sample_rate = decoder.sample_rate()
+  let samples : Array[Sample] = []
+  while true {
+    match decoder.next() {
+      None => break
+      Some(s) => samples.push(s)
+    }
+  }
+  { channels, sample_rate, samples, cursor: @ref.new(0) }
+}
+
+///|
+pub fn DecoderBuilder::build_looped(
+  self : DecoderBuilder,
+) -> LoopedDecoder raise DecoderError {
+  to_looped_decoder(self.decoder_builder_build())
+}
+
+///|
+pub fn LoopedDecoder::next(self : LoopedDecoder) -> Sample? {
+  if self.samples.is_empty() {
+    None
+  } else {
+    let idx = self.cursor.val
+    let value = self.samples[idx]
+    self.cursor.val = (idx + 1) % self.samples.length()
+    Some(value)
+  }
+}
+
+///|
+pub fn LoopedDecoder::channels(self : LoopedDecoder) -> ChannelCount {
+  self.channels
+}
+
+///|
+pub fn LoopedDecoder::sample_rate(self : LoopedDecoder) -> SampleRate {
+  self.sample_rate
+}
+
+///|
+pub impl Source for LoopedDecoder with next(self : LoopedDecoder) {
+  self.next()
+}
+
+///|
+pub impl Source for LoopedDecoder with channels(self : LoopedDecoder) {
+  self.channels()
+}
+
+///|
+pub impl Source for LoopedDecoder with sample_rate(self : LoopedDecoder) {
+  self.sample_rate()
+}
+
+///|
 fn bytes_eq4(
   bytes : Bytes,
   offset : Int,
@@ -145,6 +367,16 @@ pub fn Decoder::new(bytes : Bytes) -> Decoder raise DecoderError {
     Some(decoder) => return decoder
     None => raise DecoderError::UnknownFormat
   }
+}
+
+///|
+pub fn Decoder::builder() -> DecoderBuilder {
+  DecoderBuilder::new()
+}
+
+///|
+pub fn Decoder::new_looped(bytes : Bytes) -> LoopedDecoder raise DecoderError {
+  Decoder::builder().with_data(bytes).build_looped()
 }
 
 ///|

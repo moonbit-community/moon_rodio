@@ -50,7 +50,7 @@ pub fn[S : Source] fadeout(S, @core.Duration) -> DynSource
 
 pub fn[S : Source] from_factory(() -> S?) -> FromFactoryIter[S]
 
-pub fn from_iter(Array[DynSource]) -> FromIter
+pub fn[S : Source] from_iter(Array[S]) -> FromIter
 
 pub fn[S : Source] high_pass(S, Int) -> BltFilter
 
@@ -73,6 +73,8 @@ pub fn[S : Source] low_pass_with_q(S, Int, Double) -> BltFilter
 pub fn[A : Source, B : Source] mix(A, B) -> DynSource
 
 pub fn mixer(Int, Int) -> (Mixer, MixerSource)
+
+pub async fn[S : Source] output_to_wav(S, StringView) -> Unit
 
 pub fn[S : Source] pausable(S, Bool) -> Pausable
 
@@ -313,15 +315,32 @@ pub impl Source for Crossfade
 pub struct Decoder {
   inner : @decoder.DecodedSamples
 }
+pub fn Decoder::builder() -> DecoderBuilder
 pub fn Decoder::channels(Self) -> Int
 pub fn Decoder::new(Bytes) -> Self raise DecoderError
 pub fn Decoder::new_flac(Bytes) -> Self raise DecoderError
+pub fn Decoder::new_looped(Bytes) -> LoopedDecoder raise DecoderError
 pub fn Decoder::new_mp3(Bytes) -> Self raise DecoderError
 pub fn Decoder::new_vorbis(Bytes) -> Self raise DecoderError
 pub fn Decoder::new_wav(Bytes) -> Self raise DecoderError
 pub fn Decoder::next(Self) -> Double?
 pub fn Decoder::sample_rate(Self) -> Int
 pub impl Source for Decoder
+
+pub struct DecoderBuilder {
+  data : Bytes?
+  settings : Settings
+}
+pub fn DecoderBuilder::build(Self) -> Decoder raise DecoderError
+pub fn DecoderBuilder::build_looped(Self) -> LoopedDecoder raise DecoderError
+pub fn DecoderBuilder::new() -> Self
+pub fn DecoderBuilder::with_byte_len(Self, Int) -> Self
+pub fn DecoderBuilder::with_coarse_seek(Self, Bool) -> Self
+pub fn DecoderBuilder::with_data(Self, Bytes) -> Self
+pub fn DecoderBuilder::with_gapless(Self, Bool) -> Self
+pub fn DecoderBuilder::with_hint(Self, StringView) -> Self
+pub fn DecoderBuilder::with_mime_type(Self, StringView) -> Self
+pub fn DecoderBuilder::with_seekable(Self, Bool) -> Self
 
 pub struct Delay {
   inner : DynSource
@@ -484,6 +503,17 @@ pub fn LinearGainRamp::inner_mut(Self) -> DynSource
 pub fn LinearGainRamp::into_inner(Self) -> DynSource
 pub fn[S : Source] LinearGainRamp::new(S, Double, Double, @core.Duration) -> Self
 pub impl Source for LinearGainRamp
+
+pub struct LoopedDecoder {
+  channels : Int
+  sample_rate : Int
+  samples : Array[Double]
+  cursor : Ref[Int]
+}
+pub fn LoopedDecoder::channels(Self) -> Int
+pub fn LoopedDecoder::next(Self) -> Double?
+pub fn LoopedDecoder::sample_rate(Self) -> Int
+pub impl Source for LoopedDecoder
 
 pub struct Mix {
   inner : DynSource
@@ -654,6 +684,18 @@ pub fn SawtoothWave::new(Double) -> Self
 pub fn SawtoothWave::next(Self) -> Double?
 pub fn SawtoothWave::sample_rate(Self) -> Int
 pub impl Source for SawtoothWave
+
+pub struct Settings {
+  byte_len : Int?
+  coarse_seek : Bool
+  gapless : Bool
+  hint : String?
+  mime_type : String?
+  is_seekable : Bool
+}
+pub fn Settings::default() -> Self
+pub impl Eq for Settings
+pub impl Show for Settings
 
 pub enum SignalFunction {
   Sine

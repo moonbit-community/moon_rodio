@@ -331,6 +331,17 @@ test "rodio::source::from_iter_sources" {
 }
 
 ///|
+test "rodio::source::from_iter_generic_sources" {
+  let it = from_iter([
+    SamplesBuffer::new(1, 44_100, [0.25, 0.5]),
+    SamplesBuffer::new(1, 44_100, [0.75]),
+  ])
+  assert_eq(it.channels(), 1)
+  assert_eq(it.sample_rate(), 44_100)
+  assert_eq(collect_n(it, 10), [0.25, 0.5, 0.75])
+}
+
+///|
 test "rodio::source::function_chain" {
   let src = SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0, 4.0])
   let out = take_duration(

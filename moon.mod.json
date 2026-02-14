@@ -1,13 +1,14 @@
 {
   "name": "Milky2018/moon_rodio",
   "version": "0.1.0",
-  "preferred-target": "native",
   "deps": {
-    "Milky2018/moon_cpal": "0.10.11"
+    "Milky2018/moon_cpal": "0.10.11",
+    "moonbitlang/async": "0.16.6"
   },
   "readme": "README.mbt.md",
   "repository": "",
   "license": "Apache-2.0",
   "keywords": [],
-  "description": ""
+  "description": "",
+  "preferred-target": "native"
 }

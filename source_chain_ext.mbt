@@ -182,7 +182,7 @@ pub struct FromIter {
 }
 
 ///|
-pub fn from_iter(sources : Array[DynSource]) -> FromIter {
+fn from_dyn_iter(sources : Array[DynSource]) -> FromIter {
   if sources.is_empty() {
     {
       sources: @ref.new([]),
@@ -198,6 +198,15 @@ pub fn from_iter(sources : Array[DynSource]) -> FromIter {
       has_current: @ref.new(true),
     }
   }
+}
+
+///|
+pub fn[S : Source] from_iter(sources : Array[S]) -> FromIter {
+  let dyn_sources : Array[DynSource] = []
+  for source in sources {
+    dyn_sources.push(to_dyn(source))
+  }
+  from_dyn_iter(dyn_sources)
 }
 
 ///|

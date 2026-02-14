@@ -122,3 +122,43 @@ test "rodio::decoder_api::play" {
   assert_eq(rx.next(), Some(0.0))
   assert_true(rx.next().unwrap() > 0.06)
 }
+
+///|
+test "rodio::decoder_api::builder_build" {
+  let decoder = Decoder::builder()
+    .with_data(@decoder.mp3_ill2_mono_bytes())
+    .with_hint("mp3")
+    .with_gapless(true)
+    .with_seekable(true)
+    .build()
+
+  assert_eq(decoder.channels(), 1)
+  assert_eq(decoder.sample_rate(), 48_000)
+}
+
+///|
+test "rodio::decoder_api::builder_requires_data" {
+  let failed = try {
+    ignore(Decoder::builder().build())
+    false
+  } catch {
+    DecoderError::UnknownFormat => true
+    _ => false
+  }
+  assert_true(failed)
+}
+
+///|
+test "rodio::decoder_api::looped_decoder_repeats" {
+  let looped = Decoder::builder()
+    .with_data(wav_mono([0, 32767], 16))
+    .with_hint("wav")
+    .build_looped()
+
+  assert_eq(looped.channels(), 1)
+  assert_eq(looped.sample_rate(), 44_100)
+  assert_eq(looped.next(), Some(0.0))
+  assert_true(looped.next().unwrap() > 0.99)
+  assert_eq(looped.next(), Some(0.0))
+  assert_true(looped.next().unwrap() > 0.99)
+}
