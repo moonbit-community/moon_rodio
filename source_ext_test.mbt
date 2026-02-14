@@ -123,6 +123,15 @@ test "rodio::source::speed" {
   assert_eq(s.channels(), 1)
   assert_eq(s.sample_rate(), 88_200)
   assert_eq(collect_n(s, 3), [1.0, 2.0])
+
+  let s2 = speed(
+    SamplesBuffer::new(1, 4, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]),
+    2.0,
+  )
+  let total = s2.total_duration().unwrap()
+  assert_eq(total.secs, (1 : UInt64))
+  s2.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
+  assert_eq(s2.next(), None)
 }
 
 ///|
@@ -220,9 +229,10 @@ test "rodio::source::periodic_alias" {
 
 ///|
 test "rodio::source::channel_volume" {
-  let s = SamplesBuffer::new(2, 44_100, [2.0, 2.0, 4.0, 4.0])
-  let out = channel_volume(s, [1.0, 0.5])
-  assert_eq(collect_n(out, 10), [2.0, 1.0, 4.0, 2.0])
+  let s = SamplesBuffer::new(2, 44_100, [2.0, 6.0, 4.0, 8.0])
+  let out = channel_volume(s, [1.0, 0.5, 2.0])
+  assert_eq(out.channels(), 3)
+  assert_eq(collect_n(out, 10), [4.0, 2.0, 8.0, 6.0, 3.0, 12.0])
 }
 
 ///|
@@ -468,16 +478,25 @@ test "rodio::source::named_wrappers_basic" {
   assert_eq(collect_n(dg, 10), [0.5, -0.7])
 
   let cv = ChannelVolume::new(
-    SamplesBuffer::new(2, 44_100, [2.0, 2.0, 4.0, 4.0]),
-    [1.0, 1.0],
+    SamplesBuffer::new(2, 44_100, [2.0, 6.0, 4.0, 8.0]),
+    [1.0, 1.0, 1.0],
   )
   cv.set_volume(1, 0.5)
-  assert_eq(collect_n(cv, 10), [2.0, 1.0, 4.0, 2.0])
+  cv.set_volume(2, 2.0)
+  assert_eq(cv.channels(), 3)
+  assert_eq(collect_n(cv, 10), [4.0, 2.0, 8.0, 6.0, 3.0, 12.0])
 
-  let sp = Speed::new(SamplesBuffer::new(1, 10, [1.0]), 2.0)
-  assert_eq(sp.sample_rate(), 20)
+  let sp = Speed::new(
+    SamplesBuffer::new(1, 4, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]),
+    2.0,
+  )
+  assert_eq(sp.sample_rate(), 8)
+  let total_sp = sp.total_duration().unwrap()
+  assert_eq(total_sp.secs, (1 : UInt64))
+  sp.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
+  assert_eq(sp.next(), None)
   sp.set_factor(0.5)
-  assert_eq(sp.sample_rate(), 5)
+  assert_eq(sp.sample_rate(), 2)
 }
 
 ///|

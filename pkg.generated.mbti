@@ -272,7 +272,8 @@ pub impl Source for ChannelCountConverter
 pub struct ChannelVolume {
   input : DynSource
   channel_factors : Ref[Array[Double]]
-  cursor : Ref[Int]
+  current_channel : Ref[Int]
+  current_sample : Ref[Double?]
 }
 pub fn ChannelVolume::inner(Self) -> DynSource
 pub fn ChannelVolume::inner_mut(Self) -> DynSource
@@ -944,7 +945,7 @@ pub impl Source for TakeDuration
 pub struct TrackPosition {
   input : DynSource
   played_samples : Ref[Int]
-  offset_secs : Ref[Int]
+  offset_duration : Ref[@core.Duration]
 }
 pub fn TrackPosition::channels(Self) -> Int
 pub fn TrackPosition::get_pos(Self) -> @core.Duration

@@ -21,26 +21,35 @@ pub fn[S : Source] channel_volume(
 ) -> DynSource {
   guard !channel_factors.is_empty() else { panic() }
   let src = to_dyn(source)
-  let channels = src.channels()
-  let cursor = @ref.new(0)
+  let from_channels = src.channels()
+  let out_channels = channel_factors.length()
+  let current_channel = @ref.new(out_channels)
+  let current_sample = @ref.new(None)
 
   DynSource::new(
     fn() {
-      match src.next() {
-        None => None
-        Some(v) => {
-          let ch = cursor.val % channels
-          cursor.val += 1
-          let factor = if ch < channel_factors.length() {
-            channel_factors[ch]
-          } else {
-            1.0
+      if current_channel.val >= out_channels {
+        current_channel.val = 0
+        current_sample.val = None
+        for _ in 0..<from_channels {
+          match src.next() {
+            None => ()
+            Some(s) =>
+              current_sample.val = Some(current_sample.val.unwrap_or(0.0) + s)
           }
-          Some(v * factor)
         }
+        current_sample.val = current_sample.val.map(fn(v) {
+          v / Double::from_int(from_channels)
+        })
       }
+
+      let result = current_sample.val.map(fn(v) {
+        v * channel_factors[current_channel.val]
+      })
+      current_channel.val += 1
+      result
     },
-    channels,
+    out_channels,
     src.sample_rate(),
   )
 }

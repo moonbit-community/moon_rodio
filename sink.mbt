@@ -253,18 +253,11 @@ pub fn Sink::try_seek(
 pub fn Sink::get_pos(self : Sink) -> @moon_cpal.Duration {
   let sample_rate = self.controls.position_sample_rate.val
   let channels = self.controls.position_channels.val
-  if sample_rate <= 0 || channels <= 0 {
-    return @moon_cpal.Duration::from_secs((0 : UInt64))
-  }
-
   let samples = self.controls.position_samples.val
-  if samples <= 0 {
-    return @moon_cpal.Duration::from_secs((0 : UInt64))
+  match duration_from_sample_count(samples, channels, sample_rate) {
+    Some(pos) => pos
+    None => @moon_cpal.Duration::from_secs((0 : UInt64))
   }
-
-  let frames = samples / channels
-  let secs = frames / sample_rate
-  @moon_cpal.Duration::from_secs(secs.to_uint64())
 }
 
 ///|

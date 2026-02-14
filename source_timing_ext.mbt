@@ -2,7 +2,7 @@
 pub struct TrackPosition {
   input : DynSource
   played_samples : Ref[Int]
-  offset_secs : Ref[Int]
+  offset_duration : Ref[@moon_cpal.Duration]
 }
 
 ///|
@@ -10,7 +10,7 @@ pub fn[S : Source] track_position(source : S) -> TrackPosition {
   {
     input: to_dyn(source),
     played_samples: @ref.new(0),
-    offset_secs: @ref.new(0),
+    offset_duration: @ref.new(@moon_cpal.Duration::from_secs((0 : UInt64))),
   }
 }
 
@@ -55,10 +55,11 @@ pub fn TrackPosition::get_pos(self : TrackPosition) -> @moon_cpal.Duration {
   let channels = self.input.channels()
   let sample_rate = self.input.sample_rate()
   if sample_rate <= 0 || channels <= 0 {
-    return @moon_cpal.Duration::from_secs((0 : UInt64))
+    return self.offset_duration.val
   }
   let per_second = sample_rate * channels
-  let elapsed_secs = self.played_samples.val / per_second + self.offset_secs.val
+  let elapsed_secs = self.played_samples.val / per_second +
+    self.offset_duration.val.secs.to_int()
   @moon_cpal.Duration::from_secs(elapsed_secs.to_uint64())
 }
 
@@ -94,7 +95,7 @@ pub impl Source for TrackPosition with try_seek(
 ) -> Unit raise SeekError {
   self.input.try_seek(pos)
   self.played_samples.val = 0
-  self.offset_secs.val = pos.secs.to_int()
+  self.offset_duration.val = pos
 }
 
 ///|

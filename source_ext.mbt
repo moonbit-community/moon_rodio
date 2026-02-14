@@ -414,7 +414,24 @@ pub fn[S : Source] speed(source : S, ratio : Double) -> DynSource {
   let src = to_dyn(source)
   let out_rate = (Double::from_int(src.sample_rate()) * ratio).to_int()
   guard out_rate > 0 else { panic() }
-  DynSource::new(fn() { src.next() }, src.channels(), out_rate)
+  DynSource::new(
+    fn() { src.next() },
+    src.channels(),
+    out_rate,
+    current_span_len=fn() { src.current_span_len() },
+    total_duration=fn() {
+      src.total_duration().map(fn(d) { duration_div_ratio_floor(d, ratio) })
+    },
+    try_seek=fn(pos : @moon_cpal.Duration) {
+      let mapped = duration_mul_ratio_floor(pos, ratio)
+      try {
+        src.try_seek(mapped)
+        Ok(())
+      } catch {
+        err => Err(err)
+      }
+    },
+  )
 }
 
 ///|

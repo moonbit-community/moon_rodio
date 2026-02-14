@@ -200,8 +200,8 @@ fn duration_from_sample_count(
   if total_samples < 0 || channels <= 0 || sample_rate <= 0 {
     return None
   }
-  let frames = total_samples / channels
-  let secs = frames / sample_rate
+  let per_second = channels * sample_rate
+  let secs = total_samples / per_second
   Some(@moon_cpal.Duration::from_secs(secs.to_uint64()))
 }
 
@@ -211,8 +211,48 @@ fn sample_index_from_duration(
   channels : ChannelCount,
   sample_rate : SampleRate,
 ) -> Int {
-  let secs = pos.secs.to_int()
-  secs * sample_rate * channels
+  if channels <= 0 || sample_rate <= 0 {
+    return 0
+  }
+  let per_second = sample_rate * channels
+  let secs_part = pos.secs.to_int() * per_second
+  let nanos_part = pos.nanos * per_second / 1_000_000_000
+  secs_part + nanos_part
+}
+
+///|
+fn duration_secs_f64(pos : @moon_cpal.Duration) -> Double {
+  Double::from_int(pos.secs.to_int()) +
+  Double::from_int(pos.nanos) / 1_000_000_000.0
+}
+
+///|
+fn duration_from_secs_floor(secs : Double) -> @moon_cpal.Duration {
+  if secs <= 0.0 {
+    @moon_cpal.Duration::from_secs((0 : UInt64))
+  } else {
+    @moon_cpal.Duration::from_secs(secs.to_int().to_uint64())
+  }
+}
+
+///|
+fn duration_mul_ratio_floor(
+  pos : @moon_cpal.Duration,
+  ratio : Double,
+) -> @moon_cpal.Duration {
+  duration_from_secs_floor(duration_secs_f64(pos) * ratio)
+}
+
+///|
+fn duration_div_ratio_floor(
+  pos : @moon_cpal.Duration,
+  ratio : Double,
+) -> @moon_cpal.Duration {
+  if ratio <= 0.0 {
+    @moon_cpal.Duration::from_secs((0 : UInt64))
+  } else {
+    duration_from_secs_floor(duration_secs_f64(pos) / ratio)
+  }
 }
 
 ///|

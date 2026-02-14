@@ -63,7 +63,8 @@ pub fn Buffered::into_inner(self : Buffered) -> SamplesBuffer {
 pub struct ChannelVolume {
   input : DynSource
   channel_factors : Ref[Array[Sample]]
-  cursor : Ref[Int]
+  current_channel : Ref[Int]
+  current_sample : Ref[Sample?]
 }
 
 ///|
@@ -71,10 +72,13 @@ pub fn[S : Source] ChannelVolume::new(
   source : S,
   channel_factors : Array[Sample],
 ) -> ChannelVolume {
+  guard !channel_factors.is_empty() else { panic() }
+  let out_channels = channel_factors.length()
   {
     input: to_dyn(source),
     channel_factors: @ref.new(channel_factors),
-    cursor: @ref.new(0),
+    current_channel: @ref.new(out_channels),
+    current_sample: @ref.new(None),
   }
 }
 
@@ -84,10 +88,8 @@ pub fn ChannelVolume::set_volume(
   channel : Int,
   volume : Sample,
 ) -> Unit {
-  guard channel >= 0 else { panic() }
-  let target = channel + 1
-  while self.channel_factors.val.length() < target {
-    self.channel_factors.val.push(1.0)
+  guard channel >= 0 && channel < self.channel_factors.val.length() else {
+    panic()
   }
   self.channel_factors.val[channel] = volume
 }
@@ -791,25 +793,34 @@ pub impl Source for Amplify with sample_rate(self : Amplify) {
 
 ///|
 pub impl Source for ChannelVolume with next(self : ChannelVolume) {
-  match self.input.next() {
-    None => None
-    Some(v) => {
-      let channels = self.input.channels()
-      let ch = self.cursor.val % channels
-      self.cursor.val += 1
-      let factor = if ch < self.channel_factors.val.length() {
-        self.channel_factors.val[ch]
-      } else {
-        1.0
+  let out_channels = self.channel_factors.val.length()
+  if self.current_channel.val >= out_channels {
+    self.current_channel.val = 0
+    self.current_sample.val = None
+    let in_channels = self.input.channels()
+    for _ in 0..<in_channels {
+      match self.input.next() {
+        None => ()
+        Some(s) =>
+          self.current_sample.val = Some(
+            self.current_sample.val.unwrap_or(0.0) + s,
+          )
       }
-      Some(v * factor)
     }
+    self.current_sample.val = self.current_sample.val.map(fn(v) {
+      v / Double::from_int(in_channels)
+    })
   }
+  let result = self.current_sample.val.map(fn(v) {
+    v * self.channel_factors.val[self.current_channel.val]
+  })
+  self.current_channel.val += 1
+  result
 }
 
 ///|
 pub impl Source for ChannelVolume with channels(self : ChannelVolume) {
-  self.input.channels()
+  self.channel_factors.val.length()
 }
 
 ///|
@@ -1325,7 +1336,10 @@ pub impl Source for Speed with current_span_len(_self : Speed) {
 
 ///|
 pub impl Source for Speed with total_duration(_self : Speed) {
-  _self.inner().total_duration()
+  _self
+  .inner()
+  .total_duration()
+  .map(fn(d) { duration_div_ratio_floor(d, _self.factor.val) })
 }
 
 ///|
@@ -1333,7 +1347,7 @@ pub impl Source for Speed with try_seek(
   _self : Speed,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  _self.inner().try_seek(pos)
+  _self.inner().try_seek(duration_mul_ratio_floor(pos, _self.factor.val))
 }
 
 ///|
