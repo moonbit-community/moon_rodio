@@ -1,17 +1,30 @@
 ///|
 pub struct TrackPosition {
   input : DynSource
-  played_samples : Ref[Int]
+  samples_counted : Ref[Int]
   offset_duration : Ref[@moon_cpal.Duration]
+  current_span_sample_rate : Ref[SampleRate]
+  current_span_channels : Ref[ChannelCount]
+  current_span_len : Ref[Int?]
 }
 
 ///|
 pub fn[S : Source] track_position(source : S) -> TrackPosition {
   {
     input: to_dyn(source),
-    played_samples: @ref.new(0),
+    samples_counted: @ref.new(0),
     offset_duration: @ref.new(@moon_cpal.Duration::from_secs((0 : UInt64))),
+    current_span_sample_rate: @ref.new(0),
+    current_span_channels: @ref.new(0),
+    current_span_len: @ref.new(None),
   }
+}
+
+///|
+fn TrackPosition::set_current_span(self : TrackPosition) -> Unit {
+  self.current_span_len.val = self.input.current_span_len()
+  self.current_span_sample_rate.val = self.input.sample_rate()
+  self.current_span_channels.val = self.input.channels()
 }
 
 ///|
@@ -31,10 +44,32 @@ pub fn TrackPosition::into_inner(self : TrackPosition) -> DynSource {
 
 ///|
 pub fn TrackPosition::next(self : TrackPosition) -> Sample? {
+  if self.current_span_len.val is None {
+    self.set_current_span()
+  }
+
   match self.input.next() {
     None => None
     Some(v) => {
-      self.played_samples.val += 1
+      self.samples_counted.val += 1
+
+      if self.current_span_len.val == Some(self.samples_counted.val) {
+        match
+          duration_from_sample_count(
+            self.samples_counted.val,
+            self.current_span_channels.val,
+            self.current_span_sample_rate.val,
+          ) {
+          Some(span_duration) =>
+            self.offset_duration.val = duration_add(
+              self.offset_duration.val,
+              span_duration,
+            )
+          None => ()
+        }
+        self.samples_counted.val = 0
+        self.set_current_span()
+      }
       Some(v)
     }
   }
@@ -52,19 +87,19 @@ pub fn TrackPosition::sample_rate(self : TrackPosition) -> SampleRate {
 
 ///|
 pub fn TrackPosition::get_pos(self : TrackPosition) -> @moon_cpal.Duration {
-  let channels = self.input.channels()
-  let sample_rate = self.input.sample_rate()
-  if sample_rate <= 0 || channels <= 0 {
-    return self.offset_duration.val
-  }
   let played = match
-    duration_from_sample_count(self.played_samples.val, channels, sample_rate) {
+    duration_from_sample_count(
+      self.samples_counted.val,
+      self.input.channels(),
+      self.input.sample_rate(),
+    ) {
     Some(v) => v
     None => @moon_cpal.Duration::from_secs((0 : UInt64))
   }
-  let total_secs = self.offset_duration.val.secs + played.secs
-  let total_nanos = self.offset_duration.val.nanos + played.nanos
-  @moon_cpal.Duration::new(total_secs, total_nanos)
+  if self.input.sample_rate() <= 0 || self.input.channels() <= 0 {
+    return self.offset_duration.val
+  }
+  duration_add(self.offset_duration.val, played)
 }
 
 ///|
@@ -98,8 +133,9 @@ pub impl Source for TrackPosition with try_seek(
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
   self.input.try_seek(pos)
-  self.played_samples.val = 0
+  self.samples_counted.val = 0
   self.offset_duration.val = pos
+  self.current_span_len.val = None
 }
 
 ///|

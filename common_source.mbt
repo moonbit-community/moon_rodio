@@ -23,8 +23,8 @@ pub trait Source {
 ///|
 pub struct DynSource {
   next_sample : () -> Sample?
-  channels : ChannelCount
-  sample_rate : SampleRate
+  channels_fn : () -> ChannelCount
+  sample_rate_fn : () -> SampleRate
   current_span_len_fn : () -> Int?
   total_duration_fn : () -> @moon_cpal.Duration?
   try_seek_fn : (@moon_cpal.Duration) -> Result[Unit, SeekError]
@@ -55,8 +55,29 @@ pub fn DynSource::new(
   guard sample_rate > 0 else { panic() }
   {
     next_sample,
-    channels,
-    sample_rate,
+    channels_fn: fn() { channels },
+    sample_rate_fn: fn() { sample_rate },
+    current_span_len_fn: current_span_len,
+    total_duration_fn: total_duration,
+    try_seek_fn: try_seek,
+  }
+}
+
+///|
+pub fn DynSource::new_dynamic(
+  next_sample : () -> Sample?,
+  channels : () -> ChannelCount,
+  sample_rate : () -> SampleRate,
+  current_span_len? : () -> Int? = source_default_current_span_len,
+  total_duration? : () -> @moon_cpal.Duration? = source_default_total_duration,
+  try_seek? : (@moon_cpal.Duration) -> Result[Unit, SeekError] = source_default_try_seek_result,
+) -> DynSource {
+  guard channels() > 0 else { panic() }
+  guard sample_rate() > 0 else { panic() }
+  {
+    next_sample,
+    channels_fn: channels,
+    sample_rate_fn: sample_rate,
     current_span_len_fn: current_span_len,
     total_duration_fn: total_duration,
     try_seek_fn: try_seek,
@@ -70,12 +91,12 @@ pub fn DynSource::next(self : DynSource) -> Sample? {
 
 ///|
 pub fn DynSource::channels(self : DynSource) -> ChannelCount {
-  self.channels
+  (self.channels_fn)()
 }
 
 ///|
 pub fn DynSource::sample_rate(self : DynSource) -> SampleRate {
-  self.sample_rate
+  (self.sample_rate_fn)()
 }
 
 ///|
@@ -134,10 +155,10 @@ pub impl Source for DynSource with try_seek(
 
 ///|
 pub fn[S : Source] to_dyn(source : S) -> DynSource {
-  DynSource::new(
+  DynSource::new_dynamic(
     fn() { source.next() },
-    source.channels(),
-    source.sample_rate(),
+    fn() { source.channels() },
+    fn() { source.sample_rate() },
     current_span_len=fn() { source.current_span_len() },
     total_duration=fn() { source.total_duration() },
     try_seek=fn(pos : @moon_cpal.Duration) {

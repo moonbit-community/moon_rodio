@@ -258,6 +258,50 @@ test "rodio::source::track_position_subsecond" {
 }
 
 ///|
+test "rodio::source::track_position_in_presence_of_speedup" {
+  let t = track_position(
+    speed(
+      SamplesBuffer::new(1, 1, [10.0, -10.0, 10.0, -10.0, 20.0, -20.0]),
+      2.0,
+    ),
+  )
+  assert_eq(t.get_pos().secs, (0 : UInt64))
+  ignore(t.next())
+  let pos = t.get_pos()
+  assert_eq(pos.secs, (0 : UInt64))
+  assert_eq(pos.nanos, 500_000_000)
+  ignore(t.next())
+  assert_eq(t.get_pos().secs, (1 : UInt64))
+  t.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
+  assert_eq(t.get_pos().secs, (1 : UInt64))
+}
+
+///|
+test "rodio::source::track_position_across_spans" {
+  let idx = @ref.new(0)
+  let t = track_position(
+    from_factory(fn() {
+      let current = idx.val
+      idx.val += 1
+      if current == 0 {
+        Some(SamplesBuffer::new(1, 1, [1.0, 2.0]))
+      } else if current == 1 {
+        Some(SamplesBuffer::new(1, 2, [3.0, 4.0]))
+      } else {
+        None
+      }
+    }),
+  )
+  ignore(t.next())
+  ignore(t.next())
+  ignore(t.next())
+  assert_eq(t.sample_rate(), 2)
+  let pos = t.get_pos()
+  assert_eq(pos.secs, (2 : UInt64))
+  assert_eq(pos.nanos, 500_000_000)
+}
+
+///|
 test "rodio::source::periodic_access" {
   let call_count = @ref.new(0)
   let p = periodic_access(

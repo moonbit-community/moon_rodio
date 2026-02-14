@@ -385,8 +385,8 @@ pub impl Source for Done
 
 pub struct DynSource {
   next_sample : () -> Double?
-  channels : Int
-  sample_rate : Int
+  channels_fn : () -> Int
+  sample_rate_fn : () -> Int
   current_span_len_fn : () -> Int?
   total_duration_fn : () -> @core.Duration?
   try_seek_fn : (@core.Duration) -> Result[Unit, SeekError]
@@ -394,6 +394,7 @@ pub struct DynSource {
 pub fn DynSource::channels(Self) -> Int
 pub fn DynSource::current_span_len(Self) -> Int?
 pub fn DynSource::new(() -> Double?, Int, Int, current_span_len? : () -> Int?, total_duration? : () -> @core.Duration?, try_seek? : (@core.Duration) -> Result[Unit, SeekError]) -> Self
+pub fn DynSource::new_dynamic(() -> Double?, () -> Int, () -> Int, current_span_len? : () -> Int?, total_duration? : () -> @core.Duration?, try_seek? : (@core.Duration) -> Result[Unit, SeekError]) -> Self
 pub fn DynSource::next(Self) -> Double?
 pub fn DynSource::sample_rate(Self) -> Int
 pub fn DynSource::total_duration(Self) -> @core.Duration?
@@ -959,8 +960,11 @@ pub impl Source for TakeDuration
 
 pub struct TrackPosition {
   input : DynSource
-  played_samples : Ref[Int]
+  samples_counted : Ref[Int]
   offset_duration : Ref[@core.Duration]
+  current_span_sample_rate : Ref[Int]
+  current_span_channels : Ref[Int]
+  current_span_len : Ref[Int?]
 }
 pub fn TrackPosition::channels(Self) -> Int
 pub fn TrackPosition::get_pos(Self) -> @core.Duration
