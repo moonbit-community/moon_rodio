@@ -92,6 +92,9 @@ test "rodio::source::buffered_and_repeat_infinite_fn" {
   let src2 = SamplesBuffer::new(1, 44_100, [2.0, -1.0])
   let r = repeat_infinite(src2)
   assert_eq(collect_n(r, 6), [2.0, -1.0, 2.0, -1.0, 2.0, -1.0])
+
+  let src3 = SamplesBuffer::new(1, 44_100, [3.0])
+  assert_eq(collect_n(repeat(src3), 4), [3.0, 3.0, 3.0, 3.0])
 }
 
 ///|
@@ -128,6 +131,9 @@ test "rodio::source::amplify_db_and_normalized" {
 ///|
 test "rodio::source::track_position" {
   let t = track_position(SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0]))
+  assert_eq(t.inner().channels(), 1)
+  assert_eq(t.inner_mut().sample_rate(), 2)
+  assert_eq(t.into_inner().channels(), 1)
   assert_eq(t.get_pos().secs, (0 : UInt64))
   ignore(t.next())
   ignore(t.next())
@@ -142,8 +148,23 @@ test "rodio::source::periodic_access" {
     2,
     fn() { call_count.val += 1 },
   )
+  assert_eq(p.inner().channels(), 1)
+  assert_eq(p.inner_mut().sample_rate(), 44_100)
+  assert_eq(p.into_inner().channels(), 1)
   assert_eq(collect_n(p, 10), [1.0, 2.0, 3.0, 4.0, 5.0])
   assert_eq(call_count.val, 2)
+}
+
+///|
+test "rodio::source::periodic_alias" {
+  let calls = @ref.new(0)
+  let p = periodic(
+    SamplesBuffer::new(1, 4, [1.0, 2.0, 3.0, 4.0]),
+    @moon_cpal.Duration::from_secs((1 : UInt64)),
+    fn() { calls.val += 1 },
+  )
+  assert_eq(collect_n(p, 10), [1.0, 2.0, 3.0, 4.0])
+  assert_eq(calls.val, 1)
 }
 
 ///|
@@ -177,6 +198,28 @@ test "rodio::source::linear_ramp_and_fades" {
   let s3 = SamplesBuffer::new(1, 1, [1.0, 1.0, 1.0, 1.0])
   let fout = fade_out(s3, @moon_cpal.Duration::from_secs((2 : UInt64)))
   assert_eq(collect_n(fout, 10), [1.0, 1.0, 0.5, 0.0])
+
+  let s4 = SamplesBuffer::new(1, 1, [1.0, 1.0, 1.0, 1.0])
+  let unclamped = linear_gain_ramp_with_clamp(
+    s4,
+    0.0,
+    1.0,
+    @moon_cpal.Duration::from_secs((2 : UInt64)),
+    false,
+  )
+  assert_eq(collect_n(unclamped, 10), [0.0, 0.5, 1.0, 1.0])
+
+  let s5 = SamplesBuffer::new(1, 1, [1.0, 1.0])
+  assert_eq(
+    collect_n(fadein(s5, @moon_cpal.Duration::from_secs((1 : UInt64))), 10),
+    [0.0, 1.0],
+  )
+
+  let s6 = SamplesBuffer::new(1, 1, [1.0, 1.0])
+  assert_eq(
+    collect_n(fadeout(s6, @moon_cpal.Duration::from_secs((1 : UInt64))), 10),
+    [1.0, 0.0],
+  )
 }
 
 ///|
@@ -199,6 +242,13 @@ test "rodio::source::crossfade" {
   assert_eq(v[0], 1.0)
   assert_true(v[1] > 1.49 && v[1] < 1.51)
   assert_eq(v[2], 2.0)
+
+  let y = take_crossfade_with(
+    SamplesBuffer::new(1, 1, [1.0, 1.0, 1.0]),
+    SamplesBuffer::new(1, 1, [0.0, 2.0, 2.0]),
+    @moon_cpal.Duration::from_secs((2 : UInt64)),
+  )
+  assert_eq(collect_n(y, 10), [1.0, 1.5, 2.0])
 }
 
 ///|
@@ -234,6 +284,9 @@ test "rodio::source::from_factory" {
 test "rodio::source::done" {
   let signal = @ref.new(2)
   let d = Done::new(SamplesBuffer::new(1, 44_100, [1.0]), signal)
+  assert_eq(d.inner().channels(), 1)
+  assert_eq(d.inner_mut().sample_rate(), 44_100)
+  assert_eq(d.into_inner().channels(), 1)
   assert_eq(d.next(), Some(1.0))
   assert_eq(signal.val, 2)
   assert_eq(d.next(), None)
@@ -255,6 +308,7 @@ test "rodio::source::empty_callback" {
 test "rodio::source::uniform_source_iterator" {
   let s = SamplesBuffer::new(1, 2, [0.0, 2.0, 4.0])
   let u = UniformSourceIterator::new(s, 2, 4)
+  assert_eq(u.inner_mut().channels(), 2)
   assert_eq(u.channels(), 2)
   assert_eq(u.sample_rate(), 4)
   let vals = collect_n(u, 10)
@@ -296,6 +350,13 @@ test "rodio::source::named_wrappers_basic" {
     LimitSettings::default(),
   )
   assert_eq(collect_n(l, 10), [-1.0, 0.5, 1.0])
+
+  let dg = Distortion::with_gain(
+    SamplesBuffer::new(1, 1, [0.5, -0.75]),
+    2.0,
+    0.8,
+  )
+  assert_eq(collect_n(dg, 10), [0.8, -0.8])
 }
 
 ///|
@@ -336,6 +397,29 @@ test "rodio::source::agc" {
 }
 
 ///|
+test "rodio::source::agc_controls" {
+  let src = SamplesBuffer::new(1, 10, [0.1, 0.1, 0.1, 0.1])
+  let agc = automatic_gain_control(
+    src,
+    1.0,
+    @moon_cpal.Duration::from_secs((1 : UInt64)),
+    @moon_cpal.Duration::from_secs((1 : UInt64)),
+    10.0,
+  )
+  let ctrl = agc.get_agc_control()
+  assert_true(ctrl.val)
+  agc.set_enabled(false)
+  assert_true(!ctrl.val)
+  assert_eq(agc.next(), Some(0.1))
+  agc.set_enabled(true)
+  assert_true(agc.next().unwrap() > 0.1)
+  assert_true(agc.get_target_level().val > 0.9)
+  assert_true(agc.get_absolute_max_gain().val > 9.9)
+  assert_eq(agc.inner().channels(), 1)
+  assert_eq(agc.inner_mut().sample_rate(), 10)
+}
+
+///|
 test "rodio::source::blt_filter_smoke" {
   let lp = low_pass_with_q(
     SamplesBuffer::new(1, 48_000, [1.0, 0.0, 0.0, 0.0]),
@@ -345,6 +429,8 @@ test "rodio::source::blt_filter_smoke" {
   let hp = high_pass(SamplesBuffer::new(1, 48_000, [1.0, 0.0, 0.0, 0.0]), 1_000)
   assert_eq(lp.channels(), 1)
   assert_eq(hp.sample_rate(), 48_000)
+  assert_eq(lp.inner().channels(), 1)
+  assert_eq(hp.inner_mut().sample_rate(), 48_000)
   assert_true(lp.next() is Some(_))
   assert_true(hp.next() is Some(_))
 }
@@ -361,4 +447,70 @@ test "rodio::source::noise_white_and_pink" {
   for x in wv {
     assert_true(x >= -1.0 && x <= 1.0)
   }
+}
+
+///|
+test "rodio::source::distortion_with_gain" {
+  let s = SamplesBuffer::new(1, 44_100, [0.25, 0.6, -0.8])
+  let d = distortion_with_gain(s, 2.0, 0.9)
+  assert_eq(collect_n(d, 10), [0.5, 0.9, -0.9])
+}
+
+///|
+test "rodio::source::reverb" {
+  let src = SamplesBuffer::new(1, 1, [1.0, 0.0, 0.0, 0.0])
+  let out = reverb(src, @moon_cpal.Duration::from_secs((1 : UInt64)), 0.5)
+  assert_eq(collect_n(out, 10), [1.0, 0.5, 0.0, 0.0, 0.0])
+}
+
+///|
+test "rodio::source::noise_extended" {
+  let tri = WhiteTriangular::new(44_100)
+  let gauss = WhiteGaussian::new(44_100)
+  let velvet = Velvet::new(44_100)
+  let blue = Blue::new(44_100)
+  let violet = Violet::new(44_100)
+  let brown = Brownian::new(44_100)
+
+  let tri_v = collect_n(tri, 64)
+  let gauss_v = collect_n(gauss, 64)
+  let velvet_v = collect_n(velvet, 64)
+  let blue_v = collect_n(blue, 64)
+  let violet_v = collect_n(violet, 64)
+  let brown_v = collect_n(brown, 64)
+
+  assert_eq(tri_v.length(), 64)
+  assert_eq(gauss_v.length(), 64)
+  assert_eq(velvet_v.length(), 64)
+  assert_eq(blue_v.length(), 64)
+  assert_eq(violet_v.length(), 64)
+  assert_eq(brown_v.length(), 64)
+
+  for x in tri_v {
+    assert_true(x >= -1.0 && x <= 1.0)
+  }
+  for x in velvet_v {
+    assert_true(x == -1.0 || x == 0.0 || x == 1.0)
+  }
+  for x in gauss_v {
+    assert_true(x == x)
+    assert_true(x.abs() < 1.0e308)
+  }
+  for x in blue_v {
+    assert_true(x == x)
+    assert_true(x.abs() < 1.0e308)
+  }
+  for x in violet_v {
+    assert_true(x == x)
+    assert_true(x.abs() < 1.0e308)
+  }
+  for x in brown_v {
+    assert_true(x == x)
+    assert_true(x.abs() < 1.0e308)
+  }
+
+  let old_white = white(44_100)
+  let old_pink = pink(44_100)
+  assert_eq(old_white.sample_rate(), 44_100)
+  assert_eq(old_pink.sample_rate(), 44_100)
 }

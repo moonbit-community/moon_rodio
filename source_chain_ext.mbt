@@ -11,6 +11,21 @@ pub fn[S : Source] Done::new(source : S, signal : Ref[Int]) -> Done {
 }
 
 ///|
+pub fn Done::inner(self : Done) -> DynSource {
+  self.input
+}
+
+///|
+pub fn Done::inner_mut(self : Done) -> DynSource {
+  self.input
+}
+
+///|
+pub fn Done::into_inner(self : Done) -> DynSource {
+  self.input
+}
+
+///|
 pub fn Done::next(self : Done) -> Sample? {
   let next = self.input.next()
   if !self.signal_sent.val && next is None {
@@ -110,6 +125,13 @@ pub fn[S : Source] UniformSourceIterator::new(
     target_channels,
     target_sample_rate,
   }
+}
+
+///|
+pub fn UniformSourceIterator::inner_mut(
+  self : UniformSourceIterator,
+) -> DynSource {
+  self.input
 }
 
 ///|

@@ -34,11 +34,17 @@ pub fn[S : Source] delay(S, @core.Duration) -> DynSource
 
 pub fn[S : Source] distortion(S, Double) -> DynSource
 
+pub fn[S : Source] distortion_with_gain(S, Double, Double) -> DynSource
+
 pub fn empty(Int, Int) -> DynSource
 
 pub fn[S : Source] fade_in(S, @core.Duration) -> DynSource
 
 pub fn[S : Source] fade_out(S, @core.Duration) -> DynSource
+
+pub fn[S : Source] fadein(S, @core.Duration) -> DynSource
+
+pub fn[S : Source] fadeout(S, @core.Duration) -> DynSource
 
 pub fn[S : Source] from_factory(() -> S?) -> FromFactoryIter[S]
 
@@ -52,6 +58,8 @@ pub fn[S : Source] limit(S, Double, Double) -> DynSource
 
 pub fn[S : Source] linear_gain_ramp(S, Double, Double, @core.Duration) -> DynSource
 
+pub fn[S : Source] linear_gain_ramp_with_clamp(S, Double, Double, @core.Duration, Bool) -> DynSource
+
 pub fn[S : Source] low_pass(S, Int) -> BltFilter
 
 pub fn[S : Source] low_pass_with_q(S, Int, Double) -> BltFilter
@@ -62,13 +70,21 @@ pub fn mixer(Int, Int) -> (Mixer, MixerSource)
 
 pub fn[S : Source] pausable(S, Bool) -> Pausable
 
+pub fn[S : Source] periodic(S, @core.Duration, () -> Unit) -> PeriodicAccess
+
 pub fn[S : Source] periodic_access(S, Int, () -> Unit) -> PeriodicAccess
+
+pub fn pink(Int) -> Pink
 
 pub fn play(Mixer, Bytes) -> Sink raise PlayError
 
 pub fn queue(Bool) -> (SourcesQueueInput, SourcesQueueOutput)
 
+pub fn[S : Source] repeat(S) -> DynSource
+
 pub fn[S : Source] repeat_infinite(S) -> DynSource
+
+pub fn[S : Source] reverb(S, @core.Duration, Double) -> DynSource
 
 pub fn[S : Source] skip_duration(S, @core.Duration) -> DynSource
 
@@ -82,6 +98,8 @@ pub fn supported_output_configs(@spec.Device) -> Array[@core.SupportedStreamConf
 
 pub fn[S : Source] take(S, Int) -> DynSource
 
+pub fn[A : Source, B : Source] take_crossfade_with(A, B, @core.Duration) -> DynSource
+
 pub fn[S : Source] take_duration(S, @core.Duration) -> DynSource
 
 pub fn[S : Source] to_dyn(S) -> DynSource
@@ -89,6 +107,8 @@ pub fn[S : Source] to_dyn(S) -> DynSource
 pub fn[S : Source] track_position(S) -> TrackPosition
 
 pub fn[S : Source] uniform(S, Int, Int) -> DynSource
+
+pub fn white(Int) -> WhiteUniform
 
 pub fn zero(Int, Int) -> DynSource
 
@@ -138,11 +158,20 @@ pub struct AutomaticGainControl {
   current_gain : Ref[Double]
   attack_coeff : Ref[Double]
   release_coeff : Ref[Double]
+  agc_control : Ref[Bool]
 }
 pub fn AutomaticGainControl::channels(Self) -> Int
+pub fn AutomaticGainControl::get_absolute_max_gain(Self) -> Ref[Double]
+pub fn AutomaticGainControl::get_agc_control(Self) -> Ref[Bool]
+pub fn AutomaticGainControl::get_attack_coeff(Self) -> Ref[Double]
+pub fn AutomaticGainControl::get_release_coeff(Self) -> Ref[Double]
+pub fn AutomaticGainControl::get_target_level(Self) -> Ref[Double]
+pub fn AutomaticGainControl::inner(Self) -> DynSource
+pub fn AutomaticGainControl::inner_mut(Self) -> DynSource
 pub fn[S : Source] AutomaticGainControl::new(S, Double, @core.Duration, @core.Duration, Double) -> Self
 pub fn AutomaticGainControl::next(Self) -> Double?
 pub fn AutomaticGainControl::sample_rate(Self) -> Int
+pub fn AutomaticGainControl::set_enabled(Self, Bool) -> Unit
 pub impl Source for AutomaticGainControl
 
 pub struct BltFilter {
@@ -161,6 +190,9 @@ pub struct BltFilter {
   y2 : Ref[Double]
 }
 pub fn BltFilter::channels(Self) -> Int
+pub fn BltFilter::inner(Self) -> DynSource
+pub fn BltFilter::inner_mut(Self) -> DynSource
+pub fn BltFilter::into_inner(Self) -> DynSource
 pub fn BltFilter::next(Self) -> Double?
 pub fn BltFilter::sample_rate(Self) -> Int
 pub fn BltFilter::to_high_pass(Self, Int) -> Unit
@@ -175,6 +207,30 @@ pub enum BltMode {
 }
 pub impl Eq for BltMode
 pub impl Show for BltMode
+
+pub struct Blue {
+  sample_rate : Int
+  white_noise : WhiteGaussian
+  prev_white : Ref[Double]
+}
+pub fn Blue::channels(Self) -> Int
+pub fn Blue::new(Int) -> Self
+pub fn Blue::next(Self) -> Double?
+pub fn Blue::sample_rate(Self) -> Int
+pub impl Source for Blue
+
+pub struct Brownian {
+  sample_rate : Int
+  white_noise : WhiteGaussian
+  accumulator : Ref[Double]
+  leak_factor : Ref[Double]
+  scale : Ref[Double]
+}
+pub fn Brownian::channels(Self) -> Int
+pub fn Brownian::new(Int) -> Self
+pub fn Brownian::next(Self) -> Double?
+pub fn Brownian::sample_rate(Self) -> Int
+pub impl Source for Brownian
 
 pub struct Buffered {
   inner : SamplesBuffer
@@ -242,6 +298,7 @@ pub struct Distortion {
   inner : DynSource
 }
 pub fn[S : Source] Distortion::new(S, Double) -> Self
+pub fn[S : Source] Distortion::with_gain(S, Double, Double) -> Self
 pub impl Source for Distortion
 
 pub struct Done {
@@ -250,6 +307,9 @@ pub struct Done {
   signal_sent : Ref[Bool]
 }
 pub fn Done::channels(Self) -> Int
+pub fn Done::inner(Self) -> DynSource
+pub fn Done::inner_mut(Self) -> DynSource
+pub fn Done::into_inner(Self) -> DynSource
 pub fn[S : Source] Done::new(S, Ref[Int]) -> Self
 pub fn Done::next(Self) -> Double?
 pub fn Done::sample_rate(Self) -> Int
@@ -431,6 +491,9 @@ pub struct Pausable {
   remaining_paused_samples : Ref[Int]
 }
 pub fn Pausable::channels(Self) -> Int
+pub fn Pausable::inner(Self) -> DynSource
+pub fn Pausable::inner_mut(Self) -> DynSource
+pub fn Pausable::into_inner(Self) -> DynSource
 pub fn Pausable::is_paused(Self) -> Bool
 pub fn Pausable::next(Self) -> Double?
 pub fn Pausable::sample_rate(Self) -> Int
@@ -444,6 +507,9 @@ pub struct PeriodicAccess {
   callback : () -> Unit
 }
 pub fn PeriodicAccess::channels(Self) -> Int
+pub fn PeriodicAccess::inner(Self) -> DynSource
+pub fn PeriodicAccess::inner_mut(Self) -> DynSource
+pub fn PeriodicAccess::into_inner(Self) -> DynSource
 pub fn PeriodicAccess::next(Self) -> Double?
 pub fn PeriodicAccess::sample_rate(Self) -> Int
 pub impl Source for PeriodicAccess
@@ -555,6 +621,7 @@ pub struct SinkControls {
   sound_count : Ref[Int]
   position_samples : Ref[Int]
   position_sample_rate : Ref[Int]
+  position_channels : Ref[Int]
 }
 
 pub struct SkipDuration {
@@ -568,6 +635,9 @@ pub struct Skippable {
   do_skip : Ref[Bool]
 }
 pub fn Skippable::channels(Self) -> Int
+pub fn Skippable::inner(Self) -> DynSource
+pub fn Skippable::inner_mut(Self) -> DynSource
+pub fn Skippable::into_inner(Self) -> DynSource
 pub fn Skippable::next(Self) -> Double?
 pub fn Skippable::sample_rate(Self) -> Int
 pub fn Skippable::skip(Self) -> Unit
@@ -684,6 +754,9 @@ pub struct Stoppable {
   stopped : Ref[Bool]
 }
 pub fn Stoppable::channels(Self) -> Int
+pub fn Stoppable::inner(Self) -> DynSource
+pub fn Stoppable::inner_mut(Self) -> DynSource
+pub fn Stoppable::into_inner(Self) -> DynSource
 pub fn Stoppable::next(Self) -> Double?
 pub fn Stoppable::sample_rate(Self) -> Int
 pub fn Stoppable::stop(Self) -> Unit
@@ -701,6 +774,9 @@ pub struct TrackPosition {
 }
 pub fn TrackPosition::channels(Self) -> Int
 pub fn TrackPosition::get_pos(Self) -> @core.Duration
+pub fn TrackPosition::inner(Self) -> DynSource
+pub fn TrackPosition::inner_mut(Self) -> DynSource
+pub fn TrackPosition::into_inner(Self) -> DynSource
 pub fn TrackPosition::next(Self) -> Double?
 pub fn TrackPosition::sample_rate(Self) -> Int
 pub impl Source for TrackPosition
@@ -720,10 +796,58 @@ pub struct UniformSourceIterator {
   target_sample_rate : Int
 }
 pub fn UniformSourceIterator::channels(Self) -> Int
+pub fn UniformSourceIterator::inner_mut(Self) -> DynSource
 pub fn[S : Source] UniformSourceIterator::new(S, Int, Int) -> Self
 pub fn UniformSourceIterator::next(Self) -> Double?
 pub fn UniformSourceIterator::sample_rate(Self) -> Int
 pub impl Source for UniformSourceIterator
+
+pub struct Velvet {
+  sample_rate : Int
+  state : Ref[UInt64]
+  grid_size : Ref[Double]
+  grid_pos : Ref[Double]
+  impulse_pos : Ref[Double]
+}
+pub fn Velvet::channels(Self) -> Int
+pub fn Velvet::new(Int) -> Self
+pub fn Velvet::new_with_density(Int, Double) -> Self
+pub fn Velvet::next(Self) -> Double?
+pub fn Velvet::sample_rate(Self) -> Int
+pub impl Source for Velvet
+
+pub struct Violet {
+  sample_rate : Int
+  blue_noise : Blue
+  prev : Ref[Double]
+}
+pub fn Violet::channels(Self) -> Int
+pub fn Violet::new(Int) -> Self
+pub fn Violet::next(Self) -> Double?
+pub fn Violet::sample_rate(Self) -> Int
+pub impl Source for Violet
+
+pub struct WhiteGaussian {
+  sample_rate : Int
+  state : Ref[UInt64]
+}
+pub fn WhiteGaussian::channels(Self) -> Int
+pub fn WhiteGaussian::mean(Self) -> Double
+pub fn WhiteGaussian::new(Int) -> Self
+pub fn WhiteGaussian::next(Self) -> Double?
+pub fn WhiteGaussian::sample_rate(Self) -> Int
+pub fn WhiteGaussian::std_dev(Self) -> Double
+pub impl Source for WhiteGaussian
+
+pub struct WhiteTriangular {
+  sample_rate : Int
+  state : Ref[UInt64]
+}
+pub fn WhiteTriangular::channels(Self) -> Int
+pub fn WhiteTriangular::new(Int) -> Self
+pub fn WhiteTriangular::next(Self) -> Double?
+pub fn WhiteTriangular::sample_rate(Self) -> Int
+pub impl Source for WhiteTriangular
 
 pub struct WhiteUniform {
   sample_rate : Int

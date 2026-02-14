@@ -25,6 +25,7 @@ pub struct AutomaticGainControl {
   current_gain : Ref[Sample]
   attack_coeff : Ref[Sample]
   release_coeff : Ref[Sample]
+  agc_control : Ref[Bool]
 }
 
 ///|
@@ -43,6 +44,7 @@ pub fn[S : Source] automatic_gain_control(
     current_gain: @ref.new(1.0),
     attack_coeff: @ref.new(agc_coeff(attack_time, src.sample_rate())),
     release_coeff: @ref.new(agc_coeff(release_time, src.sample_rate())),
+    agc_control: @ref.new(true),
   }
 }
 
@@ -60,10 +62,25 @@ pub fn[S : Source] AutomaticGainControl::new(
 }
 
 ///|
+pub fn AutomaticGainControl::inner(self : AutomaticGainControl) -> DynSource {
+  self.input
+}
+
+///|
+pub fn AutomaticGainControl::inner_mut(
+  self : AutomaticGainControl,
+) -> DynSource {
+  self.input
+}
+
+///|
 pub fn AutomaticGainControl::next(self : AutomaticGainControl) -> Sample? {
   match self.input.next() {
     None => None
     Some(v) => {
+      if !self.agc_control.val {
+        return Some(v)
+      }
       let abs_v = v.abs()
       let raw_target_gain = if abs_v > 1.0e-12 {
         self.target_level.val / abs_v
@@ -89,6 +106,49 @@ pub fn AutomaticGainControl::next(self : AutomaticGainControl) -> Sample? {
       Some(v * self.current_gain.val)
     }
   }
+}
+
+///|
+pub fn AutomaticGainControl::get_target_level(
+  self : AutomaticGainControl,
+) -> Ref[Sample] {
+  self.target_level
+}
+
+///|
+pub fn AutomaticGainControl::get_absolute_max_gain(
+  self : AutomaticGainControl,
+) -> Ref[Sample] {
+  self.absolute_max_gain
+}
+
+///|
+pub fn AutomaticGainControl::get_attack_coeff(
+  self : AutomaticGainControl,
+) -> Ref[Sample] {
+  self.attack_coeff
+}
+
+///|
+pub fn AutomaticGainControl::get_release_coeff(
+  self : AutomaticGainControl,
+) -> Ref[Sample] {
+  self.release_coeff
+}
+
+///|
+pub fn AutomaticGainControl::get_agc_control(
+  self : AutomaticGainControl,
+) -> Ref[Bool] {
+  self.agc_control
+}
+
+///|
+pub fn AutomaticGainControl::set_enabled(
+  self : AutomaticGainControl,
+  enabled : Bool,
+) -> Unit {
+  self.agc_control.val = enabled
 }
 
 ///|
@@ -212,6 +272,21 @@ fn[S : Source] blt_new(
     y1: @ref.new(0.0),
     y2: @ref.new(0.0),
   }
+}
+
+///|
+pub fn BltFilter::inner(self : BltFilter) -> DynSource {
+  self.input
+}
+
+///|
+pub fn BltFilter::inner_mut(self : BltFilter) -> DynSource {
+  self.input
+}
+
+///|
+pub fn BltFilter::into_inner(self : BltFilter) -> DynSource {
+  self.input
 }
 
 ///|
@@ -351,6 +426,11 @@ fn rand_unit(state : Ref[UInt64]) -> Sample {
 }
 
 ///|
+fn rand_signed(state : Ref[UInt64]) -> Sample {
+  rand_unit(state) * 2.0 - 1.0
+}
+
+///|
 pub struct WhiteUniform {
   sample_rate : SampleRate
   state : Ref[UInt64]
@@ -364,7 +444,7 @@ pub fn WhiteUniform::new(sample_rate : SampleRate) -> WhiteUniform {
 
 ///|
 pub fn WhiteUniform::next(self : WhiteUniform) -> Sample? {
-  Some(rand_unit(self.state) * 2.0 - 1.0)
+  Some(rand_signed(self.state))
 }
 
 ///|
@@ -393,6 +473,11 @@ pub impl Source for WhiteUniform with sample_rate(self : WhiteUniform) {
 }
 
 ///|
+pub fn white(sample_rate : SampleRate) -> WhiteUniform {
+  WhiteUniform::new(sample_rate)
+}
+
+///|
 pub struct Pink {
   sample_rate : SampleRate
   state : Ref[UInt64]
@@ -411,7 +496,7 @@ pub fn Pink::new(sample_rate : SampleRate) -> Pink {
 
 ///|
 pub fn Pink::next(self : Pink) -> Sample? {
-  let white = rand_unit(self.state) * 2.0 - 1.0
+  let white = rand_signed(self.state)
   self.prev.val = 0.98 * self.prev.val + 0.02 * white
   Some(self.prev.val * 5.0)
 }
@@ -438,5 +523,350 @@ pub impl Source for Pink with channels(self : Pink) {
 
 ///|
 pub impl Source for Pink with sample_rate(self : Pink) {
+  self.sample_rate()
+}
+
+///|
+pub fn pink(sample_rate : SampleRate) -> Pink {
+  Pink::new(sample_rate)
+}
+
+///|
+pub struct WhiteTriangular {
+  sample_rate : SampleRate
+  state : Ref[UInt64]
+}
+
+///|
+pub fn WhiteTriangular::new(sample_rate : SampleRate) -> WhiteTriangular {
+  guard sample_rate > 0 else { panic() }
+  { sample_rate, state: @ref.new((0x94D049BB133111EB : UInt64)) }
+}
+
+///|
+pub fn WhiteTriangular::next(self : WhiteTriangular) -> Sample? {
+  Some((rand_signed(self.state) + rand_signed(self.state)) / 2.0)
+}
+
+///|
+pub fn WhiteTriangular::channels(_self : WhiteTriangular) -> ChannelCount {
+  1
+}
+
+///|
+pub fn WhiteTriangular::sample_rate(self : WhiteTriangular) -> SampleRate {
+  self.sample_rate
+}
+
+///|
+pub impl Source for WhiteTriangular with next(self : WhiteTriangular) {
+  self.next()
+}
+
+///|
+pub impl Source for WhiteTriangular with channels(self : WhiteTriangular) {
+  self.channels()
+}
+
+///|
+pub impl Source for WhiteTriangular with sample_rate(self : WhiteTriangular) {
+  self.sample_rate()
+}
+
+///|
+pub struct WhiteGaussian {
+  sample_rate : SampleRate
+  state : Ref[UInt64]
+}
+
+///|
+pub fn WhiteGaussian::new(sample_rate : SampleRate) -> WhiteGaussian {
+  guard sample_rate > 0 else { panic() }
+  { sample_rate, state: @ref.new((0x369DEA0F31A53F85 : UInt64)) }
+}
+
+///|
+pub fn WhiteGaussian::mean(_self : WhiteGaussian) -> Sample {
+  0.0
+}
+
+///|
+pub fn WhiteGaussian::std_dev(_self : WhiteGaussian) -> Sample {
+  1.0 / 3.0
+}
+
+///|
+pub fn WhiteGaussian::next(self : WhiteGaussian) -> Sample? {
+  // Irwin-Hall approximation of a normal distribution.
+  let mut sum = 0.0
+  for _ in 0..<12 {
+    sum += rand_unit(self.state)
+  }
+  Some((sum - 6.0) / 3.0)
+}
+
+///|
+pub fn WhiteGaussian::channels(_self : WhiteGaussian) -> ChannelCount {
+  1
+}
+
+///|
+pub fn WhiteGaussian::sample_rate(self : WhiteGaussian) -> SampleRate {
+  self.sample_rate
+}
+
+///|
+pub impl Source for WhiteGaussian with next(self : WhiteGaussian) {
+  self.next()
+}
+
+///|
+pub impl Source for WhiteGaussian with channels(self : WhiteGaussian) {
+  self.channels()
+}
+
+///|
+pub impl Source for WhiteGaussian with sample_rate(self : WhiteGaussian) {
+  self.sample_rate()
+}
+
+///|
+let velvet_default_density : Sample = 2_000.0
+
+///|
+pub struct Velvet {
+  sample_rate : SampleRate
+  state : Ref[UInt64]
+  grid_size : Ref[Sample]
+  grid_pos : Ref[Sample]
+  impulse_pos : Ref[Sample]
+}
+
+///|
+pub fn Velvet::new(sample_rate : SampleRate) -> Velvet {
+  Velvet::new_with_density(sample_rate, velvet_default_density)
+}
+
+///|
+pub fn Velvet::new_with_density(
+  sample_rate : SampleRate,
+  density : Sample,
+) -> Velvet {
+  guard sample_rate > 0 else { panic() }
+  let density = if density <= 1.0e-9 { velvet_default_density } else { density }
+  let grid_size = Double::from_int(sample_rate) / density
+  let state = @ref.new((0x2545F4914F6CDD1D : UInt64))
+  let impulse_pos = rand_unit(state) * grid_size
+  {
+    sample_rate,
+    state,
+    grid_size: @ref.new(grid_size),
+    grid_pos: @ref.new(0.0),
+    impulse_pos: @ref.new(impulse_pos),
+  }
+}
+
+///|
+pub fn Velvet::next(self : Velvet) -> Sample? {
+  let out = if self.grid_pos.val.to_int() == self.impulse_pos.val.to_int() {
+    if rand_unit(self.state) > 0.5 {
+      1.0
+    } else {
+      -1.0
+    }
+  } else {
+    0.0
+  }
+
+  self.grid_pos.val += 1.0
+  if self.grid_pos.val >= self.grid_size.val {
+    self.grid_pos.val = 0.0
+    self.impulse_pos.val = rand_unit(self.state) * self.grid_size.val
+  }
+
+  Some(out)
+}
+
+///|
+pub fn Velvet::channels(_self : Velvet) -> ChannelCount {
+  1
+}
+
+///|
+pub fn Velvet::sample_rate(self : Velvet) -> SampleRate {
+  self.sample_rate
+}
+
+///|
+pub impl Source for Velvet with next(self : Velvet) {
+  self.next()
+}
+
+///|
+pub impl Source for Velvet with channels(self : Velvet) {
+  self.channels()
+}
+
+///|
+pub impl Source for Velvet with sample_rate(self : Velvet) {
+  self.sample_rate()
+}
+
+///|
+pub struct Blue {
+  sample_rate : SampleRate
+  white_noise : WhiteGaussian
+  prev_white : Ref[Sample]
+}
+
+///|
+pub fn Blue::new(sample_rate : SampleRate) -> Blue {
+  guard sample_rate > 0 else { panic() }
+  {
+    sample_rate,
+    white_noise: WhiteGaussian::new(sample_rate),
+    prev_white: @ref.new(0.0),
+  }
+}
+
+///|
+pub fn Blue::next(self : Blue) -> Sample? {
+  let white = self.white_noise.next().unwrap()
+  let blue = white - self.prev_white.val
+  self.prev_white.val = white
+  Some(blue)
+}
+
+///|
+pub fn Blue::channels(_self : Blue) -> ChannelCount {
+  1
+}
+
+///|
+pub fn Blue::sample_rate(self : Blue) -> SampleRate {
+  self.sample_rate
+}
+
+///|
+pub impl Source for Blue with next(self : Blue) {
+  self.next()
+}
+
+///|
+pub impl Source for Blue with channels(self : Blue) {
+  self.channels()
+}
+
+///|
+pub impl Source for Blue with sample_rate(self : Blue) {
+  self.sample_rate()
+}
+
+///|
+pub struct Violet {
+  sample_rate : SampleRate
+  blue_noise : Blue
+  prev : Ref[Sample]
+}
+
+///|
+pub fn Violet::new(sample_rate : SampleRate) -> Violet {
+  guard sample_rate > 0 else { panic() }
+  { sample_rate, blue_noise: Blue::new(sample_rate), prev: @ref.new(0.0) }
+}
+
+///|
+pub fn Violet::next(self : Violet) -> Sample? {
+  let blue = self.blue_noise.next().unwrap()
+  let violet = blue - self.prev.val
+  self.prev.val = blue
+  Some(violet)
+}
+
+///|
+pub fn Violet::channels(_self : Violet) -> ChannelCount {
+  1
+}
+
+///|
+pub fn Violet::sample_rate(self : Violet) -> SampleRate {
+  self.sample_rate
+}
+
+///|
+pub impl Source for Violet with next(self : Violet) {
+  self.next()
+}
+
+///|
+pub impl Source for Violet with channels(self : Violet) {
+  self.channels()
+}
+
+///|
+pub impl Source for Violet with sample_rate(self : Violet) {
+  self.sample_rate()
+}
+
+///|
+pub struct Brownian {
+  sample_rate : SampleRate
+  white_noise : WhiteGaussian
+  accumulator : Ref[Sample]
+  leak_factor : Ref[Sample]
+  scale : Ref[Sample]
+}
+
+///|
+pub fn Brownian::new(sample_rate : SampleRate) -> Brownian {
+  guard sample_rate > 0 else { panic() }
+  let white_noise = WhiteGaussian::new(sample_rate)
+  let center_freq_hz = 5.0
+  let mut leak = 1.0 -
+    2.0 * @math.PI * center_freq_hz / Double::from_int(sample_rate)
+  if leak < 0.0 {
+    leak = 0.0
+  }
+  let stddev = white_noise.std_dev()
+  let variance = stddev * stddev / (1.0 - leak * leak + 1.0e-12)
+  let scale = 1.0 / @math.pow(variance, 0.5)
+  {
+    sample_rate,
+    white_noise,
+    accumulator: @ref.new(0.0),
+    leak_factor: @ref.new(leak),
+    scale: @ref.new(scale),
+  }
+}
+
+///|
+pub fn Brownian::next(self : Brownian) -> Sample? {
+  let white = self.white_noise.next().unwrap()
+  self.accumulator.val = self.accumulator.val * self.leak_factor.val + white
+  Some(self.accumulator.val * self.scale.val)
+}
+
+///|
+pub fn Brownian::channels(_self : Brownian) -> ChannelCount {
+  1
+}
+
+///|
+pub fn Brownian::sample_rate(self : Brownian) -> SampleRate {
+  self.sample_rate
+}
+
+///|
+pub impl Source for Brownian with next(self : Brownian) {
+  self.next()
+}
+
+///|
+pub impl Source for Brownian with channels(self : Brownian) {
+  self.channels()
+}
+
+///|
+pub impl Source for Brownian with sample_rate(self : Brownian) {
   self.sample_rate()
 }

@@ -10,6 +10,21 @@ pub fn[S : Source] track_position(source : S) -> TrackPosition {
 }
 
 ///|
+pub fn TrackPosition::inner(self : TrackPosition) -> DynSource {
+  self.input
+}
+
+///|
+pub fn TrackPosition::inner_mut(self : TrackPosition) -> DynSource {
+  self.input
+}
+
+///|
+pub fn TrackPosition::into_inner(self : TrackPosition) -> DynSource {
+  self.input
+}
+
+///|
 pub fn TrackPosition::next(self : TrackPosition) -> Sample? {
   match self.input.next() {
     None => None
@@ -65,6 +80,26 @@ pub struct PeriodicAccess {
 }
 
 ///|
+fn period_to_sample_count(
+  period : @moon_cpal.Duration,
+  channels : ChannelCount,
+  sample_rate : SampleRate,
+) -> Int {
+  if channels <= 0 || sample_rate <= 0 {
+    return 1
+  }
+  let per_second = channels * sample_rate
+  let secs_part = period.secs.to_int() * per_second
+  let nanos_part = period.nanos * per_second / 1_000_000_000
+  let total = secs_part + nanos_part
+  if total <= 0 {
+    1
+  } else {
+    total
+  }
+}
+
+///|
 pub fn[S : Source] periodic_access(
   source : S,
   every_samples : Int,
@@ -77,6 +112,35 @@ pub fn[S : Source] periodic_access(
     remaining: @ref.new(every_samples),
     callback,
   }
+}
+
+///|
+pub fn[S : Source] periodic(
+  source : S,
+  period : @moon_cpal.Duration,
+  callback : () -> Unit,
+) -> PeriodicAccess {
+  let every = period_to_sample_count(
+    period,
+    source.channels(),
+    source.sample_rate(),
+  )
+  periodic_access(source, every, callback)
+}
+
+///|
+pub fn PeriodicAccess::inner(self : PeriodicAccess) -> DynSource {
+  self.input
+}
+
+///|
+pub fn PeriodicAccess::inner_mut(self : PeriodicAccess) -> DynSource {
+  self.input
+}
+
+///|
+pub fn PeriodicAccess::into_inner(self : PeriodicAccess) -> DynSource {
+  self.input
 }
 
 ///|

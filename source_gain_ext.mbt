@@ -52,6 +52,17 @@ pub fn[S : Source] linear_gain_ramp(
   end_gain : Sample,
   duration : @moon_cpal.Duration,
 ) -> DynSource {
+  linear_gain_ramp_with_clamp(source, start_gain, end_gain, duration, true)
+}
+
+///|
+pub fn[S : Source] linear_gain_ramp_with_clamp(
+  source : S,
+  start_gain : Sample,
+  end_gain : Sample,
+  duration : @moon_cpal.Duration,
+  clamp_end : Bool,
+) -> DynSource {
   let src = to_dyn(source)
   let sample_count = gain_duration_to_sample_count(
     duration,
@@ -67,8 +78,10 @@ pub fn[S : Source] linear_gain_ramp(
         Some(v) => {
           let factor = if sample_count <= 0 {
             end_gain
-          } else if idx.val >= sample_count {
+          } else if idx.val >= sample_count && clamp_end {
             end_gain
+          } else if idx.val >= sample_count {
+            1.0
           } else {
             let t = Double::from_int(idx.val) / Double::from_int(sample_count)
             start_gain + (end_gain - start_gain) * t
@@ -89,6 +102,14 @@ pub fn[S : Source] fade_in(
   duration : @moon_cpal.Duration,
 ) -> DynSource {
   linear_gain_ramp(source, 0.0, 1.0, duration)
+}
+
+///|
+pub fn[S : Source] fadein(
+  source : S,
+  duration : @moon_cpal.Duration,
+) -> DynSource {
+  fade_in(source, duration)
 }
 
 ///|
@@ -117,4 +138,12 @@ pub fn[S : Source] fade_out(
   }
 
   to_dyn(SamplesBuffer::new(buf.channels(), buf.sample_rate(), data))
+}
+
+///|
+pub fn[S : Source] fadeout(
+  source : S,
+  duration : @moon_cpal.Duration,
+) -> DynSource {
+  fade_out(source, duration)
 }

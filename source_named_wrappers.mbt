@@ -72,6 +72,15 @@ pub fn[S : Source] Distortion::new(
 }
 
 ///|
+pub fn[S : Source] Distortion::with_gain(
+  source : S,
+  gain : Sample,
+  threshold : Sample,
+) -> Distortion {
+  { inner: distortion_with_gain(source, gain, threshold) }
+}
+
+///|
 pub struct Empty {
   inner : DynSource
 }

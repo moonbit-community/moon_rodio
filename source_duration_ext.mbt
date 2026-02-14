@@ -33,6 +33,11 @@ pub fn[S : Source] repeat_infinite(source : S) -> DynSource {
 }
 
 ///|
+pub fn[S : Source] repeat(source : S) -> DynSource {
+  repeat_infinite(source)
+}
+
+///|
 pub fn[S : Source] take_duration(
   source : S,
   duration : @moon_cpal.Duration,

@@ -25,6 +25,21 @@ pub fn Pausable::is_paused(self : Pausable) -> Bool {
 }
 
 ///|
+pub fn Pausable::inner(self : Pausable) -> DynSource {
+  self.input
+}
+
+///|
+pub fn Pausable::inner_mut(self : Pausable) -> DynSource {
+  self.input
+}
+
+///|
+pub fn Pausable::into_inner(self : Pausable) -> DynSource {
+  self.input
+}
+
+///|
 pub fn Pausable::next(self : Pausable) -> Sample? {
   if self.remaining_paused_samples.val > 0 {
     self.remaining_paused_samples.val -= 1
@@ -81,6 +96,21 @@ pub fn Stoppable::stop(self : Stoppable) -> Unit {
 }
 
 ///|
+pub fn Stoppable::inner(self : Stoppable) -> DynSource {
+  self.input
+}
+
+///|
+pub fn Stoppable::inner_mut(self : Stoppable) -> DynSource {
+  self.input
+}
+
+///|
+pub fn Stoppable::into_inner(self : Stoppable) -> DynSource {
+  self.input
+}
+
+///|
 pub fn Stoppable::next(self : Stoppable) -> Sample? {
   if self.stopped.val {
     None
@@ -128,6 +158,21 @@ pub fn[S : Source] skippable(source : S) -> Skippable {
 ///|
 pub fn Skippable::skip(self : Skippable) -> Unit {
   self.do_skip.val = true
+}
+
+///|
+pub fn Skippable::inner(self : Skippable) -> DynSource {
+  self.input
+}
+
+///|
+pub fn Skippable::inner_mut(self : Skippable) -> DynSource {
+  self.input
+}
+
+///|
+pub fn Skippable::into_inner(self : Skippable) -> DynSource {
+  self.input
 }
 
 ///|

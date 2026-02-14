@@ -8,6 +8,7 @@ pub struct SinkControls {
   sound_count : Ref[Int]
   position_samples : Ref[Int]
   position_sample_rate : Ref[SampleRate]
+  position_channels : Ref[ChannelCount]
 }
 
 ///|
@@ -116,6 +117,7 @@ pub fn Sink::new() -> (Sink, ControlledQueueSource) {
     sound_count: @ref.new(0),
     position_samples: @ref.new(0),
     position_sample_rate: @ref.new(hz_44100),
+    position_channels: @ref.new(1),
   }
   (
     { queue_tx, controls, detached: @ref.new(false) },
@@ -137,6 +139,7 @@ pub fn[S : Source] Sink::append(self : Sink, source : S) -> Unit {
   if self.empty() {
     self.controls.position_samples.val = 0
     self.controls.position_sample_rate.val = speeded.sample_rate()
+    self.controls.position_channels.val = speeded.channels()
   }
   self.controls.sound_count.val += 1
   self.queue_tx.append(with_done_count(speeded, self.controls.sound_count))
@@ -207,14 +210,17 @@ pub fn Sink::try_seek(
   self : Sink,
   _pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  ignore(self)
+  if self.controls.sound_count.val <= 0 {
+    return
+  }
   raise SeekError::NotSupported
 }
 
 ///|
 pub fn Sink::get_pos(self : Sink) -> @moon_cpal.Duration {
   let sample_rate = self.controls.position_sample_rate.val
-  if sample_rate <= 0 {
+  let channels = self.controls.position_channels.val
+  if sample_rate <= 0 || channels <= 0 {
     return @moon_cpal.Duration::from_secs((0 : UInt64))
   }
 
@@ -223,7 +229,9 @@ pub fn Sink::get_pos(self : Sink) -> @moon_cpal.Duration {
     return @moon_cpal.Duration::from_secs((0 : UInt64))
   }
 
-  @moon_cpal.Duration::from_secs((samples / sample_rate).to_uint64())
+  let frames = samples / channels
+  let secs = frames / sample_rate
+  @moon_cpal.Duration::from_secs(secs.to_uint64())
 }
 
 ///|

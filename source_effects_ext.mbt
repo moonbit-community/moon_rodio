@@ -43,8 +43,18 @@ pub fn[S : Source] limit(
 
 ///|
 pub fn[S : Source] distortion(source : S, threshold : Sample) -> DynSource {
+  distortion_with_gain(source, 1.0, threshold)
+}
+
+///|
+pub fn[S : Source] distortion_with_gain(
+  source : S,
+  gain : Sample,
+  threshold : Sample,
+) -> DynSource {
+  guard gain >= 0.0 else { panic() }
   guard threshold >= 0.0 else { panic() }
-  limit(source, -threshold, threshold)
+  limit(amplify(source, gain), -threshold, threshold)
 }
 
 ///|
@@ -80,4 +90,30 @@ pub fn[A : Source, B : Source] crossfade(
     lhs.channels(),
     lhs.sample_rate(),
   )
+}
+
+///|
+pub fn[A : Source, B : Source] take_crossfade_with(
+  left : A,
+  right : B,
+  duration : @moon_cpal.Duration,
+) -> DynSource {
+  crossfade(left, right, duration)
+}
+
+///|
+pub fn[S : Source] reverb(
+  source : S,
+  duration : @moon_cpal.Duration,
+  amplitude : Sample,
+) -> DynSource {
+  let buf = buffered(source)
+  let channels = buf.channels()
+  let sample_rate = buf.sample_rate()
+  let dry = SamplesBuffer::new(channels, sample_rate, buf.samples)
+  let wet = delay(
+    amplify(SamplesBuffer::new(channels, sample_rate, buf.samples), amplitude),
+    duration,
+  )
+  mix(dry, wet)
 }
