@@ -1,11 +1,37 @@
 ///|
 pub struct Amplify {
-  inner : DynSource
+  input : DynSource
+  factor : Ref[Sample]
 }
 
 ///|
 pub fn[S : Source] Amplify::new(source : S, factor : Sample) -> Amplify {
-  { inner: amplify(source, factor) }
+  { input: to_dyn(source), factor: @ref.new(factor) }
+}
+
+///|
+pub fn Amplify::set_factor(self : Amplify, factor : Sample) -> Unit {
+  self.factor.val = factor
+}
+
+///|
+pub fn Amplify::set_log_factor(self : Amplify, factor : Sample) -> Unit {
+  self.factor.val = @math.pow(10.0, factor / 20.0)
+}
+
+///|
+pub fn Amplify::inner(self : Amplify) -> DynSource {
+  self.input
+}
+
+///|
+pub fn Amplify::inner_mut(self : Amplify) -> DynSource {
+  self.input
+}
+
+///|
+pub fn Amplify::into_inner(self : Amplify) -> DynSource {
+  self.input
 }
 
 ///|
@@ -19,8 +45,25 @@ pub fn[S : Source] Buffered::new(source : S) -> Buffered {
 }
 
 ///|
+pub fn Buffered::inner(self : Buffered) -> SamplesBuffer {
+  self.inner
+}
+
+///|
+pub fn Buffered::inner_mut(self : Buffered) -> SamplesBuffer {
+  self.inner
+}
+
+///|
+pub fn Buffered::into_inner(self : Buffered) -> SamplesBuffer {
+  self.inner
+}
+
+///|
 pub struct ChannelVolume {
-  inner : DynSource
+  input : DynSource
+  channel_factors : Ref[Array[Sample]]
+  cursor : Ref[Int]
 }
 
 ///|
@@ -28,7 +71,40 @@ pub fn[S : Source] ChannelVolume::new(
   source : S,
   channel_factors : Array[Sample],
 ) -> ChannelVolume {
-  { inner: channel_volume(source, channel_factors) }
+  {
+    input: to_dyn(source),
+    channel_factors: @ref.new(channel_factors),
+    cursor: @ref.new(0),
+  }
+}
+
+///|
+pub fn ChannelVolume::set_volume(
+  self : ChannelVolume,
+  channel : Int,
+  volume : Sample,
+) -> Unit {
+  guard channel >= 0 else { panic() }
+  let target = channel + 1
+  while self.channel_factors.val.length() < target {
+    self.channel_factors.val.push(1.0)
+  }
+  self.channel_factors.val[channel] = volume
+}
+
+///|
+pub fn ChannelVolume::inner(self : ChannelVolume) -> DynSource {
+  self.input
+}
+
+///|
+pub fn ChannelVolume::inner_mut(self : ChannelVolume) -> DynSource {
+  self.input
+}
+
+///|
+pub fn ChannelVolume::into_inner(self : ChannelVolume) -> DynSource {
+  self.input
 }
 
 ///|
@@ -46,6 +122,21 @@ pub fn[A : Source, B : Source] Crossfade::new(
 }
 
 ///|
+pub fn Crossfade::inner(self : Crossfade) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn Crossfade::inner_mut(self : Crossfade) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn Crossfade::into_inner(self : Crossfade) -> DynSource {
+  self.inner
+}
+
+///|
 pub struct Delay {
   inner : DynSource
 }
@@ -59,8 +150,25 @@ pub fn[S : Source] Delay::new(
 }
 
 ///|
+pub fn Delay::inner(self : Delay) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn Delay::inner_mut(self : Delay) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn Delay::into_inner(self : Delay) -> DynSource {
+  self.inner
+}
+
+///|
 pub struct Distortion {
-  inner : DynSource
+  input : DynSource
+  gain : Ref[Sample]
+  threshold : Ref[Sample]
 }
 
 ///|
@@ -68,7 +176,7 @@ pub fn[S : Source] Distortion::new(
   source : S,
   threshold : Sample,
 ) -> Distortion {
-  { inner: distortion(source, threshold) }
+  { input: to_dyn(source), gain: @ref.new(1.0), threshold: @ref.new(threshold) }
 }
 
 ///|
@@ -77,7 +185,36 @@ pub fn[S : Source] Distortion::with_gain(
   gain : Sample,
   threshold : Sample,
 ) -> Distortion {
-  { inner: distortion_with_gain(source, gain, threshold) }
+  {
+    input: to_dyn(source),
+    gain: @ref.new(gain),
+    threshold: @ref.new(threshold),
+  }
+}
+
+///|
+pub fn Distortion::set_gain(self : Distortion, gain : Sample) -> Unit {
+  self.gain.val = gain
+}
+
+///|
+pub fn Distortion::set_threshold(self : Distortion, threshold : Sample) -> Unit {
+  self.threshold.val = threshold
+}
+
+///|
+pub fn Distortion::inner(self : Distortion) -> DynSource {
+  self.input
+}
+
+///|
+pub fn Distortion::inner_mut(self : Distortion) -> DynSource {
+  self.input
+}
+
+///|
+pub fn Distortion::into_inner(self : Distortion) -> DynSource {
+  self.input
 }
 
 ///|
@@ -88,6 +225,21 @@ pub struct Empty {
 ///|
 pub fn Empty::new(channels : ChannelCount, sample_rate : SampleRate) -> Empty {
   { inner: empty(channels, sample_rate) }
+}
+
+///|
+pub fn Empty::inner(self : Empty) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn Empty::inner_mut(self : Empty) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn Empty::into_inner(self : Empty) -> DynSource {
+  self.inner
 }
 
 ///|
@@ -104,6 +256,21 @@ pub fn[S : Source] FadeIn::new(
 }
 
 ///|
+pub fn FadeIn::inner(self : FadeIn) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn FadeIn::inner_mut(self : FadeIn) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn FadeIn::into_inner(self : FadeIn) -> DynSource {
+  self.inner
+}
+
+///|
 pub struct FadeOut {
   inner : DynSource
 }
@@ -114,6 +281,21 @@ pub fn[S : Source] FadeOut::new(
   duration : @moon_cpal.Duration,
 ) -> FadeOut {
   { inner: fade_out(source, duration) }
+}
+
+///|
+pub fn FadeOut::inner(self : FadeOut) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn FadeOut::inner_mut(self : FadeOut) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn FadeOut::into_inner(self : FadeOut) -> DynSource {
+  self.inner
 }
 
 ///|
@@ -221,6 +403,21 @@ pub fn[S : Source] Limit::new(source : S, settings : LimitSettings) -> Limit {
 }
 
 ///|
+pub fn Limit::inner(self : Limit) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn Limit::inner_mut(self : Limit) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn Limit::into_inner(self : Limit) -> DynSource {
+  self.inner
+}
+
+///|
 pub struct Mix {
   inner : DynSource
 }
@@ -231,6 +428,21 @@ pub fn[A : Source, B : Source] Mix::new(left : A, right : B) -> Mix {
 }
 
 ///|
+pub fn Mix::inner(self : Mix) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn Mix::inner_mut(self : Mix) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn Mix::into_inner(self : Mix) -> DynSource {
+  self.inner
+}
+
+///|
 pub struct Repeat {
   inner : DynSource
 }
@@ -238,6 +450,21 @@ pub struct Repeat {
 ///|
 pub fn[S : Source] Repeat::new(source : S) -> Repeat {
   { inner: repeat_infinite(source) }
+}
+
+///|
+pub fn Repeat::inner(self : Repeat) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn Repeat::inner_mut(self : Repeat) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn Repeat::into_inner(self : Repeat) -> DynSource {
+  self.inner
 }
 
 ///|
@@ -254,13 +481,51 @@ pub fn[S : Source] SkipDuration::new(
 }
 
 ///|
+pub fn SkipDuration::inner(self : SkipDuration) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn SkipDuration::inner_mut(self : SkipDuration) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn SkipDuration::into_inner(self : SkipDuration) -> DynSource {
+  self.inner
+}
+
+///|
 pub struct Speed {
-  inner : DynSource
+  input : DynSource
+  factor : Ref[Double]
 }
 
 ///|
 pub fn[S : Source] Speed::new(source : S, ratio : Double) -> Speed {
-  { inner: speed(source, ratio) }
+  guard ratio > 0.0 else { panic() }
+  { input: to_dyn(source), factor: @ref.new(ratio) }
+}
+
+///|
+pub fn Speed::set_factor(self : Speed, factor : Double) -> Unit {
+  guard factor > 0.0 else { panic() }
+  self.factor.val = factor
+}
+
+///|
+pub fn Speed::inner(self : Speed) -> DynSource {
+  self.input
+}
+
+///|
+pub fn Speed::inner_mut(self : Speed) -> DynSource {
+  self.input
+}
+
+///|
+pub fn Speed::into_inner(self : Speed) -> DynSource {
+  self.input
 }
 
 ///|
@@ -277,6 +542,31 @@ pub fn[S : Source] TakeDuration::new(
 }
 
 ///|
+pub fn TakeDuration::inner(self : TakeDuration) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn TakeDuration::inner_mut(self : TakeDuration) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn TakeDuration::into_inner(self : TakeDuration) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn TakeDuration::set_filter_fadeout(self : TakeDuration) -> Unit {
+  ignore(self)
+}
+
+///|
+pub fn TakeDuration::clear_filter(self : TakeDuration) -> Unit {
+  ignore(self)
+}
+
+///|
 pub struct Zero {
   inner : DynSource
 }
@@ -284,6 +574,21 @@ pub struct Zero {
 ///|
 pub fn Zero::new(channels : ChannelCount, sample_rate : SampleRate) -> Zero {
   { inner: zero(channels, sample_rate) }
+}
+
+///|
+pub fn Zero::inner(self : Zero) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn Zero::inner_mut(self : Zero) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn Zero::into_inner(self : Zero) -> DynSource {
+  self.inner
 }
 
 ///|
@@ -299,6 +604,21 @@ pub fn[S : Source] LinearGainRamp::new(
   duration : @moon_cpal.Duration,
 ) -> LinearGainRamp {
   { inner: linear_gain_ramp(source, start_gain, end_gain, duration) }
+}
+
+///|
+pub fn LinearGainRamp::inner(self : LinearGainRamp) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn LinearGainRamp::inner_mut(self : LinearGainRamp) -> DynSource {
+  self.inner
+}
+
+///|
+pub fn LinearGainRamp::into_inner(self : LinearGainRamp) -> DynSource {
+  self.inner
 }
 
 ///|
@@ -324,6 +644,21 @@ pub fn Spatial::set_positions(
   right_ear : Array[Double],
 ) -> Unit {
   self.inner.set_positions(emitter_position, left_ear, right_ear)
+}
+
+///|
+pub fn Spatial::inner(self : Spatial) -> SpatialSource {
+  self.inner
+}
+
+///|
+pub fn Spatial::inner_mut(self : Spatial) -> SpatialSource {
+  self.inner
+}
+
+///|
+pub fn Spatial::into_inner(self : Spatial) -> SpatialSource {
+  self.inner
 }
 
 ///|
@@ -429,32 +764,48 @@ fn dyn_sample_rate(inner : DynSource) -> SampleRate {
 
 ///|
 pub impl Source for Amplify with next(self : Amplify) {
-  dyn_next(self.inner)
+  match self.input.next() {
+    None => None
+    Some(v) => Some(v * self.factor.val)
+  }
 }
 
 ///|
 pub impl Source for Amplify with channels(self : Amplify) {
-  dyn_channels(self.inner)
+  self.input.channels()
 }
 
 ///|
 pub impl Source for Amplify with sample_rate(self : Amplify) {
-  dyn_sample_rate(self.inner)
+  self.input.sample_rate()
 }
 
 ///|
 pub impl Source for ChannelVolume with next(self : ChannelVolume) {
-  dyn_next(self.inner)
+  match self.input.next() {
+    None => None
+    Some(v) => {
+      let channels = self.input.channels()
+      let ch = self.cursor.val % channels
+      self.cursor.val += 1
+      let factor = if ch < self.channel_factors.val.length() {
+        self.channel_factors.val[ch]
+      } else {
+        1.0
+      }
+      Some(v * factor)
+    }
+  }
 }
 
 ///|
 pub impl Source for ChannelVolume with channels(self : ChannelVolume) {
-  dyn_channels(self.inner)
+  self.input.channels()
 }
 
 ///|
 pub impl Source for ChannelVolume with sample_rate(self : ChannelVolume) {
-  dyn_sample_rate(self.inner)
+  self.input.sample_rate()
 }
 
 ///|
@@ -489,17 +840,30 @@ pub impl Source for Delay with sample_rate(self : Delay) {
 
 ///|
 pub impl Source for Distortion with next(self : Distortion) {
-  dyn_next(self.inner)
+  match self.input.next() {
+    None => None
+    Some(v) => {
+      let value = v * self.gain.val
+      let t = self.threshold.val
+      if value < -t {
+        Some(-t)
+      } else if value > t {
+        Some(t)
+      } else {
+        Some(value)
+      }
+    }
+  }
 }
 
 ///|
 pub impl Source for Distortion with channels(self : Distortion) {
-  dyn_channels(self.inner)
+  self.input.channels()
 }
 
 ///|
 pub impl Source for Distortion with sample_rate(self : Distortion) {
-  dyn_sample_rate(self.inner)
+  self.input.sample_rate()
 }
 
 ///|
@@ -609,17 +973,22 @@ pub impl Source for SkipDuration with sample_rate(self : SkipDuration) {
 
 ///|
 pub impl Source for Speed with next(self : Speed) {
-  dyn_next(self.inner)
+  self.input.next()
 }
 
 ///|
 pub impl Source for Speed with channels(self : Speed) {
-  dyn_channels(self.inner)
+  self.input.channels()
 }
 
 ///|
 pub impl Source for Speed with sample_rate(self : Speed) {
-  dyn_sample_rate(self.inner)
+  let rate = (Double::from_int(self.input.sample_rate()) * self.factor.val).to_int()
+  if rate <= 0 {
+    1
+  } else {
+    rate
+  }
 }
 
 ///|

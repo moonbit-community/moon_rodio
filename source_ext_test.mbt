@@ -340,9 +340,19 @@ test "rodio::source::function_chain" {
 ///|
 test "rodio::source::named_wrappers_basic" {
   let a = Amplify::new(SamplesBuffer::new(1, 1, [1.0, 2.0]), 0.5)
-  assert_eq(collect_n(a, 10), [0.5, 1.0])
+  assert_eq(a.inner().channels(), 1)
+  a.set_factor(2.0)
+  assert_eq(a.next(), Some(2.0))
+  a.set_log_factor(6.0206)
+  let next_amp = a.next().unwrap()
+  assert_true(next_amp > 3.98 && next_amp < 4.02)
+  assert_eq(a.next(), None)
+
+  let a2 = Amplify::new(SamplesBuffer::new(1, 1, [1.0, 2.0]), 0.5)
+  assert_eq(collect_n(a2, 10), [0.5, 1.0])
 
   let z = Zero::new(1, 44_100)
+  assert_eq(z.inner_mut().sample_rate(), 44_100)
   assert_eq(collect_n(z, 3), [0.0, 0.0, 0.0])
 
   let l = Limit::new(
@@ -368,7 +378,21 @@ test "rodio::source::named_wrappers_basic" {
     2.0,
     0.8,
   )
-  assert_eq(collect_n(dg, 10), [0.8, -0.8])
+  dg.set_threshold(0.7)
+  dg.set_gain(1.0)
+  assert_eq(collect_n(dg, 10), [0.5, -0.7])
+
+  let cv = ChannelVolume::new(
+    SamplesBuffer::new(2, 44_100, [2.0, 2.0, 4.0, 4.0]),
+    [1.0, 1.0],
+  )
+  cv.set_volume(1, 0.5)
+  assert_eq(collect_n(cv, 10), [2.0, 1.0, 4.0, 2.0])
+
+  let sp = Speed::new(SamplesBuffer::new(1, 10, [1.0]), 2.0)
+  assert_eq(sp.sample_rate(), 20)
+  sp.set_factor(0.5)
+  assert_eq(sp.sample_rate(), 5)
 }
 
 ///|
@@ -391,8 +415,54 @@ test "rodio::source::named_wrappers_signal_and_spatial" {
     [-1.0, 0.0, 0.0],
     [1.0, 0.0, 0.0],
   )
+  assert_eq(s.inner().sample_rate(), 44_100)
+  assert_eq(s.inner_mut().channels(), 2)
+  assert_eq(s.into_inner().sample_rate(), 44_100)
   assert_eq(s.channels(), 2)
   assert_eq(s.sample_rate(), 44_100)
+}
+
+///|
+test "rodio::source::named_wrappers_inner_accessors" {
+  let d = Delay::new(
+    SamplesBuffer::new(1, 1, [1.0]),
+    @moon_cpal.Duration::from_secs((1 : UInt64)),
+  )
+  assert_eq(d.inner().channels(), 1)
+  assert_eq(d.inner_mut().sample_rate(), 1)
+  assert_eq(d.into_inner().channels(), 1)
+
+  let r = Repeat::new(SamplesBuffer::new(1, 1, [1.0]))
+  assert_eq(r.inner().channels(), 1)
+  assert_eq(r.inner_mut().sample_rate(), 1)
+  assert_eq(r.into_inner().channels(), 1)
+
+  let td = TakeDuration::new(
+    SamplesBuffer::new(1, 1, [1.0, 2.0]),
+    @moon_cpal.Duration::from_secs((1 : UInt64)),
+  )
+  td.set_filter_fadeout()
+  td.clear_filter()
+  assert_eq(td.inner().channels(), 1)
+  assert_eq(td.inner_mut().sample_rate(), 1)
+  assert_eq(td.into_inner().channels(), 1)
+
+  let m = Mix::new(
+    SamplesBuffer::new(1, 1, [1.0]),
+    SamplesBuffer::new(1, 1, [2.0]),
+  )
+  assert_eq(m.inner().channels(), 1)
+  assert_eq(m.inner_mut().sample_rate(), 1)
+  assert_eq(m.into_inner().channels(), 1)
+
+  let c = Crossfade::new(
+    SamplesBuffer::new(1, 1, [1.0]),
+    SamplesBuffer::new(1, 1, [2.0]),
+    @moon_cpal.Duration::from_secs((1 : UInt64)),
+  )
+  assert_eq(c.inner().channels(), 1)
+  assert_eq(c.inner_mut().sample_rate(), 1)
+  assert_eq(c.into_inner().channels(), 1)
 }
 
 ///|

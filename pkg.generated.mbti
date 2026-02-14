@@ -30,6 +30,8 @@ pub fn[S : Source] convert_sample_rate(S, Int) -> DynSource
 
 pub fn[A : Source, B : Source] crossfade(A, B, @core.Duration) -> DynSource
 
+pub fn db_to_linear(Double) -> Double
+
 pub fn[S : Source] delay(S, @core.Duration) -> DynSource
 
 pub fn[S : Source] distortion(S, Double) -> DynSource
@@ -54,11 +56,15 @@ pub fn[S : Source] high_pass(S, Int) -> BltFilter
 
 pub fn[S : Source] high_pass_with_q(S, Int, Double) -> BltFilter
 
+pub fn lerp(Double, Double, Int, Int) -> Double
+
 pub fn[S : Source] limit(S, Double, Double) -> DynSource
 
 pub fn[S : Source] linear_gain_ramp(S, Double, Double, @core.Duration) -> DynSource
 
 pub fn[S : Source] linear_gain_ramp_with_clamp(S, Double, Double, @core.Duration, Bool) -> DynSource
+
+pub fn linear_to_db(Double) -> Double
 
 pub fn[S : Source] low_pass(S, Int) -> BltFilter
 
@@ -146,9 +152,15 @@ pub impl Show for StreamError
 
 // Types and methods
 pub struct Amplify {
-  inner : DynSource
+  input : DynSource
+  factor : Ref[Double]
 }
+pub fn Amplify::inner(Self) -> DynSource
+pub fn Amplify::inner_mut(Self) -> DynSource
+pub fn Amplify::into_inner(Self) -> DynSource
 pub fn[S : Source] Amplify::new(S, Double) -> Self
+pub fn Amplify::set_factor(Self, Double) -> Unit
+pub fn Amplify::set_log_factor(Self, Double) -> Unit
 pub impl Source for Amplify
 
 pub struct AutomaticGainControl {
@@ -236,15 +248,33 @@ pub struct Buffered {
   inner : SamplesBuffer
 }
 pub fn Buffered::channels(Self) -> Int
+pub fn Buffered::inner(Self) -> SamplesBuffer
+pub fn Buffered::inner_mut(Self) -> SamplesBuffer
+pub fn Buffered::into_inner(Self) -> SamplesBuffer
 pub fn[S : Source] Buffered::new(S) -> Self
 pub fn Buffered::next(Self) -> Double?
 pub fn Buffered::sample_rate(Self) -> Int
 pub impl Source for Buffered
 
-pub struct ChannelVolume {
+pub struct ChannelCountConverter {
   inner : DynSource
+  to : Int
 }
+pub fn ChannelCountConverter::inner_mut(Self) -> DynSource
+pub fn ChannelCountConverter::into_inner(Self) -> DynSource
+pub fn[S : Source] ChannelCountConverter::new(S, Int, Int) -> Self
+pub impl Source for ChannelCountConverter
+
+pub struct ChannelVolume {
+  input : DynSource
+  channel_factors : Ref[Array[Double]]
+  cursor : Ref[Int]
+}
+pub fn ChannelVolume::inner(Self) -> DynSource
+pub fn ChannelVolume::inner_mut(Self) -> DynSource
+pub fn ChannelVolume::into_inner(Self) -> DynSource
 pub fn[S : Source] ChannelVolume::new(S, Array[Double]) -> Self
+pub fn ChannelVolume::set_volume(Self, Int, Double) -> Unit
 pub impl Source for ChannelVolume
 
 pub struct Chirp {
@@ -272,6 +302,9 @@ pub impl Source for ControlledQueueSource
 pub struct Crossfade {
   inner : DynSource
 }
+pub fn Crossfade::inner(Self) -> DynSource
+pub fn Crossfade::inner_mut(Self) -> DynSource
+pub fn Crossfade::into_inner(Self) -> DynSource
 pub fn[A : Source, B : Source] Crossfade::new(A, B, @core.Duration) -> Self
 pub impl Source for Crossfade
 
@@ -291,13 +324,23 @@ pub impl Source for Decoder
 pub struct Delay {
   inner : DynSource
 }
+pub fn Delay::inner(Self) -> DynSource
+pub fn Delay::inner_mut(Self) -> DynSource
+pub fn Delay::into_inner(Self) -> DynSource
 pub fn[S : Source] Delay::new(S, @core.Duration) -> Self
 pub impl Source for Delay
 
 pub struct Distortion {
-  inner : DynSource
+  input : DynSource
+  gain : Ref[Double]
+  threshold : Ref[Double]
 }
+pub fn Distortion::inner(Self) -> DynSource
+pub fn Distortion::inner_mut(Self) -> DynSource
+pub fn Distortion::into_inner(Self) -> DynSource
 pub fn[S : Source] Distortion::new(S, Double) -> Self
+pub fn Distortion::set_gain(Self, Double) -> Unit
+pub fn Distortion::set_threshold(Self, Double) -> Unit
 pub fn[S : Source] Distortion::with_gain(S, Double, Double) -> Self
 pub impl Source for Distortion
 
@@ -329,6 +372,9 @@ pub impl Source for DynSource
 pub struct Empty {
   inner : DynSource
 }
+pub fn Empty::inner(Self) -> DynSource
+pub fn Empty::inner_mut(Self) -> DynSource
+pub fn Empty::into_inner(Self) -> DynSource
 pub fn Empty::new(Int, Int) -> Self
 pub impl Source for Empty
 
@@ -345,12 +391,18 @@ pub impl Source for EmptyCallback
 pub struct FadeIn {
   inner : DynSource
 }
+pub fn FadeIn::inner(Self) -> DynSource
+pub fn FadeIn::inner_mut(Self) -> DynSource
+pub fn FadeIn::into_inner(Self) -> DynSource
 pub fn[S : Source] FadeIn::new(S, @core.Duration) -> Self
 pub impl Source for FadeIn
 
 pub struct FadeOut {
   inner : DynSource
 }
+pub fn FadeOut::inner(Self) -> DynSource
+pub fn FadeOut::inner_mut(Self) -> DynSource
+pub fn FadeOut::into_inner(Self) -> DynSource
 pub fn[S : Source] FadeOut::new(S, @core.Duration) -> Self
 pub impl Source for FadeOut
 
@@ -396,6 +448,9 @@ pub fn GeneratorFunction::new((Double) -> Double) -> Self
 pub struct Limit {
   inner : DynSource
 }
+pub fn Limit::inner(Self) -> DynSource
+pub fn Limit::inner_mut(Self) -> DynSource
+pub fn Limit::into_inner(Self) -> DynSource
 pub fn[S : Source] Limit::new(S, LimitSettings) -> Self
 pub impl Source for Limit
 
@@ -422,12 +477,18 @@ pub impl Show for LimitSettings
 pub struct LinearGainRamp {
   inner : DynSource
 }
+pub fn LinearGainRamp::inner(Self) -> DynSource
+pub fn LinearGainRamp::inner_mut(Self) -> DynSource
+pub fn LinearGainRamp::into_inner(Self) -> DynSource
 pub fn[S : Source] LinearGainRamp::new(S, Double, Double, @core.Duration) -> Self
 pub impl Source for LinearGainRamp
 
 pub struct Mix {
   inner : DynSource
 }
+pub fn Mix::inner(Self) -> DynSource
+pub fn Mix::inner_mut(Self) -> DynSource
+pub fn Mix::into_inner(Self) -> DynSource
 pub fn[A : Source, B : Source] Mix::new(A, B) -> Self
 pub impl Source for Mix
 
@@ -545,8 +606,29 @@ type QueuedSource
 pub struct Repeat {
   inner : DynSource
 }
+pub fn Repeat::inner(Self) -> DynSource
+pub fn Repeat::inner_mut(Self) -> DynSource
+pub fn Repeat::into_inner(Self) -> DynSource
 pub fn[S : Source] Repeat::new(S) -> Self
 pub impl Source for Repeat
+
+pub struct SampleRateConverter {
+  inner : DynSource
+  to : Int
+  channels : Int
+}
+pub fn SampleRateConverter::inner_mut(Self) -> DynSource
+pub fn SampleRateConverter::into_inner(Self) -> DynSource
+pub fn[S : Source] SampleRateConverter::new(S, Int, Int, Int) -> Self
+pub impl Source for SampleRateConverter
+
+pub struct SampleTypeConverter {
+  inner : DynSource
+}
+pub fn SampleTypeConverter::inner_mut(Self) -> DynSource
+pub fn SampleTypeConverter::into_inner(Self) -> DynSource
+pub fn[S : Source] SampleTypeConverter::new(S) -> Self
+pub impl Source for SampleTypeConverter
 
 pub struct SamplesBuffer {
   channels : Int
@@ -646,6 +728,9 @@ pub struct SinkControls {
 pub struct SkipDuration {
   inner : DynSource
 }
+pub fn SkipDuration::inner(Self) -> DynSource
+pub fn SkipDuration::inner_mut(Self) -> DynSource
+pub fn SkipDuration::into_inner(Self) -> DynSource
 pub fn[S : Source] SkipDuration::new(S, @core.Duration) -> Self
 pub impl Source for SkipDuration
 
@@ -691,6 +776,9 @@ pub struct Spatial {
   inner : SpatialSource
 }
 pub fn Spatial::channels(Self) -> Int
+pub fn Spatial::inner(Self) -> SpatialSource
+pub fn Spatial::inner_mut(Self) -> SpatialSource
+pub fn Spatial::into_inner(Self) -> SpatialSource
 pub fn[S : Source] Spatial::new(S, Array[Double], Array[Double], Array[Double]) -> Self
 pub fn Spatial::next(Self) -> Double?
 pub fn Spatial::sample_rate(Self) -> Int
@@ -744,9 +832,14 @@ pub fn SpatialSource::set_positions(Self, Array[Double], Array[Double], Array[Do
 pub impl Source for SpatialSource
 
 pub struct Speed {
-  inner : DynSource
+  input : DynSource
+  factor : Ref[Double]
 }
+pub fn Speed::inner(Self) -> DynSource
+pub fn Speed::inner_mut(Self) -> DynSource
+pub fn Speed::into_inner(Self) -> DynSource
 pub fn[S : Source] Speed::new(S, Double) -> Self
+pub fn Speed::set_factor(Self, Double) -> Unit
 pub impl Source for Speed
 
 pub struct SquareWave {
@@ -786,7 +879,12 @@ pub impl Source for Stoppable
 pub struct TakeDuration {
   inner : DynSource
 }
+pub fn TakeDuration::clear_filter(Self) -> Unit
+pub fn TakeDuration::inner(Self) -> DynSource
+pub fn TakeDuration::inner_mut(Self) -> DynSource
+pub fn TakeDuration::into_inner(Self) -> DynSource
 pub fn[S : Source] TakeDuration::new(S, @core.Duration) -> Self
+pub fn TakeDuration::set_filter_fadeout(Self) -> Unit
 pub impl Source for TakeDuration
 
 pub struct TrackPosition {
@@ -883,6 +981,9 @@ pub impl Source for WhiteUniform
 pub struct Zero {
   inner : DynSource
 }
+pub fn Zero::inner(Self) -> DynSource
+pub fn Zero::inner_mut(Self) -> DynSource
+pub fn Zero::into_inner(Self) -> DynSource
 pub fn Zero::new(Int, Int) -> Self
 pub impl Source for Zero
 
