@@ -183,6 +183,42 @@ test "rodio::source::duration_filters" {
 }
 
 ///|
+test "rodio::source::duration_filters_metadata_and_seek" {
+  let td = take_duration(
+    SamplesBuffer::new(1, 4, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]),
+    @moon_cpal.Duration::new((1 : UInt64), 500_000_000),
+  )
+  assert_eq(td.current_span_len(), Some(6))
+  let td_total = td.total_duration().unwrap()
+  assert_eq(td_total.secs, (1 : UInt64))
+  assert_eq(td_total.nanos, 500_000_000)
+  td.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
+  assert_eq(td.next(), Some(5.0))
+
+  let dd = delay(
+    SamplesBuffer::new(1, 2, [9.0, 8.0]),
+    @moon_cpal.Duration::from_secs((1 : UInt64)),
+  )
+  assert_eq(dd.current_span_len(), Some(4))
+  let dd_total = dd.total_duration().unwrap()
+  assert_eq(dd_total.secs, (2 : UInt64))
+  assert_eq(dd_total.nanos, 0)
+  dd.try_seek(@moon_cpal.Duration::new((0 : UInt64), 500_000_000))
+  assert_eq(dd.next(), Some(0.0))
+  assert_eq(dd.next(), Some(9.0))
+  dd.try_seek(@moon_cpal.Duration::new((1 : UInt64), 500_000_000))
+  assert_eq(dd.next(), Some(8.0))
+
+  let sd = skip_duration(
+    SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0, 4.0]),
+    @moon_cpal.Duration::from_secs((1 : UInt64)),
+  )
+  let sd_total = sd.total_duration().unwrap()
+  assert_eq(sd_total.secs, (1 : UInt64))
+  assert_eq(sd_total.nanos, 0)
+}
+
+///|
 test "rodio::source::amplify_db_and_normalized" {
   let a = SamplesBuffer::new(1, 44_100, [1.0])
   let db = amplify_decibel(a, 6.0206)

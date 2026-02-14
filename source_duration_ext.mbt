@@ -42,12 +42,56 @@ pub fn[S : Source] take_duration(
   source : S,
   duration : @moon_cpal.Duration,
 ) -> DynSource {
-  let sample_count = duration_to_sample_count(
-    duration,
-    source.channels(),
-    source.sample_rate(),
+  let src = to_dyn(source)
+  let channels = src.channels()
+  let sample_rate = src.sample_rate()
+  let sample_count = duration_to_sample_count(duration, channels, sample_rate)
+  let remaining = @ref.new(sample_count)
+
+  DynSource::new(
+    fn() {
+      if remaining.val <= 0 {
+        None
+      } else {
+        match src.next() {
+          None => {
+            remaining.val = 0
+            None
+          }
+          Some(v) => {
+            remaining.val -= 1
+            Some(v)
+          }
+        }
+      }
+    },
+    channels,
+    sample_rate,
+    current_span_len=fn() {
+      let rem = if remaining.val <= 0 { 0 } else { remaining.val }
+      match src.current_span_len() {
+        None => Some(rem)
+        Some(v) => Some(if v < rem { v } else { rem })
+      }
+    },
+    total_duration=fn() {
+      src.total_duration().map(fn(v) { duration_min(v, duration) })
+    },
+    try_seek=fn(pos : @moon_cpal.Duration) {
+      try {
+        src.try_seek(pos)
+        let target = sample_index_from_duration(pos, channels, sample_rate)
+        remaining.val = if target >= sample_count {
+          0
+        } else {
+          sample_count - target
+        }
+        Ok(())
+      } catch {
+        err => Err(err)
+      }
+    },
   )
-  take(source, sample_count)
 }
 
 ///|
@@ -56,23 +100,36 @@ pub fn[S : Source] skip_duration(
   duration : @moon_cpal.Duration,
 ) -> DynSource {
   let src = to_dyn(source)
+  let channels = src.channels()
+  let sample_rate = src.sample_rate()
   let remaining = @ref.new(
-    duration_to_sample_count(duration, src.channels(), src.sample_rate()),
+    duration_to_sample_count(duration, channels, sample_rate),
   )
 
+  while remaining.val > 0 {
+    remaining.val -= 1
+    match src.next() {
+      None => break
+      Some(_) => ()
+    }
+  }
+
   DynSource::new(
-    fn() {
-      while remaining.val > 0 {
-        remaining.val -= 1
-        match src.next() {
-          None => return None
-          Some(_) => ()
-        }
-      }
-      src.next()
+    fn() { src.next() },
+    channels,
+    sample_rate,
+    current_span_len=fn() { src.current_span_len() },
+    total_duration=fn() {
+      src.total_duration().map(fn(v) { duration_saturating_sub(v, duration) })
     },
-    src.channels(),
-    src.sample_rate(),
+    try_seek=fn(pos : @moon_cpal.Duration) {
+      try {
+        src.try_seek(pos)
+        Ok(())
+      } catch {
+        err => Err(err)
+      }
+    },
   )
 }
 
@@ -82,8 +139,10 @@ pub fn[S : Source] delay(
   duration : @moon_cpal.Duration,
 ) -> DynSource {
   let src = to_dyn(source)
+  let channels = src.channels()
+  let sample_rate = src.sample_rate()
   let remaining = @ref.new(
-    duration_to_sample_count(duration, src.channels(), src.sample_rate()),
+    duration_to_sample_count(duration, channels, sample_rate),
   )
 
   DynSource::new(
@@ -95,8 +154,40 @@ pub fn[S : Source] delay(
         src.next()
       }
     },
-    src.channels(),
-    src.sample_rate(),
+    channels,
+    sample_rate,
+    current_span_len=fn() {
+      let rem = if remaining.val > 0 { remaining.val } else { 0 }
+      src.current_span_len().map(fn(v) { v + rem })
+    },
+    total_duration=fn() {
+      src.total_duration().map(fn(v) { duration_add(v, duration) })
+    },
+    try_seek=fn(pos : @moon_cpal.Duration) {
+      let zero = @moon_cpal.Duration::from_secs((0 : UInt64))
+      if duration_compare(pos, duration) < 0 {
+        let until_playback = duration_saturating_sub(duration, pos)
+        let rem = duration_to_sample_count(
+          until_playback, channels, sample_rate,
+        )
+        try {
+          src.try_seek(zero)
+          remaining.val = rem
+          Ok(())
+        } catch {
+          err => Err(err)
+        }
+      } else {
+        let compensated = duration_saturating_sub(pos, duration)
+        try {
+          src.try_seek(compensated)
+          remaining.val = 0
+          Ok(())
+        } catch {
+          err => Err(err)
+        }
+      }
+    },
   )
 }
 

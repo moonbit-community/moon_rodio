@@ -262,6 +262,58 @@ fn duration_div_ratio_floor(
 }
 
 ///|
+fn duration_compare(a : @moon_cpal.Duration, b : @moon_cpal.Duration) -> Int {
+  if a.secs < b.secs {
+    -1
+  } else if a.secs > b.secs {
+    1
+  } else if a.nanos < b.nanos {
+    -1
+  } else if a.nanos > b.nanos {
+    1
+  } else {
+    0
+  }
+}
+
+///|
+fn duration_min(
+  a : @moon_cpal.Duration,
+  b : @moon_cpal.Duration,
+) -> @moon_cpal.Duration {
+  if duration_compare(a, b) <= 0 {
+    a
+  } else {
+    b
+  }
+}
+
+///|
+fn duration_add(
+  a : @moon_cpal.Duration,
+  b : @moon_cpal.Duration,
+) -> @moon_cpal.Duration {
+  @moon_cpal.Duration::new(a.secs + b.secs, a.nanos + b.nanos)
+}
+
+///|
+fn duration_saturating_sub(
+  a : @moon_cpal.Duration,
+  b : @moon_cpal.Duration,
+) -> @moon_cpal.Duration {
+  if duration_compare(a, b) <= 0 {
+    @moon_cpal.Duration::from_secs((0 : UInt64))
+  } else if a.nanos >= b.nanos {
+    @moon_cpal.Duration::new(a.secs - b.secs, a.nanos - b.nanos)
+  } else {
+    @moon_cpal.Duration::new(
+      a.secs - b.secs - (1 : UInt64),
+      a.nanos + 1_000_000_000 - b.nanos,
+    )
+  }
+}
+
+///|
 fn source_default_current_span_len() -> Int? {
   None
 }
