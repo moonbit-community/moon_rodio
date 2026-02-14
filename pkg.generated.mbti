@@ -416,7 +416,6 @@ pub impl Source for Empty
 
 pub struct EmptyCallback {
   callback : () -> Unit
-  called : Ref[Bool]
 }
 pub fn EmptyCallback::channels(Self) -> Int
 pub fn EmptyCallback::new(() -> Unit) -> Self

@@ -78,20 +78,16 @@ pub impl Source for Done with try_seek(_self : Done, pos : @moon_cpal.Duration) 
 ///|
 pub struct EmptyCallback {
   callback : () -> Unit
-  called : Ref[Bool]
 }
 
 ///|
 pub fn EmptyCallback::new(callback : () -> Unit) -> EmptyCallback {
-  { callback, called: @ref.new(false) }
+  { callback, }
 }
 
 ///|
 pub fn EmptyCallback::next(self : EmptyCallback) -> Sample? {
-  if !self.called.val {
-    self.called.val = true
-    (self.callback)()
-  }
+  (self.callback)()
   None
 }
 

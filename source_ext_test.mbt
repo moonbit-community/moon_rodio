@@ -648,7 +648,7 @@ test "rodio::source::empty_callback" {
   let e = EmptyCallback::new(fn() { calls.val += 1 })
   assert_eq(e.next(), None)
   assert_eq(e.next(), None)
-  assert_eq(calls.val, 1)
+  assert_eq(calls.val, 2)
   let total = e.total_duration().unwrap()
   assert_eq(total.secs, (0 : UInt64))
   assert_eq(total.nanos, 0)
