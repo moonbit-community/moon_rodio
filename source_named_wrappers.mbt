@@ -1107,12 +1107,12 @@ pub impl Source for Spatial with sample_rate(self : Spatial) {
 
 ///|
 pub impl Source for Amplify with current_span_len(_self : Amplify) {
-  source_default_current_span_len()
+  _self.inner().current_span_len()
 }
 
 ///|
 pub impl Source for Amplify with total_duration(_self : Amplify) {
-  source_default_total_duration()
+  _self.inner().total_duration()
 }
 
 ///|
@@ -1120,17 +1120,17 @@ pub impl Source for Amplify with try_seek(
   _self : Amplify,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.inner().try_seek(pos)
 }
 
 ///|
 pub impl Source for ChannelVolume with current_span_len(_self : ChannelVolume) {
-  source_default_current_span_len()
+  _self.inner().current_span_len()
 }
 
 ///|
 pub impl Source for ChannelVolume with total_duration(_self : ChannelVolume) {
-  source_default_total_duration()
+  _self.inner().total_duration()
 }
 
 ///|
@@ -1138,17 +1138,17 @@ pub impl Source for ChannelVolume with try_seek(
   _self : ChannelVolume,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.inner().try_seek(pos)
 }
 
 ///|
 pub impl Source for Crossfade with current_span_len(_self : Crossfade) {
-  source_default_current_span_len()
+  _self.inner().current_span_len()
 }
 
 ///|
 pub impl Source for Crossfade with total_duration(_self : Crossfade) {
-  source_default_total_duration()
+  _self.inner().total_duration()
 }
 
 ///|
@@ -1156,17 +1156,17 @@ pub impl Source for Crossfade with try_seek(
   _self : Crossfade,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.inner().try_seek(pos)
 }
 
 ///|
 pub impl Source for Delay with current_span_len(_self : Delay) {
-  source_default_current_span_len()
+  _self.inner().current_span_len()
 }
 
 ///|
 pub impl Source for Delay with total_duration(_self : Delay) {
-  source_default_total_duration()
+  _self.inner().total_duration()
 }
 
 ///|
@@ -1174,17 +1174,17 @@ pub impl Source for Delay with try_seek(
   _self : Delay,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.inner().try_seek(pos)
 }
 
 ///|
 pub impl Source for Distortion with current_span_len(_self : Distortion) {
-  source_default_current_span_len()
+  _self.inner().current_span_len()
 }
 
 ///|
 pub impl Source for Distortion with total_duration(_self : Distortion) {
-  source_default_total_duration()
+  _self.inner().total_duration()
 }
 
 ///|
@@ -1192,17 +1192,17 @@ pub impl Source for Distortion with try_seek(
   _self : Distortion,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.inner().try_seek(pos)
 }
 
 ///|
 pub impl Source for Empty with current_span_len(_self : Empty) {
-  source_default_current_span_len()
+  _self.inner().current_span_len()
 }
 
 ///|
 pub impl Source for Empty with total_duration(_self : Empty) {
-  source_default_total_duration()
+  _self.inner().total_duration()
 }
 
 ///|
@@ -1210,17 +1210,17 @@ pub impl Source for Empty with try_seek(
   _self : Empty,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.inner().try_seek(pos)
 }
 
 ///|
 pub impl Source for FadeIn with current_span_len(_self : FadeIn) {
-  source_default_current_span_len()
+  _self.inner().current_span_len()
 }
 
 ///|
 pub impl Source for FadeIn with total_duration(_self : FadeIn) {
-  source_default_total_duration()
+  _self.inner().total_duration()
 }
 
 ///|
@@ -1228,17 +1228,17 @@ pub impl Source for FadeIn with try_seek(
   _self : FadeIn,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.inner().try_seek(pos)
 }
 
 ///|
 pub impl Source for FadeOut with current_span_len(_self : FadeOut) {
-  source_default_current_span_len()
+  _self.inner().current_span_len()
 }
 
 ///|
 pub impl Source for FadeOut with total_duration(_self : FadeOut) {
-  source_default_total_duration()
+  _self.inner().total_duration()
 }
 
 ///|
@@ -1246,17 +1246,17 @@ pub impl Source for FadeOut with try_seek(
   _self : FadeOut,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.inner().try_seek(pos)
 }
 
 ///|
 pub impl Source for Limit with current_span_len(_self : Limit) {
-  source_default_current_span_len()
+  _self.inner().current_span_len()
 }
 
 ///|
 pub impl Source for Limit with total_duration(_self : Limit) {
-  source_default_total_duration()
+  _self.inner().total_duration()
 }
 
 ///|
@@ -1264,32 +1264,32 @@ pub impl Source for Limit with try_seek(
   _self : Limit,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.inner().try_seek(pos)
 }
 
 ///|
 pub impl Source for Mix with current_span_len(_self : Mix) {
-  source_default_current_span_len()
+  _self.inner().current_span_len()
 }
 
 ///|
 pub impl Source for Mix with total_duration(_self : Mix) {
-  source_default_total_duration()
+  _self.inner().total_duration()
 }
 
 ///|
 pub impl Source for Mix with try_seek(_self : Mix, pos : @moon_cpal.Duration) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.inner().try_seek(pos)
 }
 
 ///|
 pub impl Source for Repeat with current_span_len(_self : Repeat) {
-  source_default_current_span_len()
+  _self.inner().current_span_len()
 }
 
 ///|
 pub impl Source for Repeat with total_duration(_self : Repeat) {
-  source_default_total_duration()
+  _self.inner().total_duration()
 }
 
 ///|
@@ -1297,17 +1297,17 @@ pub impl Source for Repeat with try_seek(
   _self : Repeat,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.inner().try_seek(pos)
 }
 
 ///|
 pub impl Source for SkipDuration with current_span_len(_self : SkipDuration) {
-  source_default_current_span_len()
+  _self.inner().current_span_len()
 }
 
 ///|
 pub impl Source for SkipDuration with total_duration(_self : SkipDuration) {
-  source_default_total_duration()
+  _self.inner().total_duration()
 }
 
 ///|
@@ -1315,17 +1315,17 @@ pub impl Source for SkipDuration with try_seek(
   _self : SkipDuration,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.inner().try_seek(pos)
 }
 
 ///|
 pub impl Source for Speed with current_span_len(_self : Speed) {
-  source_default_current_span_len()
+  _self.inner().current_span_len()
 }
 
 ///|
 pub impl Source for Speed with total_duration(_self : Speed) {
-  source_default_total_duration()
+  _self.inner().total_duration()
 }
 
 ///|
@@ -1333,17 +1333,17 @@ pub impl Source for Speed with try_seek(
   _self : Speed,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.inner().try_seek(pos)
 }
 
 ///|
 pub impl Source for TakeDuration with current_span_len(_self : TakeDuration) {
-  source_default_current_span_len()
+  _self.inner().current_span_len()
 }
 
 ///|
 pub impl Source for TakeDuration with total_duration(_self : TakeDuration) {
-  source_default_total_duration()
+  _self.inner().total_duration()
 }
 
 ///|
@@ -1351,32 +1351,32 @@ pub impl Source for TakeDuration with try_seek(
   _self : TakeDuration,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.inner().try_seek(pos)
 }
 
 ///|
 pub impl Source for Zero with current_span_len(_self : Zero) {
-  source_default_current_span_len()
+  _self.inner().current_span_len()
 }
 
 ///|
 pub impl Source for Zero with total_duration(_self : Zero) {
-  source_default_total_duration()
+  _self.inner().total_duration()
 }
 
 ///|
 pub impl Source for Zero with try_seek(_self : Zero, pos : @moon_cpal.Duration) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.inner().try_seek(pos)
 }
 
 ///|
 pub impl Source for LinearGainRamp with current_span_len(_self : LinearGainRamp) {
-  source_default_current_span_len()
+  _self.inner().current_span_len()
 }
 
 ///|
 pub impl Source for LinearGainRamp with total_duration(_self : LinearGainRamp) {
-  source_default_total_duration()
+  _self.inner().total_duration()
 }
 
 ///|
@@ -1384,17 +1384,17 @@ pub impl Source for LinearGainRamp with try_seek(
   _self : LinearGainRamp,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.inner().try_seek(pos)
 }
 
 ///|
 pub impl Source for Buffered with current_span_len(_self : Buffered) {
-  source_default_current_span_len()
+  _self.inner().current_span_len()
 }
 
 ///|
 pub impl Source for Buffered with total_duration(_self : Buffered) {
-  source_default_total_duration()
+  _self.inner().total_duration()
 }
 
 ///|
@@ -1402,17 +1402,17 @@ pub impl Source for Buffered with try_seek(
   _self : Buffered,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.inner().try_seek(pos)
 }
 
 ///|
 pub impl Source for Spatial with current_span_len(_self : Spatial) {
-  source_default_current_span_len()
+  _self.inner().current_span_len()
 }
 
 ///|
 pub impl Source for Spatial with total_duration(_self : Spatial) {
-  source_default_total_duration()
+  _self.inner().total_duration()
 }
 
 ///|
@@ -1420,5 +1420,5 @@ pub impl Source for Spatial with try_seek(
   _self : Spatial,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.inner().try_seek(pos)
 }

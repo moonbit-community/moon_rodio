@@ -84,6 +84,23 @@ test "rodio::source::default_try_seek_not_supported" {
 }
 
 ///|
+test "rodio::source::to_dyn_preserves_seek_metadata" {
+  let src = SamplesBuffer::new(1, 4, [1.0, 2.0, 3.0, 4.0])
+  let dyn_src = to_dyn(src)
+  assert_eq(dyn_src.current_span_len(), Some(4))
+  dyn_src.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
+  assert_eq(dyn_src.next(), None)
+}
+
+///|
+test "rodio::source::named_wrapper_forwards_seek" {
+  let amp = Amplify::new(SamplesBuffer::new(1, 4, [1.0, 2.0, 3.0, 4.0]), 1.0)
+  assert_eq(amp.current_span_len(), Some(4))
+  amp.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
+  assert_eq(amp.next(), None)
+}
+
+///|
 test "rodio::source::amplify_take" {
   let src = SamplesBuffer::new(1, 44_100, [1.0, -2.0, 3.0, -4.0])
   let amp = amplify(src, 0.5)

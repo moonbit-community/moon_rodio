@@ -25,6 +25,21 @@ pub struct DynSource {
   next_sample : () -> Sample?
   channels : ChannelCount
   sample_rate : SampleRate
+  current_span_len_fn : () -> Int?
+  total_duration_fn : () -> @moon_cpal.Duration?
+  try_seek_fn : (@moon_cpal.Duration) -> Result[Unit, SeekError]
+}
+
+///|
+fn source_default_try_seek_result(
+  pos : @moon_cpal.Duration,
+) -> Result[Unit, SeekError] {
+  try {
+    source_default_try_seek(pos)
+    Ok(())
+  } catch {
+    err => Err(err)
+  }
 }
 
 ///|
@@ -32,10 +47,20 @@ pub fn DynSource::new(
   next_sample : () -> Sample?,
   channels : ChannelCount,
   sample_rate : SampleRate,
+  current_span_len? : () -> Int? = source_default_current_span_len,
+  total_duration? : () -> @moon_cpal.Duration? = source_default_total_duration,
+  try_seek? : (@moon_cpal.Duration) -> Result[Unit, SeekError] = source_default_try_seek_result,
 ) -> DynSource {
   guard channels > 0 else { panic() }
   guard sample_rate > 0 else { panic() }
-  { next_sample, channels, sample_rate }
+  {
+    next_sample,
+    channels,
+    sample_rate,
+    current_span_len_fn: current_span_len,
+    total_duration_fn: total_duration,
+    try_seek_fn: try_seek,
+  }
 }
 
 ///|
@@ -51,6 +76,27 @@ pub fn DynSource::channels(self : DynSource) -> ChannelCount {
 ///|
 pub fn DynSource::sample_rate(self : DynSource) -> SampleRate {
   self.sample_rate
+}
+
+///|
+pub fn DynSource::current_span_len(self : DynSource) -> Int? {
+  (self.current_span_len_fn)()
+}
+
+///|
+pub fn DynSource::total_duration(self : DynSource) -> @moon_cpal.Duration? {
+  (self.total_duration_fn)()
+}
+
+///|
+pub fn DynSource::try_seek(
+  self : DynSource,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  match (self.try_seek_fn)(pos) {
+    Ok(_) => ()
+    Err(err) => raise err
+  }
 }
 
 ///|
@@ -70,12 +116,12 @@ pub impl Source for DynSource with sample_rate(self : DynSource) {
 
 ///|
 pub impl Source for DynSource with current_span_len(_self : DynSource) {
-  source_default_current_span_len()
+  _self.current_span_len()
 }
 
 ///|
 pub impl Source for DynSource with total_duration(_self : DynSource) {
-  source_default_total_duration()
+  _self.total_duration()
 }
 
 ///|
@@ -83,7 +129,7 @@ pub impl Source for DynSource with try_seek(
   _self : DynSource,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  _self.try_seek(pos)
 }
 
 ///|
@@ -92,6 +138,16 @@ pub fn[S : Source] to_dyn(source : S) -> DynSource {
     fn() { source.next() },
     source.channels(),
     source.sample_rate(),
+    current_span_len=fn() { source.current_span_len() },
+    total_duration=fn() { source.total_duration() },
+    try_seek=fn(pos : @moon_cpal.Duration) {
+      try {
+        source.try_seek(pos)
+        Ok(())
+      } catch {
+        err => Err(err)
+      }
+    },
   )
 }
 
