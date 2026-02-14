@@ -22,7 +22,7 @@ pub fn[S : Source] limit(
 ) -> DynSource {
   guard min_value <= max_value else { panic() }
   let src = to_dyn(source)
-  DynSource::new(
+  DynSource::new_dynamic(
     fn() {
       match src.next() {
         None => None
@@ -36,8 +36,8 @@ pub fn[S : Source] limit(
           }
       }
     },
-    src.channels(),
-    src.sample_rate(),
+    fn() { src.channels() },
+    fn() { src.sample_rate() },
   )
 }
 
@@ -72,7 +72,7 @@ pub fn[A : Source, B : Source] crossfade(
   )
   let idx = @ref.new(0)
 
-  DynSource::new(
+  DynSource::new_dynamic(
     fn() {
       if fade_samples > 0 && idx.val < fade_samples {
         let t = Double::from_int(idx.val) / Double::from_int(fade_samples)
@@ -87,8 +87,8 @@ pub fn[A : Source, B : Source] crossfade(
         rhs.next()
       }
     },
-    lhs.channels(),
-    lhs.sample_rate(),
+    fn() { lhs.channels() },
+    fn() { lhs.sample_rate() },
   )
 }
 

@@ -360,15 +360,15 @@ pub fn zero_samples(
 ///|
 pub fn[S : Source] amplify(source : S, factor : Sample) -> DynSource {
   let src = to_dyn(source)
-  DynSource::new(
+  DynSource::new_dynamic(
     fn() {
       match src.next() {
         None => None
         Some(v) => Some(v * factor)
       }
     },
-    src.channels(),
-    src.sample_rate(),
+    fn() { src.channels() },
+    fn() { src.sample_rate() },
   )
 }
 
@@ -376,7 +376,7 @@ pub fn[S : Source] amplify(source : S, factor : Sample) -> DynSource {
 pub fn[S : Source] take(source : S, sample_count : Int) -> DynSource {
   let src = to_dyn(source)
   let remaining = @ref.new(if sample_count < 0 { 0 } else { sample_count })
-  DynSource::new(
+  DynSource::new_dynamic(
     fn() {
       if remaining.val <= 0 {
         None
@@ -385,8 +385,8 @@ pub fn[S : Source] take(source : S, sample_count : Int) -> DynSource {
         src.next()
       }
     },
-    src.channels(),
-    src.sample_rate(),
+    fn() { src.channels() },
+    fn() { src.sample_rate() },
   )
 }
 
@@ -394,7 +394,7 @@ pub fn[S : Source] take(source : S, sample_count : Int) -> DynSource {
 pub fn[A : Source, B : Source] mix(left : A, right : B) -> DynSource {
   let lhs = to_dyn(left)
   let rhs = uniform_source(to_dyn(right), lhs.channels(), lhs.sample_rate())
-  DynSource::new(
+  DynSource::new_dynamic(
     fn() {
       match (lhs.next(), rhs.next()) {
         (None, None) => None
@@ -403,8 +403,8 @@ pub fn[A : Source, B : Source] mix(left : A, right : B) -> DynSource {
         (Some(a), Some(b)) => Some(a + b)
       }
     },
-    lhs.channels(),
-    lhs.sample_rate(),
+    fn() { lhs.channels() },
+    fn() { lhs.sample_rate() },
   )
 }
 
@@ -412,12 +412,19 @@ pub fn[A : Source, B : Source] mix(left : A, right : B) -> DynSource {
 pub fn[S : Source] speed(source : S, ratio : Double) -> DynSource {
   guard ratio > 0.0 else { panic() }
   let src = to_dyn(source)
-  let out_rate = (Double::from_int(src.sample_rate()) * ratio).to_int()
-  guard out_rate > 0 else { panic() }
-  DynSource::new(
+  let init_rate = (Double::from_int(src.sample_rate()) * ratio).to_int()
+  guard init_rate > 0 else { panic() }
+  DynSource::new_dynamic(
     fn() { src.next() },
-    src.channels(),
-    out_rate,
+    fn() { src.channels() },
+    fn() {
+      let rate = (Double::from_int(src.sample_rate()) * ratio).to_int()
+      if rate <= 0 {
+        1
+      } else {
+        rate
+      }
+    },
     current_span_len=fn() { src.current_span_len() },
     total_duration=fn() {
       src.total_duration().map(fn(d) { duration_div_ratio_floor(d, ratio) })

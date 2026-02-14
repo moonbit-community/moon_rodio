@@ -122,7 +122,7 @@ pub fn[S : Source] take_duration(
   let sample_count = duration_to_sample_count(duration, channels, sample_rate)
   let remaining = @ref.new(sample_count)
 
-  DynSource::new(
+  DynSource::new_dynamic(
     fn() {
       if remaining.val <= 0 {
         None
@@ -139,8 +139,8 @@ pub fn[S : Source] take_duration(
         }
       }
     },
-    channels,
-    sample_rate,
+    fn() { src.channels() },
+    fn() { src.sample_rate() },
     current_span_len=fn() {
       let rem = if remaining.val <= 0 { 0 } else { remaining.val }
       match src.current_span_len() {
@@ -207,7 +207,7 @@ pub fn[S : Source] delay(
     duration_to_sample_count(duration, channels, sample_rate),
   )
 
-  DynSource::new(
+  DynSource::new_dynamic(
     fn() {
       if remaining.val > 0 {
         remaining.val -= 1
@@ -216,8 +216,8 @@ pub fn[S : Source] delay(
         src.next()
       }
     },
-    channels,
-    sample_rate,
+    fn() { src.channels() },
+    fn() { src.sample_rate() },
     current_span_len=fn() {
       let rem = if remaining.val > 0 { remaining.val } else { 0 }
       src.current_span_len().map(fn(v) { v + rem })
