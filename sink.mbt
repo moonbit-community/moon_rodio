@@ -228,7 +228,13 @@ pub fn Sink::get_pos(self : Sink) -> @moon_cpal.Duration {
 
 ///|
 pub fn Sink::sleep_until_end(self : Sink) -> Unit {
-  ignore(self)
+  let mut spin = 0
+  while !self.empty() {
+    spin += 1
+    if spin > 10_000_000 {
+      spin = 0
+    }
+  }
 }
 
 ///|

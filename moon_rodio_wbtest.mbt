@@ -120,3 +120,13 @@ test "rodio::stream::builder::with_config" {
   assert_eq(builder.config.sample_rate, 22_050)
   assert_eq(builder.config.buffer_size, @moon_cpal.BufferSize::fixed(512))
 }
+
+///|
+test "rodio::sink::tests::sleep_until_end" {
+  let (sink, source) = Sink::new()
+  sink.append(SamplesBuffer::new(1, 1, [1.0]))
+  assert_eq(source.next(), Some(1.0))
+  ignore(source.next())
+  sink.sleep_until_end()
+  assert_true(sink.empty())
+}
