@@ -119,24 +119,24 @@ pub impl Source for ControlledQueueSource with sample_rate(
 
 ///|
 pub impl Source for ControlledQueueSource with current_span_len(
-  _self : ControlledQueueSource,
+  self : ControlledQueueSource,
 ) {
-  source_default_current_span_len()
+  self.inner.current_span_len()
 }
 
 ///|
 pub impl Source for ControlledQueueSource with total_duration(
-  _self : ControlledQueueSource,
+  self : ControlledQueueSource,
 ) {
-  source_default_total_duration()
+  self.inner.total_duration()
 }
 
 ///|
 pub impl Source for ControlledQueueSource with try_seek(
-  _self : ControlledQueueSource,
+  self : ControlledQueueSource,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  self.inner.try_seek(pos)
 }
 
 ///|

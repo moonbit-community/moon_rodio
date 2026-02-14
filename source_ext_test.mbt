@@ -478,6 +478,17 @@ test "rodio::source::from_iter_metadata_and_seek" {
 }
 
 ///|
+test "rodio::queue::current_span_len_behavior" {
+  let (tx, rx) = queue(true)
+  assert_eq(rx.current_span_len(), Some(512))
+
+  tx.append(SamplesBuffer::new(1, 44_100, [1.0, 2.0, 3.0]))
+  let span = rx.current_span_len().unwrap()
+  assert_true(span > 0)
+  assert_eq(span, 3)
+}
+
+///|
 test "rodio::source::function_chain" {
   let src = SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0, 4.0])
   let out = take_duration(

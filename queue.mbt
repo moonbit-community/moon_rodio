@@ -255,9 +255,30 @@ pub impl Source for SourcesQueueOutput with sample_rate(
 
 ///|
 pub impl Source for SourcesQueueOutput with current_span_len(
-  _self : SourcesQueueOutput,
+  self : SourcesQueueOutput,
 ) {
-  source_default_current_span_len()
+  self.sync_reset()
+
+  if self.current_is_fallback.val && !self.input.next_sounds.val.is_empty() {
+    match self.input.next_sounds.val[0].source.current_span_len() {
+      Some(v) => if v != 0 { return Some(v) }
+      None => ()
+    }
+    return Some(threshold)
+  }
+
+  match self.current.val.current_span_len() {
+    Some(v) =>
+      if v != 0 {
+        return Some(v)
+      } else if self.input.keep_alive_if_empty.val &&
+        self.input.next_sounds.val.is_empty() {
+        return Some(threshold)
+      }
+    None => ()
+  }
+
+  Some(threshold)
 }
 
 ///|
