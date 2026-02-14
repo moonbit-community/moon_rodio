@@ -282,3 +282,40 @@ test "rodio::source::function_chain" {
   )
   assert_eq(collect_n(out, 10), [0.0, 0.0, 2.0, 4.0])
 }
+
+///|
+test "rodio::source::named_wrappers_basic" {
+  let a = Amplify::new(SamplesBuffer::new(1, 1, [1.0, 2.0]), 0.5)
+  assert_eq(collect_n(a, 10), [0.5, 1.0])
+
+  let z = Zero::new(1, 44_100)
+  assert_eq(collect_n(z, 3), [0.0, 0.0, 0.0])
+
+  let l = Limit::new(
+    SamplesBuffer::new(1, 1, [-2.0, 0.5, 3.0]),
+    LimitSettings::default(),
+  )
+  assert_eq(collect_n(l, 10), [-1.0, 0.5, 1.0])
+}
+
+///|
+test "rodio::source::named_wrappers_signal_and_spatial" {
+  let g = SignalGenerator::from_function(48_000, 440.0, Function::sine())
+  assert_eq(g.channels(), 1)
+
+  let custom = SignalGenerator::with_generator(
+    48_000,
+    440.0,
+    GeneratorFunction::new(fn(_phase) { 0.25 }),
+  )
+  assert_eq(custom.next(), Some(0.25))
+
+  let s = Spatial::new(
+    SamplesBuffer::new(1, 44_100, [1.0, 1.0]),
+    [0.0, 0.0, 0.0],
+    [-1.0, 0.0, 0.0],
+    [1.0, 0.0, 0.0],
+  )
+  assert_eq(s.channels(), 2)
+  assert_eq(s.sample_rate(), 44_100)
+}

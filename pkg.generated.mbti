@@ -115,6 +115,27 @@ pub impl Eq for StreamError
 pub impl Show for StreamError
 
 // Types and methods
+pub struct Amplify {
+  inner : DynSource
+}
+pub fn[S : Source] Amplify::new(S, Double) -> Self
+pub impl Source for Amplify
+
+pub struct Buffered {
+  inner : SamplesBuffer
+}
+pub fn Buffered::channels(Self) -> Int
+pub fn[S : Source] Buffered::new(S) -> Self
+pub fn Buffered::next(Self) -> Double?
+pub fn Buffered::sample_rate(Self) -> Int
+pub impl Source for Buffered
+
+pub struct ChannelVolume {
+  inner : DynSource
+}
+pub fn[S : Source] ChannelVolume::new(S, Array[Double]) -> Self
+pub impl Source for ChannelVolume
+
 pub struct Chirp {
   sample_rate : Int
   start_frequency : Double
@@ -137,6 +158,12 @@ pub fn ControlledQueueSource::next(Self) -> Double?
 pub fn ControlledQueueSource::sample_rate(Self) -> Int
 pub impl Source for ControlledQueueSource
 
+pub struct Crossfade {
+  inner : DynSource
+}
+pub fn[A : Source, B : Source] Crossfade::new(A, B, @core.Duration) -> Self
+pub impl Source for Crossfade
+
 pub struct Decoder {
   inner : @decoder.DecodedSamples
 }
@@ -149,6 +176,18 @@ pub fn Decoder::new_wav(Bytes) -> Self raise DecoderError
 pub fn Decoder::next(Self) -> Double?
 pub fn Decoder::sample_rate(Self) -> Int
 pub impl Source for Decoder
+
+pub struct Delay {
+  inner : DynSource
+}
+pub fn[S : Source] Delay::new(S, @core.Duration) -> Self
+pub impl Source for Delay
+
+pub struct Distortion {
+  inner : DynSource
+}
+pub fn[S : Source] Distortion::new(S, Double) -> Self
+pub impl Source for Distortion
 
 pub struct Done {
   input : DynSource
@@ -172,6 +211,12 @@ pub fn DynSource::next(Self) -> Double?
 pub fn DynSource::sample_rate(Self) -> Int
 pub impl Source for DynSource
 
+pub struct Empty {
+  inner : DynSource
+}
+pub fn Empty::new(Int, Int) -> Self
+pub impl Source for Empty
+
 pub struct EmptyCallback {
   callback : () -> Unit
   called : Ref[Bool]
@@ -181,6 +226,18 @@ pub fn EmptyCallback::new(() -> Unit) -> Self
 pub fn EmptyCallback::next(Self) -> Double?
 pub fn EmptyCallback::sample_rate(Self) -> Int
 pub impl Source for EmptyCallback
+
+pub struct FadeIn {
+  inner : DynSource
+}
+pub fn[S : Source] FadeIn::new(S, @core.Duration) -> Self
+pub impl Source for FadeIn
+
+pub struct FadeOut {
+  inner : DynSource
+}
+pub fn[S : Source] FadeOut::new(S, @core.Duration) -> Self
+pub impl Source for FadeOut
 
 pub struct FromFactoryIter[S] {
   factory : () -> S?
@@ -202,6 +259,53 @@ pub fn FromIter::channels(Self) -> Int
 pub fn FromIter::next(Self) -> Double?
 pub fn FromIter::sample_rate(Self) -> Int
 pub impl Source for FromIter
+
+pub enum Function {
+  Sine
+  Triangle
+  Square
+  Sawtooth
+}
+pub fn Function::sawtooth() -> Self
+pub fn Function::sine() -> Self
+pub fn Function::square() -> Self
+pub fn Function::triangle() -> Self
+pub impl Eq for Function
+pub impl Show for Function
+
+pub struct GeneratorFunction {
+  generator : (Double) -> Double
+}
+pub fn GeneratorFunction::new((Double) -> Double) -> Self
+
+pub struct Limit {
+  inner : DynSource
+}
+pub fn[S : Source] Limit::new(S, LimitSettings) -> Self
+pub impl Source for Limit
+
+pub struct LimitSettings {
+  min_value : Double
+  max_value : Double
+}
+pub fn LimitSettings::default() -> Self
+pub fn LimitSettings::new() -> Self
+pub fn LimitSettings::with_max(Self, Double) -> Self
+pub fn LimitSettings::with_min(Self, Double) -> Self
+pub impl Eq for LimitSettings
+pub impl Show for LimitSettings
+
+pub struct LinearGainRamp {
+  inner : DynSource
+}
+pub fn[S : Source] LinearGainRamp::new(S, Double, Double, @core.Duration) -> Self
+pub impl Source for LinearGainRamp
+
+pub struct Mix {
+  inner : DynSource
+}
+pub fn[A : Source, B : Source] Mix::new(A, B) -> Self
+pub impl Source for Mix
 
 pub struct Mixer {
   has_pending : Ref[Bool]
@@ -289,6 +393,12 @@ pub fn PeriodicAccess::next(Self) -> Double?
 pub fn PeriodicAccess::sample_rate(Self) -> Int
 pub impl Source for PeriodicAccess
 
+pub struct Repeat {
+  inner : DynSource
+}
+pub fn[S : Source] Repeat::new(S) -> Self
+pub impl Source for Repeat
+
 pub struct SamplesBuffer {
   channels : Int
   sample_rate : Int
@@ -329,9 +439,11 @@ pub struct SignalGenerator {
   phase : Ref[Double]
 }
 pub fn SignalGenerator::channels(Self) -> Int
+pub fn SignalGenerator::from_function(Int, Double, Function) -> Self
 pub fn SignalGenerator::new(Int, Double, SignalFunction) -> Self
 pub fn SignalGenerator::next(Self) -> Double?
 pub fn SignalGenerator::sample_rate(Self) -> Int
+pub fn SignalGenerator::with_generator(Int, Double, GeneratorFunction) -> DynSource
 pub impl Source for SignalGenerator
 
 pub struct SineWave {
@@ -379,6 +491,12 @@ pub struct SinkControls {
   position_sample_rate : Ref[Int]
 }
 
+pub struct SkipDuration {
+  inner : DynSource
+}
+pub fn[S : Source] SkipDuration::new(S, @core.Duration) -> Self
+pub impl Source for SkipDuration
+
 pub struct Skippable {
   input : DynSource
   do_skip : Ref[Bool]
@@ -411,6 +529,16 @@ pub fn SourcesQueueOutput::next(Self) -> Double?
 pub fn SourcesQueueOutput::sample_rate(Self) -> Int
 pub fn SourcesQueueOutput::skip_one(Self) -> Unit
 pub impl Source for SourcesQueueOutput
+
+pub struct Spatial {
+  inner : SpatialSource
+}
+pub fn Spatial::channels(Self) -> Int
+pub fn[S : Source] Spatial::new(S, Array[Double], Array[Double], Array[Double]) -> Self
+pub fn Spatial::next(Self) -> Double?
+pub fn Spatial::sample_rate(Self) -> Int
+pub fn Spatial::set_positions(Self, Array[Double], Array[Double], Array[Double]) -> Unit
+pub impl Source for Spatial
 
 pub struct SpatialSink {
   sink : Sink
@@ -458,6 +586,12 @@ pub fn SpatialSource::sample_rate(Self) -> Int
 pub fn SpatialSource::set_positions(Self, Array[Double], Array[Double], Array[Double]) -> Unit
 pub impl Source for SpatialSource
 
+pub struct Speed {
+  inner : DynSource
+}
+pub fn[S : Source] Speed::new(S, Double) -> Self
+pub impl Source for Speed
+
 pub struct SquareWave {
   inner : SignalGenerator
 }
@@ -489,6 +623,12 @@ pub fn Stoppable::sample_rate(Self) -> Int
 pub fn Stoppable::stop(Self) -> Unit
 pub impl Source for Stoppable
 
+pub struct TakeDuration {
+  inner : DynSource
+}
+pub fn[S : Source] TakeDuration::new(S, @core.Duration) -> Self
+pub impl Source for TakeDuration
+
 pub struct TrackPosition {
   input : DynSource
   played_samples : Ref[Int]
@@ -518,6 +658,12 @@ pub fn[S : Source] UniformSourceIterator::new(S, Int, Int) -> Self
 pub fn UniformSourceIterator::next(Self) -> Double?
 pub fn UniformSourceIterator::sample_rate(Self) -> Int
 pub impl Source for UniformSourceIterator
+
+pub struct Zero {
+  inner : DynSource
+}
+pub fn Zero::new(Int, Int) -> Self
+pub impl Source for Zero
 
 // Type aliases
 pub type ChannelCount = Int
