@@ -61,6 +61,7 @@ test "rodio::source::metadata_and_seek_on_samples_buffer" {
   assert_eq(src.current_span_len(), Some(6))
   let total = src.total_duration().unwrap()
   assert_eq(total.secs, (0 : UInt64))
+  assert_eq(total.nanos, 750_000_000)
 
   src.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
   assert_eq(src.current_span_len(), Some(0))
@@ -69,6 +70,17 @@ test "rodio::source::metadata_and_seek_on_samples_buffer" {
   src.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
   assert_eq(src.current_span_len(), Some(6))
   assert_eq(src.next(), Some(1.0))
+}
+
+///|
+test "rodio::source::duration_precision_and_subsecond_seek" {
+  let src = SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0])
+  let total = src.total_duration().unwrap()
+  assert_eq(total.secs, (1 : UInt64))
+  assert_eq(total.nanos, 500_000_000)
+
+  src.try_seek(@moon_cpal.Duration::new((0 : UInt64), 500_000_000))
+  assert_eq(src.next(), Some(2.0))
 }
 
 ///|
@@ -198,6 +210,15 @@ test "rodio::source::track_position" {
   assert_eq(t.get_pos().secs, (1 : UInt64))
   t.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
   assert_eq(t.get_pos().secs, (1 : UInt64))
+}
+
+///|
+test "rodio::source::track_position_subsecond" {
+  let t = track_position(SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0]))
+  ignore(t.next())
+  let pos = t.get_pos()
+  assert_eq(pos.secs, (0 : UInt64))
+  assert_eq(pos.nanos, 500_000_000)
 }
 
 ///|

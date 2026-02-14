@@ -93,7 +93,9 @@ test "rodio::sink::tests::get_pos_and_try_seek" {
   ignore(queue_rx.next())
   ignore(queue_rx.next())
   ignore(queue_rx.next())
-  assert_eq(sink.get_pos().secs, (0 : UInt64))
+  let pos0 = sink.get_pos()
+  assert_eq(pos0.secs, (0 : UInt64))
+  assert_eq(pos0.nanos, 750_000_000)
 
   sink.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
   assert_eq(sink.get_pos().secs, (0 : UInt64))
@@ -101,11 +103,15 @@ test "rodio::sink::tests::get_pos_and_try_seek" {
 
   ignore(queue_rx.next())
   assert_eq(queue_rx.next(), Some(3.0))
-  assert_eq(sink.get_pos().secs, (0 : UInt64))
+  let pos1 = sink.get_pos()
+  assert_eq(pos1.secs, (0 : UInt64))
+  assert_eq(pos1.nanos, 750_000_000)
 
   sink.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
+  let pos2 = sink.get_pos()
+  assert_eq(pos2.secs, (1 : UInt64))
+  assert_eq(pos2.nanos, 0)
   assert_eq(queue_rx.next(), Some(0.0))
-  assert_eq(sink.get_pos().secs, (1 : UInt64))
 }
 
 ///|

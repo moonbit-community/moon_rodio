@@ -57,10 +57,14 @@ pub fn TrackPosition::get_pos(self : TrackPosition) -> @moon_cpal.Duration {
   if sample_rate <= 0 || channels <= 0 {
     return self.offset_duration.val
   }
-  let per_second = sample_rate * channels
-  let elapsed_secs = self.played_samples.val / per_second +
-    self.offset_duration.val.secs.to_int()
-  @moon_cpal.Duration::from_secs(elapsed_secs.to_uint64())
+  let played = match
+    duration_from_sample_count(self.played_samples.val, channels, sample_rate) {
+    Some(v) => v
+    None => @moon_cpal.Duration::from_secs((0 : UInt64))
+  }
+  let total_secs = self.offset_duration.val.secs + played.secs
+  let total_nanos = self.offset_duration.val.nanos + played.nanos
+  @moon_cpal.Duration::new(total_secs, total_nanos)
 }
 
 ///|
