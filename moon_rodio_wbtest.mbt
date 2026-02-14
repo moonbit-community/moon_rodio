@@ -57,10 +57,12 @@ test "rodio::sink::tests::test_volume" {
 
 ///|
 test "rodio::sink::tests::len" {
-  let (sink, _) = Sink::new()
+  let (sink, src) = Sink::new()
   assert_eq(sink.len(), 0)
   sink.append(SamplesBuffer::new(1, 1, [1.0]))
   assert_eq(sink.len(), 1)
+  ignore(src.next())
+  assert_eq(sink.len(), 0)
 }
 
 ///|

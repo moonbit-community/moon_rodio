@@ -284,6 +284,7 @@ pub struct SinkControls {
   skip_one : Ref[Bool]
   volume : Ref[Double]
   speed : Ref[Double]
+  sound_count : Ref[Int]
   position_samples : Ref[Int]
   position_sample_rate : Ref[Int]
 }
