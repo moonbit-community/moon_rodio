@@ -49,6 +49,9 @@ test "rodio::source::empty_and_zero" {
 
   let z = zero(1, 44_100)
   assert_eq(collect_n(z, 4), [0.0, 0.0, 0.0, 0.0])
+
+  let zf = zero_samples(1, 44_100, 3)
+  assert_eq(collect_n(zf, 10), [0.0, 0.0, 0.0])
 }
 
 ///|
@@ -354,6 +357,8 @@ test "rodio::source::named_wrappers_basic" {
   let z = Zero::new(1, 44_100)
   assert_eq(z.inner_mut().sample_rate(), 44_100)
   assert_eq(collect_n(z, 3), [0.0, 0.0, 0.0])
+  let zf = Zero::new_samples(1, 44_100, 2)
+  assert_eq(collect_n(zf, 10), [0.0, 0.0])
 
   let l = Limit::new(
     SamplesBuffer::new(1, 1, [-2.0, 0.5, 3.0]),

@@ -257,6 +257,15 @@ pub fn zero(channels : ChannelCount, sample_rate : SampleRate) -> DynSource {
 }
 
 ///|
+pub fn zero_samples(
+  channels : ChannelCount,
+  sample_rate : SampleRate,
+  sample_count : Int,
+) -> DynSource {
+  take(zero(channels, sample_rate), sample_count)
+}
+
+///|
 pub fn[S : Source] amplify(source : S, factor : Sample) -> DynSource {
   let src = to_dyn(source)
   DynSource::new(

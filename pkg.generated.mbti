@@ -118,6 +118,8 @@ pub fn white(Int) -> WhiteUniform
 
 pub fn zero(Int, Int) -> DynSource
 
+pub fn zero_samples(Int, Int, Int) -> DynSource
+
 // Errors
 pub suberror DecoderError {
   Backend(@decoder.DecoderError)
@@ -985,6 +987,7 @@ pub fn Zero::inner(Self) -> DynSource
 pub fn Zero::inner_mut(Self) -> DynSource
 pub fn Zero::into_inner(Self) -> DynSource
 pub fn Zero::new(Int, Int) -> Self
+pub fn Zero::new_samples(Int, Int, Int) -> Self
 pub impl Source for Zero
 
 // Type aliases

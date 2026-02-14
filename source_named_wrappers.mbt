@@ -577,6 +577,15 @@ pub fn Zero::new(channels : ChannelCount, sample_rate : SampleRate) -> Zero {
 }
 
 ///|
+pub fn Zero::new_samples(
+  channels : ChannelCount,
+  sample_rate : SampleRate,
+  num_samples : Int,
+) -> Zero {
+  { inner: zero_samples(channels, sample_rate, num_samples) }
+}
+
+///|
 pub fn Zero::inner(self : Zero) -> DynSource {
   self.inner
 }
