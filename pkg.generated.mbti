@@ -14,6 +14,8 @@ pub fn[S : Source] amplify_decibel(S, Double) -> DynSource
 
 pub fn[S : Source] amplify_normalized(S, Double) -> DynSource
 
+pub fn[S : Source] automatic_gain_control(S, Double, @core.Duration, @core.Duration, Double) -> AutomaticGainControl
+
 pub fn[S : Source] buffered(S) -> SamplesBuffer
 
 pub fn[S : Source] channel_volume(S, Array[Double]) -> DynSource
@@ -42,9 +44,17 @@ pub fn from_iter(Int, Int, Array[Double]) -> SamplesBuffer
 
 pub fn from_source_iter(Array[DynSource]) -> FromIter
 
+pub fn[S : Source] high_pass(S, Int) -> BltFilter
+
+pub fn[S : Source] high_pass_with_q(S, Int, Double) -> BltFilter
+
 pub fn[S : Source] limit(S, Double, Double) -> DynSource
 
 pub fn[S : Source] linear_gain_ramp(S, Double, Double, @core.Duration) -> DynSource
+
+pub fn[S : Source] low_pass(S, Int) -> BltFilter
+
+pub fn[S : Source] low_pass_with_q(S, Int, Double) -> BltFilter
 
 pub fn[A : Source, B : Source] mix(A, B) -> DynSource
 
@@ -120,6 +130,51 @@ pub struct Amplify {
 }
 pub fn[S : Source] Amplify::new(S, Double) -> Self
 pub impl Source for Amplify
+
+pub struct AutomaticGainControl {
+  input : DynSource
+  target_level : Ref[Double]
+  absolute_max_gain : Ref[Double]
+  current_gain : Ref[Double]
+  attack_coeff : Ref[Double]
+  release_coeff : Ref[Double]
+}
+pub fn AutomaticGainControl::channels(Self) -> Int
+pub fn[S : Source] AutomaticGainControl::new(S, Double, @core.Duration, @core.Duration, Double) -> Self
+pub fn AutomaticGainControl::next(Self) -> Double?
+pub fn AutomaticGainControl::sample_rate(Self) -> Int
+pub impl Source for AutomaticGainControl
+
+pub struct BltFilter {
+  input : DynSource
+  mode : Ref[BltMode]
+  freq : Ref[Int]
+  q : Ref[Double]
+  b0 : Ref[Double]
+  b1 : Ref[Double]
+  b2 : Ref[Double]
+  a1 : Ref[Double]
+  a2 : Ref[Double]
+  x1 : Ref[Double]
+  x2 : Ref[Double]
+  y1 : Ref[Double]
+  y2 : Ref[Double]
+}
+pub fn BltFilter::channels(Self) -> Int
+pub fn BltFilter::next(Self) -> Double?
+pub fn BltFilter::sample_rate(Self) -> Int
+pub fn BltFilter::to_high_pass(Self, Int) -> Unit
+pub fn BltFilter::to_high_pass_with_q(Self, Int, Double) -> Unit
+pub fn BltFilter::to_low_pass(Self, Int) -> Unit
+pub fn BltFilter::to_low_pass_with_q(Self, Int, Double) -> Unit
+pub impl Source for BltFilter
+
+pub enum BltMode {
+  LowPass
+  HighPass
+}
+pub impl Eq for BltMode
+pub impl Show for BltMode
 
 pub struct Buffered {
   inner : SamplesBuffer
@@ -393,6 +448,17 @@ pub fn PeriodicAccess::next(Self) -> Double?
 pub fn PeriodicAccess::sample_rate(Self) -> Int
 pub impl Source for PeriodicAccess
 
+pub struct Pink {
+  sample_rate : Int
+  state : Ref[UInt64]
+  prev : Ref[Double]
+}
+pub fn Pink::channels(Self) -> Int
+pub fn Pink::new(Int) -> Self
+pub fn Pink::next(Self) -> Double?
+pub fn Pink::sample_rate(Self) -> Int
+pub impl Source for Pink
+
 pub struct Repeat {
   inner : DynSource
 }
@@ -658,6 +724,16 @@ pub fn[S : Source] UniformSourceIterator::new(S, Int, Int) -> Self
 pub fn UniformSourceIterator::next(Self) -> Double?
 pub fn UniformSourceIterator::sample_rate(Self) -> Int
 pub impl Source for UniformSourceIterator
+
+pub struct WhiteUniform {
+  sample_rate : Int
+  state : Ref[UInt64]
+}
+pub fn WhiteUniform::channels(Self) -> Int
+pub fn WhiteUniform::new(Int) -> Self
+pub fn WhiteUniform::next(Self) -> Double?
+pub fn WhiteUniform::sample_rate(Self) -> Int
+pub impl Source for WhiteUniform
 
 pub struct Zero {
   inner : DynSource

@@ -319,3 +319,46 @@ test "rodio::source::named_wrappers_signal_and_spatial" {
   assert_eq(s.channels(), 2)
   assert_eq(s.sample_rate(), 44_100)
 }
+
+///|
+test "rodio::source::agc" {
+  let src = SamplesBuffer::new(1, 10, [0.1, 0.1, 0.1, 0.1])
+  let agc = AutomaticGainControl::new(
+    src,
+    1.0,
+    @moon_cpal.Duration::from_secs((1 : UInt64)),
+    @moon_cpal.Duration::from_secs((1 : UInt64)),
+    10.0,
+  )
+  let v = collect_n(agc, 4)
+  assert_true(v[0] > 0.1)
+  assert_true(v[3] > v[0])
+}
+
+///|
+test "rodio::source::blt_filter_smoke" {
+  let lp = low_pass_with_q(
+    SamplesBuffer::new(1, 48_000, [1.0, 0.0, 0.0, 0.0]),
+    1_000,
+    0.7,
+  )
+  let hp = high_pass(SamplesBuffer::new(1, 48_000, [1.0, 0.0, 0.0, 0.0]), 1_000)
+  assert_eq(lp.channels(), 1)
+  assert_eq(hp.sample_rate(), 48_000)
+  assert_true(lp.next() is Some(_))
+  assert_true(hp.next() is Some(_))
+}
+
+///|
+test "rodio::source::noise_white_and_pink" {
+  let w = WhiteUniform::new(44_100)
+  let p = Pink::new(44_100)
+
+  let wv = collect_n(w, 8)
+  let pv = collect_n(p, 8)
+  assert_eq(wv.length(), 8)
+  assert_eq(pv.length(), 8)
+  for x in wv {
+    assert_true(x >= -1.0 && x <= 1.0)
+  }
+}
