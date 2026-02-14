@@ -1,17 +1,13 @@
 ///|
 /// MoonBit port (MVP slice) of RustAudio/rodio.
 ///
-/// Implemented in this milestone:
-/// - `Source` / `SamplesBuffer`
-/// - source generators and filters: `SineWave`/`SquareWave`/`SawtoothWave`/`TriangleWave`,
-///   `empty`/`zero`/`amplify`/`take`/`mix`/`speed`/`repeat_infinite`,
-///   `pausable`/`stoppable`/`skippable`
-/// - `SpatialSource` and `SpatialSink`
-/// - `queue` and `mixer` with upstream-parity tests
-/// - `Sink` and `OutputStreamBuilder` backed by `Milky2018/moon_cpal`
-/// - `Decoder` and `play` (WAV/MP3/FLAC/Vorbis bytes input)
+/// Current focus:
+/// - native backend (`preferred-target: native`)
+/// - broad `source::*` parity (filters, wrappers, controls, noise generators)
+/// - `queue`/`mixer`/`sink`/`stream` playback chain via `Milky2018/moon_cpal`
+/// - decoder/play path for WAV/MP3/FLAC/Vorbis bytes input
 ///
-/// Not implemented yet:
-/// - most `source::*` filters
-/// - full sample-format parity with upstream rodio decoders
-/// - blocking controls such as `sleep_until_end`
+/// Known gaps versus upstream rodio:
+/// - no automatic drop-hook parity (MoonBit currently lacks Rust-style `Drop`)
+/// - some APIs are compatibility aliases over simplified internals
+/// - decoder sample-format and seek semantics are still a native-slice subset
