@@ -351,6 +351,18 @@ test "rodio::source::named_wrappers_basic" {
   )
   assert_eq(collect_n(l, 10), [-1.0, 0.5, 1.0])
 
+  let set = LimitSettings::new().with_threshold(-6.0)
+  let l2 = Limit::new(SamplesBuffer::new(1, 1, [-1.0, -0.5, 0.5, 1.0]), set)
+  let lv = collect_n(l2, 10)
+  assert_true(lv[0] <= -0.49 && lv[0] >= -0.51)
+  assert_true(lv[3] >= 0.49 && lv[3] <= 0.51)
+
+  ignore(LimitSettings::dynamic_content())
+  ignore(LimitSettings::broadcast())
+  ignore(LimitSettings::mastering())
+  ignore(LimitSettings::gaming())
+  ignore(LimitSettings::live_performance())
+
   let dg = Distortion::with_gain(
     SamplesBuffer::new(1, 1, [0.5, -0.75]),
     2.0,
@@ -363,6 +375,8 @@ test "rodio::source::named_wrappers_basic" {
 test "rodio::source::named_wrappers_signal_and_spatial" {
   let g = SignalGenerator::from_function(48_000, 440.0, Function::sine())
   assert_eq(g.channels(), 1)
+  let g2 = SignalGenerator::with_function(48_000, 440.0, Function::triangle())
+  assert_eq(g2.sample_rate(), 48_000)
 
   let custom = SignalGenerator::with_generator(
     48_000,

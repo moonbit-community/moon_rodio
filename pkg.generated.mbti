@@ -403,10 +403,19 @@ pub struct LimitSettings {
   min_value : Double
   max_value : Double
 }
+pub fn LimitSettings::broadcast() -> Self
 pub fn LimitSettings::default() -> Self
+pub fn LimitSettings::dynamic_content() -> Self
+pub fn LimitSettings::gaming() -> Self
+pub fn LimitSettings::live_performance() -> Self
+pub fn LimitSettings::mastering() -> Self
 pub fn LimitSettings::new() -> Self
+pub fn LimitSettings::with_attack(Self, @core.Duration) -> Self
+pub fn LimitSettings::with_knee_width(Self, Double) -> Self
 pub fn LimitSettings::with_max(Self, Double) -> Self
 pub fn LimitSettings::with_min(Self, Double) -> Self
+pub fn LimitSettings::with_release(Self, @core.Duration) -> Self
+pub fn LimitSettings::with_threshold(Self, Double) -> Self
 pub impl Eq for LimitSettings
 pub impl Show for LimitSettings
 
@@ -575,6 +584,7 @@ pub fn SignalGenerator::from_function(Int, Double, Function) -> Self
 pub fn SignalGenerator::new(Int, Double, SignalFunction) -> Self
 pub fn SignalGenerator::next(Self) -> Double?
 pub fn SignalGenerator::sample_rate(Self) -> Int
+pub fn SignalGenerator::with_function(Int, Double, Function) -> Self
 pub fn SignalGenerator::with_generator(Int, Double, GeneratorFunction) -> DynSource
 pub impl Source for SignalGenerator
 

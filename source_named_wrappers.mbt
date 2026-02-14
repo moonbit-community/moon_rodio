@@ -149,6 +149,68 @@ pub fn LimitSettings::with_max(
 }
 
 ///|
+pub fn LimitSettings::with_threshold(
+  self : LimitSettings,
+  threshold : Sample,
+) -> LimitSettings {
+  ignore(self)
+  let peak = @math.pow(10.0, threshold / 20.0)
+  { min_value: -peak, max_value: peak }
+}
+
+///|
+pub fn LimitSettings::with_knee_width(
+  self : LimitSettings,
+  _knee_width : Sample,
+) -> LimitSettings {
+  self
+}
+
+///|
+pub fn LimitSettings::with_attack(
+  self : LimitSettings,
+  _attack : @moon_cpal.Duration,
+) -> LimitSettings {
+  self
+}
+
+///|
+pub fn LimitSettings::with_release(
+  self : LimitSettings,
+  _release : @moon_cpal.Duration,
+) -> LimitSettings {
+  self
+}
+
+///|
+pub fn LimitSettings::dynamic_content() -> LimitSettings {
+  LimitSettings::default().with_threshold(-3.0).with_knee_width(6.0)
+}
+
+///|
+pub fn LimitSettings::broadcast() -> LimitSettings {
+  LimitSettings::default()
+  .with_knee_width(2.0)
+  .with_attack(@moon_cpal.Duration::from_secs((0 : UInt64)))
+  .with_release(@moon_cpal.Duration::from_secs((0 : UInt64)))
+}
+
+///|
+pub fn LimitSettings::mastering() -> LimitSettings {
+  LimitSettings::default().with_threshold(-0.5).with_knee_width(1.0)
+}
+
+///|
+pub fn LimitSettings::gaming() -> LimitSettings {
+  LimitSettings::default().with_threshold(-3.0).with_knee_width(3.0)
+}
+
+///|
+pub fn LimitSettings::live_performance() -> LimitSettings {
+  LimitSettings::default().with_threshold(-1.0).with_knee_width(1.0)
+}
+
+///|
 pub struct Limit {
   inner : DynSource
 }
@@ -317,6 +379,15 @@ pub fn SignalGenerator::from_function(
     Function::Sawtooth => SignalFunction::Sawtooth
   }
   SignalGenerator::new(sample_rate, frequency, sf)
+}
+
+///|
+pub fn SignalGenerator::with_function(
+  sample_rate : SampleRate,
+  frequency : Double,
+  function : Function,
+) -> SignalGenerator {
+  SignalGenerator::from_function(sample_rate, frequency, function)
 }
 
 ///|
