@@ -2,6 +2,7 @@
 pub struct SinkControls {
   pause : Ref[Bool]
   stopped : Ref[Bool]
+  skip_one : Ref[Bool]
   volume : Ref[Sample]
   speed : Ref[Sample]
 }
@@ -21,6 +22,11 @@ pub struct Sink {
 
 ///|
 pub fn ControlledQueueSource::next(self : ControlledQueueSource) -> Sample? {
+  if self.controls.skip_one.val {
+    self.controls.skip_one.val = false
+    self.inner.skip_one()
+  }
+
   if self.controls.stopped.val || self.controls.pause.val {
     Some(0.0)
   } else {
@@ -72,6 +78,7 @@ pub fn Sink::new() -> (Sink, ControlledQueueSource) {
   let controls = {
     pause: @ref.new(false),
     stopped: @ref.new(false),
+    skip_one: @ref.new(false),
     volume: @ref.new(1.0),
     speed: @ref.new(1.0),
   }
@@ -141,6 +148,11 @@ pub fn Sink::stop(self : Sink) -> Unit {
 pub fn Sink::clear(self : Sink) -> Unit {
   ignore(self.queue_tx.clear())
   self.pause()
+}
+
+///|
+pub fn Sink::skip_one(self : Sink) -> Unit {
+  self.controls.skip_one.val = true
 }
 
 ///|

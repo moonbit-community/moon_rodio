@@ -241,6 +241,7 @@ pub fn Sink::pause(Self) -> Unit
 pub fn Sink::play(Self) -> Unit
 pub fn Sink::set_speed(Self, Double) -> Unit
 pub fn Sink::set_volume(Self, Double) -> Unit
+pub fn Sink::skip_one(Self) -> Unit
 pub fn Sink::sleep_until_end(Self) -> Unit
 pub fn Sink::speed(Self) -> Double
 pub fn Sink::stop(Self) -> Unit
@@ -249,6 +250,7 @@ pub fn Sink::volume(Self) -> Double
 pub struct SinkControls {
   pause : Ref[Bool]
   stopped : Ref[Bool]
+  skip_one : Ref[Bool]
   volume : Ref[Double]
   speed : Ref[Double]
 }
@@ -283,6 +285,7 @@ pub struct SourcesQueueOutput {
 pub fn SourcesQueueOutput::channels(Self) -> Int
 pub fn SourcesQueueOutput::next(Self) -> Double?
 pub fn SourcesQueueOutput::sample_rate(Self) -> Int
+pub fn SourcesQueueOutput::skip_one(Self) -> Unit
 pub impl Source for SourcesQueueOutput
 
 pub struct SpatialSink {
@@ -305,6 +308,7 @@ pub fn SpatialSink::set_left_ear_position(Self, Array[Double]) -> Unit
 pub fn SpatialSink::set_right_ear_position(Self, Array[Double]) -> Unit
 pub fn SpatialSink::set_speed(Self, Double) -> Unit
 pub fn SpatialSink::set_volume(Self, Double) -> Unit
+pub fn SpatialSink::skip_one(Self) -> Unit
 pub fn SpatialSink::sleep_until_end(Self) -> Unit
 pub fn SpatialSink::speed(Self) -> Double
 pub fn SpatialSink::stop(Self) -> Unit

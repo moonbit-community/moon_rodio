@@ -71,3 +71,14 @@ test "rodio::sink::tests::speed" {
   sink.append(SamplesBuffer::new(1, 10, [1.0, 2.0]))
   assert_eq(queue_rx.sample_rate(), 20)
 }
+
+///|
+test "rodio::sink::tests::skip_one" {
+  let (sink, queue_rx) = Sink::new()
+  sink.append(SamplesBuffer::new(1, 1, [1.0, 2.0]))
+  sink.append(SamplesBuffer::new(1, 1, [10.0, 20.0]))
+
+  assert_eq(queue_rx.next(), Some(1.0))
+  sink.skip_one()
+  assert_eq(queue_rx.next(), Some(10.0))
+}

@@ -300,6 +300,11 @@ pub fn SpatialSink::stop(self : SpatialSink) -> Unit {
 }
 
 ///|
+pub fn SpatialSink::skip_one(self : SpatialSink) -> Unit {
+  self.sink.skip_one()
+}
+
+///|
 pub fn SpatialSink::detach(self : SpatialSink) -> Unit {
   self.sink.detach()
 }

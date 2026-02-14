@@ -152,6 +152,17 @@ pub fn SourcesQueueOutput::next(self : SourcesQueueOutput) -> Sample? {
 }
 
 ///|
+pub fn SourcesQueueOutput::skip_one(self : SourcesQueueOutput) -> Unit {
+  self.sync_reset()
+  self.prefetched.val = None
+  self.has_prefetched.val = false
+  if !self.go_next() {
+    self.current.val = make_empty_dyn_source(1, hz_44100)
+    self.current_is_fallback.val = true
+  }
+}
+
+///|
 pub fn SourcesQueueOutput::channels(self : SourcesQueueOutput) -> ChannelCount {
   self.sync_reset()
   if self.current_is_fallback.val && !self.input.next_sounds.val.is_empty() {
