@@ -535,6 +535,15 @@ test "rodio::source::linear_ramp_and_fades" {
   seek_ramp.try_seek(@moon_cpal.Duration::from_secs((10 : UInt64)))
   let c0 = seek_ramp.next().unwrap()
   assert_true(c0 > 0.39 && c0 < 0.41)
+
+  let named_unclamped = LinearGainRamp::new_with_clamp(
+    SamplesBuffer::new(1, 1, [1.0, 1.0, 1.0, 1.0]),
+    0.0,
+    1.0,
+    @moon_cpal.Duration::from_secs((2 : UInt64)),
+    false,
+  )
+  assert_eq(collect_n(named_unclamped, 10), [0.0, 0.5, 1.0, 1.0])
 }
 
 ///|

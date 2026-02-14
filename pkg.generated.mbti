@@ -526,6 +526,7 @@ pub fn LinearGainRamp::inner(Self) -> DynSource
 pub fn LinearGainRamp::inner_mut(Self) -> DynSource
 pub fn LinearGainRamp::into_inner(Self) -> DynSource
 pub fn[S : Source] LinearGainRamp::new(S, Double, Double, @core.Duration) -> Self
+pub fn[S : Source] LinearGainRamp::new_with_clamp(S, Double, Double, @core.Duration, Bool) -> Self
 pub impl Source for LinearGainRamp
 
 pub struct LoopedDecoder {

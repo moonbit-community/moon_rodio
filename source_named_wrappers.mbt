@@ -786,7 +786,22 @@ pub fn[S : Source] LinearGainRamp::new(
   end_gain : Sample,
   duration : @moon_cpal.Duration,
 ) -> LinearGainRamp {
-  { inner: linear_gain_ramp(source, start_gain, end_gain, duration) }
+  LinearGainRamp::new_with_clamp(source, start_gain, end_gain, duration, true)
+}
+
+///|
+pub fn[S : Source] LinearGainRamp::new_with_clamp(
+  source : S,
+  start_gain : Sample,
+  end_gain : Sample,
+  duration : @moon_cpal.Duration,
+  clamp_end : Bool,
+) -> LinearGainRamp {
+  {
+    inner: linear_gain_ramp_with_clamp(
+      source, start_gain, end_gain, duration, clamp_end,
+    ),
+  }
 }
 
 ///|
