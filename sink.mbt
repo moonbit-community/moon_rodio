@@ -231,6 +231,7 @@ pub fn Sink::stop(self : Sink) -> Unit {
   self.controls.sound_count.val = 0
   self.last_signal.val = None
   ignore(self.queue_tx.clear())
+  self.queue_rx.skip_one()
 }
 
 ///|
@@ -239,6 +240,7 @@ pub fn Sink::clear(self : Sink) -> Unit {
   self.controls.sound_count.val = 0
   self.last_signal.val = None
   ignore(self.queue_tx.clear())
+  self.queue_rx.skip_one()
   self.pause()
 }
 

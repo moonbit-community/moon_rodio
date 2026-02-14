@@ -821,7 +821,6 @@ pub impl Source for Skippable
 pub struct SourcesQueueInput {
   next_sounds : Ref[Array[QueuedSource]]
   keep_alive_if_empty : Ref[Bool]
-  reset_version : Ref[Int]
 }
 pub fn[S : Source] SourcesQueueInput::append(Self, S) -> Unit
 pub fn[S : Source] SourcesQueueInput::append_with_signal(Self, S) -> QueueSignal
@@ -833,7 +832,6 @@ pub struct SourcesQueueOutput {
   current_is_fallback : Ref[Bool]
   prefetched : Ref[Double?]
   has_prefetched : Ref[Bool]
-  seen_reset_version : Ref[Int]
   signal_after_end : Ref[QueueSignal?]
   input : SourcesQueueInput
 }

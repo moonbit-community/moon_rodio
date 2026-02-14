@@ -158,3 +158,16 @@ test "rodio::queue::tests::append_with_signal" {
   assert_eq(rx.next(), None)
   assert_true(signal.is_done())
 }
+
+///|
+test "rodio::queue::tests::clear_keeps_current_source" {
+  let (tx, rx) = @moon_rodio.queue(false)
+  tx.append(@moon_rodio.SamplesBuffer::new(1, 1, [1.0, 2.0]))
+  tx.append(@moon_rodio.SamplesBuffer::new(1, 1, [3.0]))
+  tx.append(@moon_rodio.SamplesBuffer::new(1, 1, [4.0]))
+
+  assert_eq(rx.next(), Some(1.0))
+  assert_eq(tx.clear(), 2)
+  assert_eq(rx.next(), Some(2.0))
+  assert_eq(rx.next(), None)
+}

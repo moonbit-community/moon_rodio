@@ -26,7 +26,6 @@ struct QueuedSource {
 pub struct SourcesQueueInput {
   next_sounds : Ref[Array[QueuedSource]]
   keep_alive_if_empty : Ref[Bool]
-  reset_version : Ref[Int]
 }
 
 ///|
@@ -35,7 +34,6 @@ pub struct SourcesQueueOutput {
   current_is_fallback : Ref[Bool]
   prefetched : Ref[Sample?]
   has_prefetched : Ref[Bool]
-  seen_reset_version : Ref[Int]
   signal_after_end : Ref[QueueSignal?]
   input : SourcesQueueInput
 }
@@ -47,14 +45,12 @@ pub fn queue(
   let input = {
     next_sounds: @ref.new([]),
     keep_alive_if_empty: @ref.new(keep_alive_if_empty),
-    reset_version: @ref.new(0),
   }
   let output = {
     current: @ref.new(make_empty_dyn_source(1, hz_44100)),
     current_is_fallback: @ref.new(true),
     prefetched: @ref.new(None),
     has_prefetched: @ref.new(false),
-    seen_reset_version: @ref.new(0),
     signal_after_end: @ref.new(None),
     input,
   }
@@ -97,24 +93,7 @@ pub fn SourcesQueueInput::clear(self : SourcesQueueInput) -> Int {
     }
   }
   self.next_sounds.val.clear()
-  self.reset_version.val += 1
   len
-}
-
-///|
-fn SourcesQueueOutput::sync_reset(self : SourcesQueueOutput) -> Unit {
-  if self.seen_reset_version.val != self.input.reset_version.val {
-    match self.signal_after_end.val {
-      Some(signal) => signal.mark_done()
-      None => ()
-    }
-    self.signal_after_end.val = None
-    self.current.val = make_empty_dyn_source(1, hz_44100)
-    self.current_is_fallback.val = true
-    self.prefetched.val = None
-    self.has_prefetched.val = false
-    self.seen_reset_version.val = self.input.reset_version.val
-  }
 }
 
 ///|
@@ -173,8 +152,6 @@ fn SourcesQueueOutput::ensure_prefetched(self : SourcesQueueOutput) -> Bool {
 
 ///|
 fn SourcesQueueOutput::next_internal(self : SourcesQueueOutput) -> Sample? {
-  self.sync_reset()
-
   if self.current_is_fallback.val && !self.input.next_sounds.val.is_empty() {
     let next = self.input.next_sounds.val.remove(0)
     self.current.val = next.source
@@ -209,7 +186,6 @@ pub fn SourcesQueueOutput::next(self : SourcesQueueOutput) -> Sample? {
 
 ///|
 pub fn SourcesQueueOutput::skip_one(self : SourcesQueueOutput) -> Unit {
-  self.sync_reset()
   self.prefetched.val = None
   self.has_prefetched.val = false
   if !self.go_next() {
@@ -220,7 +196,6 @@ pub fn SourcesQueueOutput::skip_one(self : SourcesQueueOutput) -> Unit {
 
 ///|
 pub fn SourcesQueueOutput::channels(self : SourcesQueueOutput) -> ChannelCount {
-  self.sync_reset()
   if self.current_is_fallback.val && !self.input.next_sounds.val.is_empty() {
     return self.input.next_sounds.val[0].source.channels()
   }
@@ -229,7 +204,6 @@ pub fn SourcesQueueOutput::channels(self : SourcesQueueOutput) -> ChannelCount {
 
 ///|
 pub fn SourcesQueueOutput::sample_rate(self : SourcesQueueOutput) -> SampleRate {
-  self.sync_reset()
   if self.current_is_fallback.val && !self.input.next_sounds.val.is_empty() {
     return self.input.next_sounds.val[0].source.sample_rate()
   }
@@ -257,8 +231,6 @@ pub impl Source for SourcesQueueOutput with sample_rate(
 pub impl Source for SourcesQueueOutput with current_span_len(
   self : SourcesQueueOutput,
 ) {
-  self.sync_reset()
-
   if self.current_is_fallback.val && !self.input.next_sounds.val.is_empty() {
     match self.input.next_sounds.val[0].source.current_span_len() {
       Some(v) => if v != 0 { return Some(v) }
@@ -293,7 +265,6 @@ pub impl Source for SourcesQueueOutput with try_seek(
   self : SourcesQueueOutput,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  self.sync_reset()
   if self.current_is_fallback.val && !self.input.next_sounds.val.is_empty() {
     let next = self.input.next_sounds.val.remove(0)
     self.current.val = next.source
