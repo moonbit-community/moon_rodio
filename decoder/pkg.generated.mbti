@@ -1,0 +1,42 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/decoder"
+
+// Values
+pub fn decode_flac_bytes(Bytes) -> DecodedSamples raise DecoderError
+
+pub fn decode_mp3_bytes(Bytes) -> DecodedSamples raise DecoderError
+
+pub fn decode_vorbis_bytes(Bytes) -> DecodedSamples raise DecoderError
+
+pub fn decode_wav_bytes(Bytes) -> DecodedSamples raise DecoderError
+
+pub fn flac_pop_bytes() -> Bytes
+
+pub fn mp3_ill2_mono_bytes() -> Bytes
+
+pub fn vorbis_sine_48k_mono_bytes() -> Bytes
+
+// Errors
+pub suberror DecoderError {
+  InvalidFormat(String)
+  Unsupported(String)
+}
+pub impl Eq for DecoderError
+pub impl Show for DecoderError
+
+// Types and methods
+pub struct DecodedSamples {
+  channels : Int
+  sample_rate : Int
+  samples : Array[Double]
+  cursor : Ref[Int]
+}
+pub fn DecodedSamples::channels(Self) -> Int
+pub fn DecodedSamples::new(Int, Int, Array[Double]) -> Self
+pub fn DecodedSamples::next(Self) -> Double?
+pub fn DecodedSamples::sample_rate(Self) -> Int
+
+// Type aliases
+
+// Traits
+

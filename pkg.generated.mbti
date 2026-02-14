@@ -1,0 +1,384 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio"
+
+import {
+  "Milky2018/moon_cpal/core",
+  "Milky2018/moon_cpal/spec",
+  "Milky2018/moon_rodio/decoder",
+}
+
+// Values
+pub fn[S : Source] amplify(S, Double) -> DynSource
+
+pub fn empty(Int, Int) -> DynSource
+
+pub fn from_iter(Int, Int, Array[Double]) -> SamplesBuffer
+
+pub fn[A : Source, B : Source] mix(A, B) -> DynSource
+
+pub fn mixer(Int, Int) -> (Mixer, MixerSource)
+
+pub fn[S : Source] pausable(S, Bool) -> Pausable
+
+pub fn play(Mixer, Bytes) -> Sink raise PlayError
+
+pub fn queue(Bool) -> (SourcesQueueInput, SourcesQueueOutput)
+
+pub fn[S : Source] skippable(S) -> Skippable
+
+pub fn[S : Source] speed(S, Double) -> DynSource
+
+pub fn[S : Source] stoppable(S) -> Stoppable
+
+pub fn supported_output_configs(@spec.Device) -> Array[@core.SupportedStreamConfig] raise StreamError
+
+pub fn[S : Source] take(S, Int) -> DynSource
+
+pub fn[S : Source] to_dyn(S) -> DynSource
+
+pub fn zero(Int, Int) -> DynSource
+
+// Errors
+pub suberror DecoderError {
+  Backend(@decoder.DecoderError)
+  UnknownFormat
+}
+pub impl Eq for DecoderError
+pub impl Show for DecoderError
+
+pub suberror PlayError {
+  Decode(DecoderError)
+}
+pub impl Eq for PlayError
+pub impl Show for PlayError
+
+pub suberror StreamError {
+  PlayStreamError(@core.PlayStreamError)
+  DefaultStreamConfigError(@core.DefaultStreamConfigError)
+  BuildStreamError(@core.BuildStreamError)
+  SupportedStreamConfigsError(@core.SupportedStreamConfigsError)
+  NoDevice
+  UnsupportedSampleFormat
+}
+pub impl Eq for StreamError
+pub impl Show for StreamError
+
+// Types and methods
+pub struct ControlledQueueSource {
+  inner : SourcesQueueOutput
+  controls : SinkControls
+}
+pub fn ControlledQueueSource::channels(Self) -> Int
+pub fn ControlledQueueSource::next(Self) -> Double?
+pub fn ControlledQueueSource::sample_rate(Self) -> Int
+pub impl Source for ControlledQueueSource
+
+pub struct Decoder {
+  inner : @decoder.DecodedSamples
+}
+pub fn Decoder::channels(Self) -> Int
+pub fn Decoder::new(Bytes) -> Self raise DecoderError
+pub fn Decoder::new_flac(Bytes) -> Self raise DecoderError
+pub fn Decoder::new_mp3(Bytes) -> Self raise DecoderError
+pub fn Decoder::new_vorbis(Bytes) -> Self raise DecoderError
+pub fn Decoder::new_wav(Bytes) -> Self raise DecoderError
+pub fn Decoder::next(Self) -> Double?
+pub fn Decoder::sample_rate(Self) -> Int
+pub impl Source for Decoder
+
+pub struct DynSource {
+  next_sample : () -> Double?
+  channels : Int
+  sample_rate : Int
+}
+pub fn DynSource::channels(Self) -> Int
+pub fn DynSource::new(() -> Double?, Int, Int) -> Self
+pub fn DynSource::next(Self) -> Double?
+pub fn DynSource::sample_rate(Self) -> Int
+pub impl Source for DynSource
+
+pub struct Mixer {
+  has_pending : Ref[Bool]
+  pending_sources : Ref[Array[DynSource]]
+  channels : Int
+  sample_rate : Int
+}
+pub fn[S : Source] Mixer::add(Self, S) -> Unit
+
+pub struct MixerSource {
+  current_sources : Ref[Array[DynSource]]
+  input : Mixer
+  sample_count : Ref[Int]
+}
+pub fn MixerSource::channels(Self) -> Int
+pub fn MixerSource::next(Self) -> Double?
+pub fn MixerSource::sample_rate(Self) -> Int
+pub impl Source for MixerSource
+
+pub struct OutputStream {
+  config : OutputStreamConfig
+  mixer : Mixer
+  _stream : @spec.Stream
+}
+pub fn OutputStream::config(Self) -> OutputStreamConfig
+pub fn OutputStream::mixer(Self) -> Mixer
+pub fn OutputStream::open(@spec.Device, OutputStreamConfig, (@core.StreamError) -> Unit) -> Self raise StreamError
+
+pub struct OutputStreamBuilder {
+  device : @spec.Device?
+  config : OutputStreamConfig
+  error_callback : (@core.StreamError) -> Unit
+}
+pub fn OutputStreamBuilder::default() -> Self
+pub fn OutputStreamBuilder::from_default_device() -> Self raise StreamError
+pub fn OutputStreamBuilder::from_device(@spec.Device) -> Self raise StreamError
+pub fn OutputStreamBuilder::open_default_stream() -> OutputStream raise StreamError
+pub fn OutputStreamBuilder::open_stream(Self) -> OutputStream raise StreamError
+pub fn OutputStreamBuilder::open_stream_or_fallback(Self) -> OutputStream raise StreamError
+pub fn OutputStreamBuilder::with_buffer_size(Self, @core.BufferSize) -> Self
+pub fn OutputStreamBuilder::with_channels(Self, Int) -> Self
+pub fn OutputStreamBuilder::with_config(Self, @core.StreamConfig) -> Self
+pub fn OutputStreamBuilder::with_device(Self, @spec.Device) -> Self
+pub fn OutputStreamBuilder::with_error_callback(Self, (@core.StreamError) -> Unit) -> Self
+pub fn OutputStreamBuilder::with_sample_format(Self, @core.SampleFormat) -> Self
+pub fn OutputStreamBuilder::with_sample_rate(Self, Int) -> Self
+pub fn OutputStreamBuilder::with_supported_config(Self, @core.SupportedStreamConfig) -> Self
+
+pub struct OutputStreamConfig {
+  channel_count : Int
+  sample_rate : Int
+  buffer_size : @core.BufferSize
+  sample_format : @core.SampleFormat
+}
+pub fn OutputStreamConfig::buffer_size(Self) -> @core.BufferSize
+pub fn OutputStreamConfig::channel_count(Self) -> Int
+pub fn OutputStreamConfig::default() -> Self
+pub fn OutputStreamConfig::sample_format(Self) -> @core.SampleFormat
+pub fn OutputStreamConfig::sample_rate(Self) -> Int
+pub impl Eq for OutputStreamConfig
+pub impl Show for OutputStreamConfig
+
+pub struct Pausable {
+  input : DynSource
+  paused : Ref[Bool]
+  remaining_paused_samples : Ref[Int]
+}
+pub fn Pausable::channels(Self) -> Int
+pub fn Pausable::is_paused(Self) -> Bool
+pub fn Pausable::next(Self) -> Double?
+pub fn Pausable::sample_rate(Self) -> Int
+pub fn Pausable::set_paused(Self, Bool) -> Unit
+pub impl Source for Pausable
+
+pub struct SamplesBuffer {
+  channels : Int
+  sample_rate : Int
+  samples : Array[Double]
+  cursor : Ref[Int]
+}
+pub fn SamplesBuffer::amplify(Self, Double) -> DynSource
+pub fn SamplesBuffer::channels(Self) -> Int
+pub fn SamplesBuffer::new(Int, Int, Array[Double]) -> Self
+pub fn SamplesBuffer::next(Self) -> Double?
+pub fn SamplesBuffer::repeat_infinite(Self) -> DynSource
+pub fn SamplesBuffer::sample_rate(Self) -> Int
+pub impl Source for SamplesBuffer
+
+pub struct SawtoothWave {
+  inner : SignalGenerator
+}
+pub fn SawtoothWave::channels(Self) -> Int
+pub fn SawtoothWave::new(Double) -> Self
+pub fn SawtoothWave::next(Self) -> Double?
+pub fn SawtoothWave::sample_rate(Self) -> Int
+pub impl Source for SawtoothWave
+
+pub enum SignalFunction {
+  Sine
+  Square
+  Sawtooth
+  Triangle
+}
+pub impl Eq for SignalFunction
+pub impl Show for SignalFunction
+
+pub struct SignalGenerator {
+  channels : Int
+  sample_rate : Int
+  frequency : Double
+  function : SignalFunction
+  phase : Ref[Double]
+}
+pub fn SignalGenerator::channels(Self) -> Int
+pub fn SignalGenerator::new(Int, Double, SignalFunction) -> Self
+pub fn SignalGenerator::next(Self) -> Double?
+pub fn SignalGenerator::sample_rate(Self) -> Int
+pub impl Source for SignalGenerator
+
+pub struct SineWave {
+  inner : SignalGenerator
+}
+pub fn SineWave::channels(Self) -> Int
+pub fn SineWave::new(Double) -> Self
+pub fn SineWave::next(Self) -> Double?
+pub fn SineWave::sample_rate(Self) -> Int
+pub impl Source for SineWave
+
+pub struct Sink {
+  queue_tx : SourcesQueueInput
+  controls : SinkControls
+  detached : Ref[Bool]
+}
+pub fn[S : Source] Sink::append(Self, S) -> Unit
+pub fn Sink::clear(Self) -> Unit
+pub fn Sink::connect_new(Mixer) -> Self
+pub fn Sink::detach(Self) -> Unit
+pub fn Sink::empty(Self) -> Bool
+pub fn Sink::is_paused(Self) -> Bool
+pub fn Sink::len(Self) -> Int
+pub fn Sink::new() -> (Self, ControlledQueueSource)
+pub fn Sink::pause(Self) -> Unit
+pub fn Sink::play(Self) -> Unit
+pub fn Sink::set_speed(Self, Double) -> Unit
+pub fn Sink::set_volume(Self, Double) -> Unit
+pub fn Sink::sleep_until_end(Self) -> Unit
+pub fn Sink::speed(Self) -> Double
+pub fn Sink::stop(Self) -> Unit
+pub fn Sink::volume(Self) -> Double
+
+pub struct SinkControls {
+  pause : Ref[Bool]
+  stopped : Ref[Bool]
+  volume : Ref[Double]
+  speed : Ref[Double]
+}
+
+pub struct Skippable {
+  input : DynSource
+  do_skip : Ref[Bool]
+}
+pub fn Skippable::channels(Self) -> Int
+pub fn Skippable::next(Self) -> Double?
+pub fn Skippable::sample_rate(Self) -> Int
+pub fn Skippable::skip(Self) -> Unit
+pub impl Source for Skippable
+
+pub struct SourcesQueueInput {
+  next_sounds : Ref[Array[DynSource]]
+  keep_alive_if_empty : Ref[Bool]
+  reset_version : Ref[Int]
+}
+pub fn[S : Source] SourcesQueueInput::append(Self, S) -> Unit
+pub fn SourcesQueueInput::clear(Self) -> Int
+pub fn SourcesQueueInput::set_keep_alive_if_empty(Self, Bool) -> Unit
+
+pub struct SourcesQueueOutput {
+  current : Ref[DynSource]
+  current_is_fallback : Ref[Bool]
+  prefetched : Ref[Double?]
+  has_prefetched : Ref[Bool]
+  seen_reset_version : Ref[Int]
+  input : SourcesQueueInput
+}
+pub fn SourcesQueueOutput::channels(Self) -> Int
+pub fn SourcesQueueOutput::next(Self) -> Double?
+pub fn SourcesQueueOutput::sample_rate(Self) -> Int
+pub impl Source for SourcesQueueOutput
+
+pub struct SpatialSink {
+  sink : Sink
+  emitter_position : Ref[Array[Double]]
+  left_ear : Ref[Array[Double]]
+  right_ear : Ref[Array[Double]]
+}
+pub fn[S : Source] SpatialSink::append(Self, S) -> Unit
+pub fn SpatialSink::clear(Self) -> Unit
+pub fn SpatialSink::connect_new(Mixer, Array[Double], Array[Double], Array[Double]) -> Self
+pub fn SpatialSink::detach(Self) -> Unit
+pub fn SpatialSink::empty(Self) -> Bool
+pub fn SpatialSink::is_paused(Self) -> Bool
+pub fn SpatialSink::len(Self) -> Int
+pub fn SpatialSink::pause(Self) -> Unit
+pub fn SpatialSink::play(Self) -> Unit
+pub fn SpatialSink::set_emitter_position(Self, Array[Double]) -> Unit
+pub fn SpatialSink::set_left_ear_position(Self, Array[Double]) -> Unit
+pub fn SpatialSink::set_right_ear_position(Self, Array[Double]) -> Unit
+pub fn SpatialSink::set_speed(Self, Double) -> Unit
+pub fn SpatialSink::set_volume(Self, Double) -> Unit
+pub fn SpatialSink::sleep_until_end(Self) -> Unit
+pub fn SpatialSink::speed(Self) -> Double
+pub fn SpatialSink::stop(Self) -> Unit
+pub fn SpatialSink::volume(Self) -> Double
+
+pub struct SpatialSource {
+  input : DynSource
+  emitter_position : Ref[Array[Double]]
+  left_ear : Ref[Array[Double]]
+  right_ear : Ref[Array[Double]]
+  left_gain : Ref[Double]
+  right_gain : Ref[Double]
+  pending_mono : Ref[Double]
+  has_pending : Ref[Bool]
+  pending_channel : Ref[Int]
+}
+pub fn SpatialSource::channels(Self) -> Int
+pub fn[S : Source] SpatialSource::new(S, Array[Double], Array[Double], Array[Double]) -> Self
+pub fn SpatialSource::next(Self) -> Double?
+pub fn SpatialSource::sample_rate(Self) -> Int
+pub fn SpatialSource::set_positions(Self, Array[Double], Array[Double], Array[Double]) -> Unit
+pub impl Source for SpatialSource
+
+pub struct SquareWave {
+  inner : SignalGenerator
+}
+pub fn SquareWave::channels(Self) -> Int
+pub fn SquareWave::new(Double) -> Self
+pub fn SquareWave::next(Self) -> Double?
+pub fn SquareWave::sample_rate(Self) -> Int
+pub impl Source for SquareWave
+
+pub struct StaticSamplesBuffer {
+  channels : Int
+  sample_rate : Int
+  samples : Array[Double]
+  cursor : Ref[Int]
+}
+pub fn StaticSamplesBuffer::channels(Self) -> Int
+pub fn StaticSamplesBuffer::new(Int, Int, Array[Double]) -> Self
+pub fn StaticSamplesBuffer::next(Self) -> Double?
+pub fn StaticSamplesBuffer::sample_rate(Self) -> Int
+pub impl Source for StaticSamplesBuffer
+
+pub struct Stoppable {
+  input : DynSource
+  stopped : Ref[Bool]
+}
+pub fn Stoppable::channels(Self) -> Int
+pub fn Stoppable::next(Self) -> Double?
+pub fn Stoppable::sample_rate(Self) -> Int
+pub fn Stoppable::stop(Self) -> Unit
+pub impl Source for Stoppable
+
+pub struct TriangleWave {
+  inner : SignalGenerator
+}
+pub fn TriangleWave::channels(Self) -> Int
+pub fn TriangleWave::new(Double) -> Self
+pub fn TriangleWave::next(Self) -> Double?
+pub fn TriangleWave::sample_rate(Self) -> Int
+pub impl Source for TriangleWave
+
+// Type aliases
+pub type ChannelCount = Int
+
+pub type Sample = Double
+
+pub type SampleRate = Int
+
+// Traits
+pub trait Source {
+  next(Self) -> Double?
+  channels(Self) -> Int
+  sample_rate(Self) -> Int
+}
+

@@ -1,0 +1,14 @@
+import {
+  "Milky2018/moon_cpal",
+  "Milky2018/moon_rodio/decoder",
+  "moonbitlang/core/math",
+  "moonbitlang/core/ref",
+}
+
+options(
+  link: {
+    "native": {
+      "cc-link-flags": "-framework CoreAudio -framework CoreFoundation -framework AudioToolbox",
+    },
+  },
+)

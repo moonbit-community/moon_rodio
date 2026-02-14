@@ -1,0 +1,327 @@
+///|
+pub type Sample = Double
+
+///|
+pub type ChannelCount = Int
+
+///|
+pub type SampleRate = Int
+
+///|
+let hz_44100 : SampleRate = 44_100
+
+///|
+pub trait Source {
+  next(Self) -> Sample?
+  channels(Self) -> ChannelCount
+  sample_rate(Self) -> SampleRate
+}
+
+///|
+pub struct DynSource {
+  next_sample : () -> Sample?
+  channels : ChannelCount
+  sample_rate : SampleRate
+}
+
+///|
+pub fn DynSource::new(
+  next_sample : () -> Sample?,
+  channels : ChannelCount,
+  sample_rate : SampleRate,
+) -> DynSource {
+  guard channels > 0 else { panic() }
+  guard sample_rate > 0 else { panic() }
+  { next_sample, channels, sample_rate }
+}
+
+///|
+pub fn DynSource::next(self : DynSource) -> Sample? {
+  (self.next_sample)()
+}
+
+///|
+pub fn DynSource::channels(self : DynSource) -> ChannelCount {
+  self.channels
+}
+
+///|
+pub fn DynSource::sample_rate(self : DynSource) -> SampleRate {
+  self.sample_rate
+}
+
+///|
+pub impl Source for DynSource with next(self : DynSource) {
+  self.next()
+}
+
+///|
+pub impl Source for DynSource with channels(self : DynSource) {
+  self.channels()
+}
+
+///|
+pub impl Source for DynSource with sample_rate(self : DynSource) {
+  self.sample_rate()
+}
+
+///|
+pub fn[S : Source] to_dyn(source : S) -> DynSource {
+  DynSource::new(
+    fn() { source.next() },
+    source.channels(),
+    source.sample_rate(),
+  )
+}
+
+///|
+pub struct SamplesBuffer {
+  channels : ChannelCount
+  sample_rate : SampleRate
+  samples : Array[Sample]
+  cursor : Ref[Int]
+}
+
+///|
+pub fn SamplesBuffer::new(
+  channels : ChannelCount,
+  sample_rate : SampleRate,
+  samples : Array[Sample],
+) -> SamplesBuffer {
+  guard channels > 0 else { panic() }
+  guard sample_rate > 0 else { panic() }
+  { channels, sample_rate, samples, cursor: @ref.new(0) }
+}
+
+///|
+pub fn SamplesBuffer::channels(self : SamplesBuffer) -> ChannelCount {
+  self.channels
+}
+
+///|
+pub fn SamplesBuffer::sample_rate(self : SamplesBuffer) -> SampleRate {
+  self.sample_rate
+}
+
+///|
+pub fn SamplesBuffer::next(self : SamplesBuffer) -> Sample? {
+  if self.cursor.val >= self.samples.length() {
+    None
+  } else {
+    let value = self.samples[self.cursor.val]
+    self.cursor.val += 1
+    Some(value)
+  }
+}
+
+///|
+pub fn SamplesBuffer::amplify(
+  self : SamplesBuffer,
+  factor : Sample,
+) -> DynSource {
+  let src = to_dyn(self)
+  DynSource::new(
+    fn() {
+      match src.next() {
+        None => None
+        Some(v) => Some(v * factor)
+      }
+    },
+    src.channels(),
+    src.sample_rate(),
+  )
+}
+
+///|
+pub impl Source for SamplesBuffer with next(self : SamplesBuffer) {
+  self.next()
+}
+
+///|
+pub impl Source for SamplesBuffer with channels(self : SamplesBuffer) {
+  self.channels()
+}
+
+///|
+pub impl Source for SamplesBuffer with sample_rate(self : SamplesBuffer) {
+  self.sample_rate()
+}
+
+///|
+fn make_empty_dyn_source(
+  channels : ChannelCount,
+  sample_rate : SampleRate,
+) -> DynSource {
+  DynSource::new(fn() { None }, channels, sample_rate)
+}
+
+///|
+fn make_zero_dyn_source(
+  channels : ChannelCount,
+  sample_rate : SampleRate,
+  sample_count : Int,
+) -> DynSource {
+  let remaining = @ref.new(sample_count)
+  DynSource::new(
+    fn() {
+      if remaining.val <= 0 {
+        None
+      } else {
+        remaining.val -= 1
+        Some(0.0)
+      }
+    },
+    channels,
+    sample_rate,
+  )
+}
+
+///|
+fn channel_convert(
+  input : DynSource,
+  target_channels : ChannelCount,
+) -> DynSource {
+  let from = input.channels()
+  let to = target_channels
+  if from == to {
+    return input
+  }
+
+  let sample_repeat = @ref.new(None)
+  let next_output_sample_pos = @ref.new(0)
+
+  DynSource::new(
+    fn() {
+      let pos = next_output_sample_pos.val
+      let result = if pos == 0 {
+        let value = input.next()
+        sample_repeat.val = value
+        value
+      } else if pos < from {
+        input.next()
+      } else if pos == 1 {
+        sample_repeat.val
+      } else {
+        Some(0.0)
+      }
+
+      match result {
+        None => None
+        Some(value) => {
+          next_output_sample_pos.val += 1
+          if next_output_sample_pos.val == to {
+            next_output_sample_pos.val = 0
+            if from > to {
+              for _ in to..<from {
+                ignore(input.next())
+              }
+            }
+          }
+          Some(value)
+        }
+      }
+    },
+    to,
+    input.sample_rate(),
+  )
+}
+
+///|
+fn read_frame(input : DynSource, channels : ChannelCount) -> Array[Sample]? {
+  let frame : Array[Sample] = []
+  for _ in 0..<channels {
+    match input.next() {
+      None => return None
+      Some(v) => frame.push(v)
+    }
+  }
+  Some(frame)
+}
+
+///|
+fn sample_rate_convert(
+  input : DynSource,
+  target_sample_rate : SampleRate,
+) -> DynSource {
+  let from_rate = input.sample_rate()
+  let to_rate = target_sample_rate
+  let channels = input.channels()
+
+  if from_rate == to_rate {
+    return input
+  }
+
+  let left = @ref.new(read_frame(input, channels))
+  let right = @ref.new(read_frame(input, channels))
+  let base_index = @ref.new(0)
+  let output_index = @ref.new(0)
+  let pending = @ref.new([])
+  let pending_cursor = @ref.new(0)
+
+  DynSource::new(
+    fn() {
+      if pending_cursor.val < pending.val.length() {
+        let value = pending.val[pending_cursor.val]
+        pending_cursor.val += 1
+        return Some(value)
+      }
+
+      let position_num = output_index.val * from_rate
+      let required_left_index = position_num / to_rate
+      let frac_num = position_num % to_rate
+
+      while required_left_index > base_index.val {
+        match right.val {
+          None => break
+          Some(rf) => {
+            left.val = Some(rf)
+            right.val = read_frame(input, channels)
+            base_index.val += 1
+          }
+        }
+      }
+
+      let left_frame = match left.val {
+        None => return None
+        Some(frame) => frame
+      }
+
+      let out_frame : Array[Sample] = []
+      match right.val {
+        None => {
+          if frac_num != 0 {
+            return None
+          }
+          for i in 0..<channels {
+            out_frame.push(left_frame[i])
+          }
+        }
+        Some(right_frame) => {
+          let t = Double::from_int(frac_num) / Double::from_int(to_rate)
+          for i in 0..<channels {
+            let a = left_frame[i]
+            let b = right_frame[i]
+            out_frame.push(a + (b - a) * t)
+          }
+        }
+      }
+
+      output_index.val += 1
+      pending.val = out_frame
+      pending_cursor.val = 1
+      Some(pending.val[0])
+    },
+    channels,
+    to_rate,
+  )
+}
+
+///|
+fn uniform_source(
+  input : DynSource,
+  target_channels : ChannelCount,
+  target_sample_rate : SampleRate,
+) -> DynSource {
+  let sampled = sample_rate_convert(input, target_sample_rate)
+  channel_convert(sampled, target_channels)
+}

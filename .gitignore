@@ -1,0 +1,9 @@
+.DS_Store
+_build/
+.mooncakes/
+.moonagent/
+rodio-reference/
+mp3-reference/
+wav-reference/
+flac-reference/
+vorbis-reference/

@@ -1,0 +1,12 @@
+import {
+  "moonbitlang/core/ref",
+}
+
+options(
+  "native-stub": [ "mp3_native.c", "flac_vorbis_native.c" ],
+  targets: {
+    "flac_decoder_native.mbt": [ "native" ],
+    "mp3_decoder_native.mbt": [ "native" ],
+    "vorbis_decoder_native.mbt": [ "native" ],
+  },
+)
