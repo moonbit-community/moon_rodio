@@ -533,6 +533,10 @@ pub fn Speed::into_inner(self : Speed) -> DynSource {
 ///|
 pub struct TakeDuration {
   inner : DynSource
+  requested_duration : @moon_cpal.Duration
+  requested_samples : Int
+  remaining_samples : Ref[Int]
+  filter_fadeout : Ref[Bool]
 }
 
 ///|
@@ -540,7 +544,19 @@ pub fn[S : Source] TakeDuration::new(
   source : S,
   duration : @moon_cpal.Duration,
 ) -> TakeDuration {
-  { inner: take_duration(source, duration) }
+  let inner = to_dyn(source)
+  let requested_samples = duration_to_sample_count(
+    duration,
+    inner.channels(),
+    inner.sample_rate(),
+  )
+  {
+    inner,
+    requested_duration: duration,
+    requested_samples,
+    remaining_samples: @ref.new(requested_samples),
+    filter_fadeout: @ref.new(false),
+  }
 }
 
 ///|
@@ -560,12 +576,12 @@ pub fn TakeDuration::into_inner(self : TakeDuration) -> DynSource {
 
 ///|
 pub fn TakeDuration::set_filter_fadeout(self : TakeDuration) -> Unit {
-  ignore(self)
+  self.filter_fadeout.val = true
 }
 
 ///|
 pub fn TakeDuration::clear_filter(self : TakeDuration) -> Unit {
-  ignore(self)
+  self.filter_fadeout.val = false
 }
 
 ///|
@@ -1013,17 +1029,37 @@ pub impl Source for Speed with sample_rate(self : Speed) {
 
 ///|
 pub impl Source for TakeDuration with next(self : TakeDuration) {
-  dyn_next(self.inner)
+  if self.remaining_samples.val <= 0 {
+    return None
+  }
+
+  match self.inner.next() {
+    None => {
+      self.remaining_samples.val = 0
+      None
+    }
+    Some(v) => {
+      let out = if self.filter_fadeout.val && self.requested_samples > 0 {
+        v *
+        Double::from_int(self.remaining_samples.val) /
+        Double::from_int(self.requested_samples)
+      } else {
+        v
+      }
+      self.remaining_samples.val -= 1
+      Some(out)
+    }
+  }
 }
 
 ///|
 pub impl Source for TakeDuration with channels(self : TakeDuration) {
-  dyn_channels(self.inner)
+  self.inner.channels()
 }
 
 ///|
 pub impl Source for TakeDuration with sample_rate(self : TakeDuration) {
-  dyn_sample_rate(self.inner)
+  self.inner.sample_rate()
 }
 
 ///|
@@ -1352,12 +1388,23 @@ pub impl Source for Speed with try_seek(
 
 ///|
 pub impl Source for TakeDuration with current_span_len(_self : TakeDuration) {
-  _self.inner().current_span_len()
+  let rem = if _self.remaining_samples.val <= 0 {
+    0
+  } else {
+    _self.remaining_samples.val
+  }
+  match _self.inner().current_span_len() {
+    None => Some(rem)
+    Some(v) => Some(if v < rem { v } else { rem })
+  }
 }
 
 ///|
 pub impl Source for TakeDuration with total_duration(_self : TakeDuration) {
-  _self.inner().total_duration()
+  _self
+  .inner()
+  .total_duration()
+  .map(fn(v) { duration_min(v, _self.requested_duration) })
 }
 
 ///|
@@ -1366,6 +1413,16 @@ pub impl Source for TakeDuration with try_seek(
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
   _self.inner().try_seek(pos)
+  let target = sample_index_from_duration(
+    pos,
+    _self.inner().channels(),
+    _self.inner().sample_rate(),
+  )
+  _self.remaining_samples.val = if target >= _self.requested_samples {
+    0
+  } else {
+    _self.requested_samples - target
+  }
 }
 
 ///|

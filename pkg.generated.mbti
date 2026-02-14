@@ -934,6 +934,10 @@ pub impl Source for Stoppable
 
 pub struct TakeDuration {
   inner : DynSource
+  requested_duration : @core.Duration
+  requested_samples : Int
+  remaining_samples : Ref[Int]
+  filter_fadeout : Ref[Bool]
 }
 pub fn TakeDuration::clear_filter(Self) -> Unit
 pub fn TakeDuration::inner(Self) -> DynSource

@@ -638,6 +638,35 @@ test "rodio::source::named_wrappers_inner_accessors" {
 }
 
 ///|
+test "rodio::source::named_takeduration_filter_and_seek" {
+  let td = TakeDuration::new(
+    SamplesBuffer::new(1, 1, [1.0, 1.0, 1.0]),
+    @moon_cpal.Duration::from_secs((3 : UInt64)),
+  )
+  td.set_filter_fadeout()
+  let vals = collect_n(td, 10)
+  assert_eq(vals.length(), 3)
+  assert_eq(vals[0], 1.0)
+  assert_true(vals[1] > 0.66 && vals[1] < 0.67)
+  assert_true(vals[2] > 0.33 && vals[2] < 0.34)
+
+  let td2 = TakeDuration::new(
+    SamplesBuffer::new(1, 1, [1.0, 1.0, 1.0]),
+    @moon_cpal.Duration::from_secs((3 : UInt64)),
+  )
+  td2.set_filter_fadeout()
+  td2.clear_filter()
+  assert_eq(collect_n(td2, 10), [1.0, 1.0, 1.0])
+
+  let td3 = TakeDuration::new(
+    SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0, 4.0]),
+    @moon_cpal.Duration::from_secs((2 : UInt64)),
+  )
+  td3.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
+  assert_eq(collect_n(td3, 10), [3.0, 4.0])
+}
+
+///|
 test "rodio::source::agc" {
   let src = SamplesBuffer::new(1, 10, [0.1, 0.1, 0.1, 0.1])
   let agc = AutomaticGainControl::new(
