@@ -16,6 +16,8 @@ pub fn[S : Source] amplify_normalized(S, Double) -> DynSource
 
 pub fn[S : Source] buffered(S) -> SamplesBuffer
 
+pub fn[S : Source] channel_volume(S, Array[Double]) -> DynSource
+
 pub fn[S : Source] convert_channels(S, Int) -> DynSource
 
 pub fn[S : Source] convert_sample_rate(S, Int) -> DynSource
@@ -24,7 +26,13 @@ pub fn[S : Source] delay(S, @core.Duration) -> DynSource
 
 pub fn empty(Int, Int) -> DynSource
 
+pub fn[S : Source] fade_in(S, @core.Duration) -> DynSource
+
+pub fn[S : Source] fade_out(S, @core.Duration) -> DynSource
+
 pub fn from_iter(Int, Int, Array[Double]) -> SamplesBuffer
+
+pub fn[S : Source] linear_gain_ramp(S, Double, Double, @core.Duration) -> DynSource
 
 pub fn[A : Source, B : Source] mix(A, B) -> DynSource
 

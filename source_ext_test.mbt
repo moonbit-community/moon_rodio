@@ -145,3 +145,36 @@ test "rodio::source::periodic_access" {
   assert_eq(collect_n(p, 10), [1.0, 2.0, 3.0, 4.0, 5.0])
   assert_eq(call_count.val, 2)
 }
+
+///|
+test "rodio::source::channel_volume" {
+  let s = SamplesBuffer::new(2, 44_100, [2.0, 2.0, 4.0, 4.0])
+  let out = channel_volume(s, [1.0, 0.5])
+  assert_eq(collect_n(out, 10), [2.0, 1.0, 4.0, 2.0])
+}
+
+///|
+test "rodio::source::linear_ramp_and_fades" {
+  let s = SamplesBuffer::new(1, 1, [1.0, 1.0, 1.0])
+  let ramp = linear_gain_ramp(
+    s,
+    0.0,
+    1.0,
+    @moon_cpal.Duration::from_secs((2 : UInt64)),
+  )
+  let rv = collect_n(ramp, 10)
+  assert_eq(rv[0], 0.0)
+  assert_true(rv[1] > 0.49 && rv[1] < 0.51)
+  assert_eq(rv[2], 1.0)
+
+  let s2 = SamplesBuffer::new(1, 1, [1.0, 1.0, 1.0])
+  let fin = fade_in(s2, @moon_cpal.Duration::from_secs((2 : UInt64)))
+  let fv = collect_n(fin, 10)
+  assert_eq(fv[0], 0.0)
+  assert_true(fv[1] > 0.49 && fv[1] < 0.51)
+  assert_eq(fv[2], 1.0)
+
+  let s3 = SamplesBuffer::new(1, 1, [1.0, 1.0, 1.0, 1.0])
+  let fout = fade_out(s3, @moon_cpal.Duration::from_secs((2 : UInt64)))
+  assert_eq(collect_n(fout, 10), [1.0, 1.0, 0.5, 0.0])
+}
