@@ -182,3 +182,20 @@ test "rodio::queue::tests::set_keep_alive_if_empty_runtime_toggle" {
   }
   assert_eq(rx.next(), None)
 }
+
+///|
+test "rodio::queue::tests::try_seek_only_current_source" {
+  let (tx, rx) = @moon_rodio.queue(true)
+  tx.append(@moon_rodio.SamplesBuffer::new(1, 1, [7.0, 8.0]))
+
+  // Seek while current is initial empty source. This should not seek the pending source.
+  let seek_err = try {
+    rx.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
+    false
+  } catch {
+    SeekError::NotSupported => true
+  }
+  assert_true(seek_err)
+  assert_eq(rx.next(), Some(7.0))
+  assert_eq(rx.next(), Some(8.0))
+}

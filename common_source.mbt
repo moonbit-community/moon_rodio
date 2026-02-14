@@ -449,6 +449,10 @@ fn make_zero_dyn_source(
     },
     channels,
     sample_rate,
+    current_span_len=fn() {
+      Some(if remaining.val <= 0 { 0 } else { remaining.val })
+    },
+    try_seek=fn(_pos : @moon_cpal.Duration) { Ok(()) },
   )
 }
 
