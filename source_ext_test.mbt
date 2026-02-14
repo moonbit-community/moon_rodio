@@ -200,3 +200,32 @@ test "rodio::source::crossfade" {
   assert_true(v[1] > 1.49 && v[1] < 1.51)
   assert_eq(v[2], 2.0)
 }
+
+///|
+test "rodio::source::chirp" {
+  let c = chirp(10, 10.0, 20.0, @moon_cpal.Duration::from_secs((1 : UInt64)))
+  assert_eq(c.channels(), 1)
+  assert_eq(c.sample_rate(), 10)
+  let out = collect_n(c, 20)
+  assert_eq(out.length(), 10)
+}
+
+///|
+test "rodio::source::from_factory" {
+  let idx = @ref.new(0)
+  let src = from_factory(fn() {
+    let current = idx.val
+    idx.val += 1
+    if current == 0 {
+      Some(SamplesBuffer::new(1, 44_100, [1.0, 2.0]))
+    } else if current == 1 {
+      Some(SamplesBuffer::new(1, 44_100, [3.0]))
+    } else {
+      None
+    }
+  })
+
+  assert_eq(src.channels(), 1)
+  assert_eq(src.sample_rate(), 44_100)
+  assert_eq(collect_n(src, 10), [1.0, 2.0, 3.0])
+}

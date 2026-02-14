@@ -18,6 +18,8 @@ pub fn[S : Source] buffered(S) -> SamplesBuffer
 
 pub fn[S : Source] channel_volume(S, Array[Double]) -> DynSource
 
+pub fn chirp(Int, Double, Double, @core.Duration) -> Chirp
+
 pub fn[S : Source] convert_channels(S, Int) -> DynSource
 
 pub fn[S : Source] convert_sample_rate(S, Int) -> DynSource
@@ -33,6 +35,8 @@ pub fn empty(Int, Int) -> DynSource
 pub fn[S : Source] fade_in(S, @core.Duration) -> DynSource
 
 pub fn[S : Source] fade_out(S, @core.Duration) -> DynSource
+
+pub fn[S : Source] from_factory(() -> S?) -> FromFactoryIter[S]
 
 pub fn from_iter(Int, Int, Array[Double]) -> SamplesBuffer
 
@@ -109,6 +113,19 @@ pub impl Eq for StreamError
 pub impl Show for StreamError
 
 // Types and methods
+pub struct Chirp {
+  sample_rate : Int
+  start_frequency : Double
+  end_frequency : Double
+  total_samples : Int
+  elapsed_samples : Ref[Int]
+  phase : Ref[Double]
+}
+pub fn Chirp::channels(Self) -> Int
+pub fn Chirp::next(Self) -> Double?
+pub fn Chirp::sample_rate(Self) -> Int
+pub impl Source for Chirp
+
 pub struct ControlledQueueSource {
   inner : SourcesQueueOutput
   controls : SinkControls
@@ -141,6 +158,17 @@ pub fn DynSource::new(() -> Double?, Int, Int) -> Self
 pub fn DynSource::next(Self) -> Double?
 pub fn DynSource::sample_rate(Self) -> Int
 pub impl Source for DynSource
+
+pub struct FromFactoryIter[S] {
+  factory : () -> S?
+  current : Ref[DynSource?]
+  channels : Ref[Int]
+  sample_rate : Ref[Int]
+}
+pub fn[S] FromFactoryIter::channels(Self[S]) -> Int
+pub fn[S : Source] FromFactoryIter::next(Self[S]) -> Double?
+pub fn[S] FromFactoryIter::sample_rate(Self[S]) -> Int
+pub impl[S : Source] Source for FromFactoryIter[S]
 
 pub struct Mixer {
   has_pending : Ref[Bool]
