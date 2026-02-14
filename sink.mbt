@@ -20,6 +20,7 @@ pub struct ControlledQueueSource {
 ///|
 pub struct Sink {
   queue_tx : SourcesQueueInput
+  queue_rx : SourcesQueueOutput
   controls : SinkControls
   detached : Ref[Bool]
   last_signal : Ref[QueueSignal?]
@@ -47,6 +48,16 @@ fn with_done_count(source : DynSource, sound_count : Ref[Int]) -> DynSource {
     },
     source.channels(),
     source.sample_rate(),
+    current_span_len=fn() { source.current_span_len() },
+    total_duration=fn() { source.total_duration() },
+    try_seek=fn(pos : @moon_cpal.Duration) {
+      try {
+        source.try_seek(pos)
+        Ok(())
+      } catch {
+        err => Err(err)
+      }
+    },
   )
 }
 
@@ -145,6 +156,7 @@ pub fn Sink::new() -> (Sink, ControlledQueueSource) {
   (
     {
       queue_tx,
+      queue_rx,
       controls,
       detached: @ref.new(false),
       last_signal: @ref.new(None),
@@ -241,12 +253,17 @@ pub fn Sink::skip_one(self : Sink) -> Unit {
 ///|
 pub fn Sink::try_seek(
   self : Sink,
-  _pos : @moon_cpal.Duration,
+  pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
   if self.controls.sound_count.val <= 0 {
     return
   }
-  raise SeekError::NotSupported
+  self.queue_rx.try_seek(pos)
+  self.controls.position_samples.val = sample_index_from_duration(
+    pos,
+    self.controls.position_channels.val,
+    self.controls.position_sample_rate.val,
+  )
 }
 
 ///|

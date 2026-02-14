@@ -744,6 +744,7 @@ pub impl Source for SineWave
 
 pub struct Sink {
   queue_tx : SourcesQueueInput
+  queue_rx : SourcesQueueOutput
   controls : SinkControls
   detached : Ref[Bool]
   last_signal : Ref[QueueSignal?]

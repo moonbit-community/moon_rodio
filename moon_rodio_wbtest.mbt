@@ -95,19 +95,17 @@ test "rodio::sink::tests::get_pos_and_try_seek" {
   ignore(queue_rx.next())
   assert_eq(sink.get_pos().secs, (0 : UInt64))
 
-  let err = try {
-    sink.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
-    panic()
-  } catch {
-    e => e
-  }
-  assert_true(err is SeekError::NotSupported)
-  assert_true(err.source_intact())
+  sink.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
+  assert_eq(sink.get_pos().secs, (0 : UInt64))
+  assert_eq(queue_rx.next(), Some(1.0))
 
   ignore(queue_rx.next())
-  assert_eq(sink.get_pos().secs, (1 : UInt64))
+  assert_eq(queue_rx.next(), Some(3.0))
+  assert_eq(sink.get_pos().secs, (0 : UInt64))
 
   sink.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
+  assert_eq(queue_rx.next(), Some(0.0))
+  assert_eq(sink.get_pos().secs, (1 : UInt64))
 }
 
 ///|

@@ -269,8 +269,17 @@ pub impl Source for SourcesQueueOutput with total_duration(
 
 ///|
 pub impl Source for SourcesQueueOutput with try_seek(
-  _self : SourcesQueueOutput,
+  self : SourcesQueueOutput,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  self.sync_reset()
+  if self.current_is_fallback.val && !self.input.next_sounds.val.is_empty() {
+    let next = self.input.next_sounds.val.remove(0)
+    self.current.val = next.source
+    self.signal_after_end.val = next.signal
+    self.current_is_fallback.val = false
+  }
+  self.prefetched.val = None
+  self.has_prefetched.val = false
+  self.current.val.try_seek(pos)
 }

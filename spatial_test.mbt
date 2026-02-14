@@ -43,16 +43,13 @@ test "rodio::source::spatial_sink_seek_and_pos" {
     [1.0, 0.0, 0.0],
   )
 
-  sink.append(SamplesBuffer::new(1, 1, [1.0]))
-  ignore(mix_rx.next())
-  ignore(mix_rx.next())
-  ignore(sink.get_pos())
-
-  let err = try {
-    sink.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
-    panic()
-  } catch {
-    e => e
-  }
-  assert_true(err is SeekError::NotSupported)
+  sink.append(SamplesBuffer::new(1, 1, [1.0, 2.0]))
+  let l0 = mix_rx.next().unwrap()
+  let r0 = mix_rx.next().unwrap()
+  sink.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
+  assert_eq(sink.get_pos().secs, (0 : UInt64))
+  let l1 = mix_rx.next().unwrap()
+  let r1 = mix_rx.next().unwrap()
+  assert_eq(l1, l0)
+  assert_eq(r1, r0)
 }
