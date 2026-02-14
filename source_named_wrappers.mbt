@@ -301,14 +301,120 @@ pub fn FadeOut::into_inner(self : FadeOut) -> DynSource {
 }
 
 ///|
+fn duration_from_millis(ms : Int) -> @moon_cpal.Duration {
+  let secs = ms / 1000
+  let nanos = ms % 1000 * 1_000_000
+  @moon_cpal.Duration::new(secs.to_uint64(), nanos)
+}
+
+///|
+fn duration_from_micros(us : Int) -> @moon_cpal.Duration {
+  let secs = us / 1_000_000
+  let nanos = us % 1_000_000 * 1_000
+  @moon_cpal.Duration::new(secs.to_uint64(), nanos)
+}
+
+///|
+fn limit_duration_to_secs(duration : @moon_cpal.Duration) -> Double {
+  Double::from_int(duration.secs.to_int()) +
+  Double::from_int(duration.nanos) / 1_000_000_000.0
+}
+
+///|
+fn limit_duration_to_coefficient(
+  duration : @moon_cpal.Duration,
+  sample_rate : SampleRate,
+) -> Sample {
+  let secs = limit_duration_to_secs(duration)
+  if secs <= 0.0 || sample_rate <= 0 {
+    0.0
+  } else {
+    @math.exp(-1.0 / (secs * Double::from_int(sample_rate)))
+  }
+}
+
+///|
+fn limit_peak_from_threshold(threshold : Sample) -> Sample {
+  db_to_linear(threshold)
+}
+
+///|
+fn limit_threshold_from_peak(peak : Sample) -> Sample {
+  if peak <= 0.0 {
+    -120.0
+  } else {
+    linear_to_db(peak)
+  }
+}
+
+///|
+fn limit_peak_from_range(min_value : Sample, max_value : Sample) -> Sample {
+  let min_peak = min_value.abs()
+  let max_peak = max_value.abs()
+  if min_peak > max_peak {
+    min_peak
+  } else {
+    max_peak
+  }
+}
+
+///|
+fn limit_reduction_db(
+  sample : Sample,
+  threshold : Sample,
+  knee_width : Sample,
+) -> Sample {
+  let bias_db = linear_to_db(sample.abs() + 1.0e-12) - threshold
+  if knee_width <= 0.0 {
+    if bias_db <= 0.0 {
+      0.0
+    } else {
+      bias_db
+    }
+  } else {
+    let knee_boundary_db = bias_db * 2.0
+    if knee_boundary_db < -knee_width {
+      0.0
+    } else if knee_boundary_db.abs() <= knee_width {
+      let x = knee_boundary_db + knee_width
+      x * x / (8.0 * knee_width)
+    } else {
+      bias_db
+    }
+  }
+}
+
+///|
+fn limit_max_peak(peaks : Array[Sample]) -> Sample {
+  let max_peak = @ref.new(0.0)
+  for peak in peaks {
+    if peak > max_peak.val {
+      max_peak.val = peak
+    }
+  }
+  max_peak.val
+}
+
+///|
 pub struct LimitSettings {
   min_value : Sample
   max_value : Sample
+  threshold : Sample
+  knee_width : Sample
+  attack : @moon_cpal.Duration
+  release : @moon_cpal.Duration
 } derive(Show, Eq)
 
 ///|
 pub fn LimitSettings::default() -> LimitSettings {
-  { min_value: -1.0, max_value: 1.0 }
+  {
+    min_value: -1.0,
+    max_value: 1.0,
+    threshold: -1.0,
+    knee_width: 4.0,
+    attack: duration_from_millis(5),
+    release: duration_from_millis(100),
+  }
 }
 
 ///|
@@ -321,7 +427,8 @@ pub fn LimitSettings::with_min(
   self : LimitSettings,
   min_value : Sample,
 ) -> LimitSettings {
-  { ..self, min_value, }
+  let peak = limit_peak_from_range(min_value, self.max_value)
+  { ..self, min_value, threshold: limit_threshold_from_peak(peak) }
 }
 
 ///|
@@ -329,7 +436,8 @@ pub fn LimitSettings::with_max(
   self : LimitSettings,
   max_value : Sample,
 ) -> LimitSettings {
-  { ..self, max_value, }
+  let peak = limit_peak_from_range(self.min_value, max_value)
+  { ..self, max_value, threshold: limit_threshold_from_peak(peak) }
 }
 
 ///|
@@ -337,33 +445,32 @@ pub fn LimitSettings::with_threshold(
   self : LimitSettings,
   threshold : Sample,
 ) -> LimitSettings {
-  ignore(self)
-  let peak = @math.pow(10.0, threshold / 20.0)
-  { min_value: -peak, max_value: peak }
+  let peak = limit_peak_from_threshold(threshold)
+  { ..self, min_value: -peak, max_value: peak, threshold }
 }
 
 ///|
 pub fn LimitSettings::with_knee_width(
   self : LimitSettings,
-  _knee_width : Sample,
+  knee_width : Sample,
 ) -> LimitSettings {
-  self
+  { ..self, knee_width, }
 }
 
 ///|
 pub fn LimitSettings::with_attack(
   self : LimitSettings,
-  _attack : @moon_cpal.Duration,
+  attack : @moon_cpal.Duration,
 ) -> LimitSettings {
-  self
+  { ..self, attack, }
 }
 
 ///|
 pub fn LimitSettings::with_release(
   self : LimitSettings,
-  _release : @moon_cpal.Duration,
+  release : @moon_cpal.Duration,
 ) -> LimitSettings {
-  self
+  { ..self, release, }
 }
 
 ///|
@@ -375,48 +482,97 @@ pub fn LimitSettings::dynamic_content() -> LimitSettings {
 pub fn LimitSettings::broadcast() -> LimitSettings {
   LimitSettings::default()
   .with_knee_width(2.0)
-  .with_attack(@moon_cpal.Duration::from_secs((0 : UInt64)))
-  .with_release(@moon_cpal.Duration::from_secs((0 : UInt64)))
+  .with_attack(duration_from_millis(3))
+  .with_release(duration_from_millis(50))
 }
 
 ///|
 pub fn LimitSettings::mastering() -> LimitSettings {
-  LimitSettings::default().with_threshold(-0.5).with_knee_width(1.0)
+  LimitSettings::new()
+  .with_threshold(-0.5)
+  .with_knee_width(1.0)
+  .with_attack(duration_from_millis(1))
+  .with_release(duration_from_millis(200))
 }
 
 ///|
 pub fn LimitSettings::gaming() -> LimitSettings {
-  LimitSettings::default().with_threshold(-3.0).with_knee_width(3.0)
+  LimitSettings::new()
+  .with_threshold(-3.0)
+  .with_knee_width(3.0)
+  .with_attack(duration_from_millis(2))
+  .with_release(duration_from_millis(75))
 }
 
 ///|
 pub fn LimitSettings::live_performance() -> LimitSettings {
-  LimitSettings::default().with_threshold(-1.0).with_knee_width(1.0)
+  LimitSettings::new()
+  .with_threshold(-2.0)
+  .with_knee_width(3.0)
+  .with_attack(duration_from_micros(500))
+  .with_release(duration_from_millis(30))
 }
 
 ///|
 pub struct Limit {
-  inner : DynSource
+  input : DynSource
+  settings : LimitSettings
+  attack_coeff : Sample
+  release_coeff : Sample
+  integrators : Ref[Array[Sample]]
+  peaks : Ref[Array[Sample]]
+  position : Ref[Int]
 }
 
 ///|
 pub fn[S : Source] Limit::new(source : S, settings : LimitSettings) -> Limit {
-  { inner: limit(source, settings.min_value, settings.max_value) }
+  let input = to_dyn(source)
+  let channels = input.channels()
+  let integrators : Array[Sample] = []
+  let peaks : Array[Sample] = []
+  for _ in 0..<channels {
+    integrators.push(0.0)
+    peaks.push(0.0)
+  }
+  {
+    input,
+    settings,
+    attack_coeff: limit_duration_to_coefficient(
+      settings.attack,
+      input.sample_rate(),
+    ),
+    release_coeff: limit_duration_to_coefficient(
+      settings.release,
+      input.sample_rate(),
+    ),
+    integrators: @ref.new(integrators),
+    peaks: @ref.new(peaks),
+    position: @ref.new(0),
+  }
 }
 
 ///|
 pub fn Limit::inner(self : Limit) -> DynSource {
-  self.inner
+  self.input
 }
 
 ///|
 pub fn Limit::inner_mut(self : Limit) -> DynSource {
-  self.inner
+  self.input
 }
 
 ///|
 pub fn Limit::into_inner(self : Limit) -> DynSource {
-  self.inner
+  self.input
+}
+
+///|
+fn Limit::reset_state(self : Limit) -> Unit {
+  self.position.val = 0
+  for i in 0..<self.integrators.val.length() {
+    self.integrators.val[i] = 0.0
+    self.peaks.val[i] = 0.0
+  }
 }
 
 ///|
@@ -949,17 +1105,47 @@ pub impl Source for FadeOut with sample_rate(self : FadeOut) {
 
 ///|
 pub impl Source for Limit with next(self : Limit) {
-  dyn_next(self.inner)
+  match self.input.next() {
+    None => None
+    Some(sample) => {
+      let channels = self.integrators.val.length()
+      if channels <= 0 {
+        return Some(sample)
+      }
+
+      let channel = self.position.val % channels
+      self.position.val = (channel + 1) % channels
+
+      let limiter_db = limit_reduction_db(
+        sample,
+        self.settings.threshold,
+        self.settings.knee_width,
+      )
+      let release_smoothed = self.release_coeff * self.integrators.val[channel] +
+        (1.0 - self.release_coeff) * limiter_db
+      let integrator = if limiter_db > release_smoothed {
+        limiter_db
+      } else {
+        release_smoothed
+      }
+      self.integrators.val[channel] = integrator
+      let peak = self.attack_coeff * self.peaks.val[channel] +
+        (1.0 - self.attack_coeff) * integrator
+      self.peaks.val[channel] = peak
+
+      Some(sample * db_to_linear(-limit_max_peak(self.peaks.val)))
+    }
+  }
 }
 
 ///|
 pub impl Source for Limit with channels(self : Limit) {
-  dyn_channels(self.inner)
+  self.input.channels()
 }
 
 ///|
 pub impl Source for Limit with sample_rate(self : Limit) {
-  dyn_sample_rate(self.inner)
+  self.input.sample_rate()
 }
 
 ///|
@@ -1298,12 +1484,12 @@ pub impl Source for FadeOut with try_seek(
 
 ///|
 pub impl Source for Limit with current_span_len(_self : Limit) {
-  _self.inner().current_span_len()
+  _self.input.current_span_len()
 }
 
 ///|
 pub impl Source for Limit with total_duration(_self : Limit) {
-  _self.inner().total_duration()
+  _self.input.total_duration()
 }
 
 ///|
@@ -1311,7 +1497,8 @@ pub impl Source for Limit with try_seek(
   _self : Limit,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  _self.inner().try_seek(pos)
+  _self.input.try_seek(pos)
+  _self.reset_state()
 }
 
 ///|

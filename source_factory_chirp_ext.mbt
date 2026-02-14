@@ -204,9 +204,15 @@ pub impl[S : Source] Source for FromFactoryIter[S] with sample_rate(
 
 ///|
 pub impl[S : Source] Source for FromFactoryIter[S] with current_span_len(
-  _self : FromFactoryIter[S],
+  self : FromFactoryIter[S],
 ) {
-  source_default_current_span_len()
+  if self.current.val is Some(current) {
+    match current.current_span_len() {
+      Some(v) => if v != 0 { return Some(v) }
+      None => ()
+    }
+  }
+  Some(10_240)
 }
 
 ///|
@@ -218,8 +224,11 @@ pub impl[S : Source] Source for FromFactoryIter[S] with total_duration(
 
 ///|
 pub impl[S : Source] Source for FromFactoryIter[S] with try_seek(
-  _self : FromFactoryIter[S],
+  self : FromFactoryIter[S],
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  match self.current.val {
+    None => ()
+    Some(current) => current.try_seek(pos)
+  }
 }

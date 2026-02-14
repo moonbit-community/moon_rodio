@@ -395,7 +395,29 @@ test "rodio::source::from_factory" {
 
   assert_eq(src.channels(), 1)
   assert_eq(src.sample_rate(), 44_100)
+  assert_eq(src.current_span_len(), Some(2))
   assert_eq(collect_n(src, 10), [1.0, 2.0, 3.0])
+}
+
+///|
+test "rodio::source::from_factory_metadata_and_seek" {
+  let idx = @ref.new(0)
+  let src = from_factory(fn() {
+    let current = idx.val
+    idx.val += 1
+    if current == 0 {
+      Some(SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0, 4.0]))
+    } else if current == 1 {
+      Some(SamplesBuffer::new(1, 2, [5.0]))
+    } else {
+      None
+    }
+  })
+
+  assert_eq(src.current_span_len(), Some(4))
+  src.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
+  assert_eq(src.next(), Some(3.0))
+  assert_eq(collect_n(src, 10), [4.0, 5.0])
 }
 
 ///|
@@ -522,13 +544,72 @@ test "rodio::source::named_wrappers_basic" {
     SamplesBuffer::new(1, 1, [-2.0, 0.5, 3.0]),
     LimitSettings::default(),
   )
-  assert_eq(collect_n(l, 10), [-1.0, 0.5, 1.0])
+  let lv0 = collect_n(l, 10)
+  assert_true(lv0[0] > -0.95 && lv0[0] < -0.85)
+  assert_true(lv0[1] > 0.49 && lv0[1] <= 0.5)
+  assert_true(lv0[2] > 0.85 && lv0[2] < 0.95)
 
   let set = LimitSettings::new().with_threshold(-6.0)
   let l2 = Limit::new(SamplesBuffer::new(1, 1, [-1.0, -0.5, 0.5, 1.0]), set)
   let lv = collect_n(l2, 10)
   assert_true(lv[0] <= -0.49 && lv[0] >= -0.51)
   assert_true(lv[3] >= 0.49 && lv[3] <= 0.51)
+
+  let hard = Limit::new(
+    SamplesBuffer::new(1, 1_000, [0.9]),
+    LimitSettings::new()
+    .with_threshold(-1.0)
+    .with_knee_width(0.0)
+    .with_attack(@moon_cpal.Duration::from_secs((0 : UInt64)))
+    .with_release(@moon_cpal.Duration::from_secs((0 : UInt64))),
+  )
+  let soft = Limit::new(
+    SamplesBuffer::new(1, 1_000, [0.9]),
+    LimitSettings::new()
+    .with_threshold(-1.0)
+    .with_knee_width(8.0)
+    .with_attack(@moon_cpal.Duration::from_secs((0 : UInt64)))
+    .with_release(@moon_cpal.Duration::from_secs((0 : UInt64))),
+  )
+  let hard_v = collect_n(hard, 10)
+  let soft_v = collect_n(soft, 10)
+  assert_true(hard_v[0] > soft_v[0])
+
+  let fast_attack = Limit::new(
+    SamplesBuffer::new(1, 1_000, [1.0]),
+    LimitSettings::new()
+    .with_threshold(-12.0)
+    .with_attack(@moon_cpal.Duration::from_secs((0 : UInt64)))
+    .with_release(@moon_cpal.Duration::from_secs((0 : UInt64))),
+  )
+  let slow_attack = Limit::new(
+    SamplesBuffer::new(1, 1_000, [1.0]),
+    LimitSettings::new()
+    .with_threshold(-12.0)
+    .with_attack(@moon_cpal.Duration::new((1 : UInt64), 0))
+    .with_release(@moon_cpal.Duration::from_secs((0 : UInt64))),
+  )
+  let fast_attack_v = collect_n(fast_attack, 10)
+  let slow_attack_v = collect_n(slow_attack, 10)
+  assert_true(slow_attack_v[0] > fast_attack_v[0])
+
+  let fast_release = Limit::new(
+    SamplesBuffer::new(1, 1_000, [1.0, 0.2]),
+    LimitSettings::new()
+    .with_threshold(-12.0)
+    .with_attack(@moon_cpal.Duration::from_secs((0 : UInt64)))
+    .with_release(@moon_cpal.Duration::from_secs((0 : UInt64))),
+  )
+  let slow_release = Limit::new(
+    SamplesBuffer::new(1, 1_000, [1.0, 0.2]),
+    LimitSettings::new()
+    .with_threshold(-12.0)
+    .with_attack(@moon_cpal.Duration::from_secs((0 : UInt64)))
+    .with_release(@moon_cpal.Duration::new((2 : UInt64), 0)),
+  )
+  let fast_release_v = collect_n(fast_release, 10)
+  let slow_release_v = collect_n(slow_release, 10)
+  assert_true(slow_release_v[1] < fast_release_v[1])
 
   ignore(LimitSettings::dynamic_content())
   ignore(LimitSettings::broadcast())

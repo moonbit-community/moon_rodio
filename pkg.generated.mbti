@@ -477,7 +477,13 @@ pub struct GeneratorFunction {
 pub fn GeneratorFunction::new((Double) -> Double) -> Self
 
 pub struct Limit {
-  inner : DynSource
+  input : DynSource
+  settings : LimitSettings
+  attack_coeff : Double
+  release_coeff : Double
+  integrators : Ref[Array[Double]]
+  peaks : Ref[Array[Double]]
+  position : Ref[Int]
 }
 pub fn Limit::inner(Self) -> DynSource
 pub fn Limit::inner_mut(Self) -> DynSource
@@ -488,6 +494,10 @@ pub impl Source for Limit
 pub struct LimitSettings {
   min_value : Double
   max_value : Double
+  threshold : Double
+  knee_width : Double
+  attack : @core.Duration
+  release : @core.Duration
 }
 pub fn LimitSettings::broadcast() -> Self
 pub fn LimitSettings::default() -> Self
