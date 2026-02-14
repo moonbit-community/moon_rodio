@@ -1675,7 +1675,7 @@ pub impl Source for Buffered with try_seek(
   _self : Buffered,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  _self.inner().try_seek(pos)
+  source_default_try_seek(pos)
 }
 
 ///|

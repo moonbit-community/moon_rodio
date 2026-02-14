@@ -928,6 +928,16 @@ test "rodio::source::named_wrappers_signal_and_spatial" {
 
 ///|
 test "rodio::source::named_wrappers_inner_accessors" {
+  let buf = Buffered::new(SamplesBuffer::new(1, 1, [1.0, 2.0]))
+  assert_eq(buf.inner().channels(), 1)
+  let buf_seek_err = try {
+    buf.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
+    false
+  } catch {
+    SeekError::NotSupported => true
+  }
+  assert_true(buf_seek_err)
+
   let d = Delay::new(
     SamplesBuffer::new(1, 1, [1.0]),
     @moon_cpal.Duration::from_secs((1 : UInt64)),
