@@ -422,8 +422,11 @@ pub fn[S : Source] take(source : S, sample_count : Int) -> DynSource {
 
 ///|
 pub fn[A : Source, B : Source] mix(left : A, right : B) -> DynSource {
-  let lhs = to_dyn(left)
-  let rhs = uniform_source(to_dyn(right), lhs.channels(), lhs.sample_rate())
+  let lhs_source = to_dyn(left)
+  let channels = lhs_source.channels()
+  let sample_rate = lhs_source.sample_rate()
+  let lhs = UniformSourceIterator::new(lhs_source, channels, sample_rate)
+  let rhs = UniformSourceIterator::new(right, channels, sample_rate)
   DynSource::new_dynamic(
     fn() {
       match (lhs.next(), rhs.next()) {
@@ -433,8 +436,21 @@ pub fn[A : Source, B : Source] mix(left : A, right : B) -> DynSource {
         (Some(a), Some(b)) => Some(a + b)
       }
     },
-    fn() { lhs.channels() },
-    fn() { lhs.sample_rate() },
+    fn() { channels },
+    fn() { sample_rate },
+    current_span_len=fn() {
+      match (lhs.current_span_len(), rhs.current_span_len()) {
+        (Some(a), Some(b)) => Some(if a < b { a } else { b })
+        _ => None
+      }
+    },
+    total_duration=fn() {
+      match (lhs.total_duration(), rhs.total_duration()) {
+        (Some(a), Some(b)) =>
+          Some(if duration_compare(a, b) >= 0 { a } else { b })
+        _ => None
+      }
+    },
   )
 }
 

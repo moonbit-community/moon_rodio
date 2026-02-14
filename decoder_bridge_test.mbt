@@ -4,12 +4,17 @@ fn ints_to_bytes(xs : Array[Int]) -> Bytes {
 }
 
 ///|
-fn wav_mono(samples : Array[Int], bits_per_sample : Int) -> Bytes {
+fn wav_mono_with_rate(
+  samples : Array[Int],
+  bits_per_sample : Int,
+  sample_rate : Int,
+) -> Bytes {
+  guard sample_rate > 0 else { panic() }
   let channels = 1
   let bytes_per_sample = bits_per_sample / 8
   let data_len = samples.length() * 2
   let riff_size = 36 + data_len
-  let sr = 44_100
+  let sr = sample_rate
   let br = sr * channels * bytes_per_sample
   let block_align = channels * bytes_per_sample
 
@@ -67,6 +72,11 @@ fn wav_mono(samples : Array[Int], bits_per_sample : Int) -> Bytes {
   }
 
   ints_to_bytes(xs)
+}
+
+///|
+fn wav_mono(samples : Array[Int], bits_per_sample : Int) -> Bytes {
+  wav_mono_with_rate(samples, bits_per_sample, 44_100)
 }
 
 ///|
@@ -207,6 +217,48 @@ test "rodio::decoder_api::metadata_methods" {
   assert_eq(total.secs, (0 : UInt64))
   assert_eq(d.next(), Some(0.0))
   assert_eq(d.current_span_len(), Some(1))
+}
+
+///|
+test "rodio::decoder_api::seek_beyond_end_saturates" {
+  let d = Decoder::builder()
+    .with_data(wav_mono([0, 10_000, 20_000, 30_000], 16))
+    .with_seekable(true)
+    .build()
+
+  d.try_seek(@moon_cpal.Duration::from_secs((999 : UInt64)))
+  assert_eq(d.next(), None)
+  assert_eq(d.current_span_len(), Some(0))
+}
+
+///|
+test "rodio::decoder_api::seek_possible_after_exhausting_source" {
+  let d = Decoder::builder()
+    .with_data(wav_mono([0, 12_000], 16))
+    .with_seekable(true)
+    .build()
+
+  assert_eq(d.next(), Some(0.0))
+  assert_true(d.next().unwrap() > 0.35)
+  assert_eq(d.next(), None)
+
+  d.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
+  assert_eq(d.next(), Some(0.0))
+}
+
+///|
+test "rodio::decoder_api::seek_results_in_correct_remaining_playtime" {
+  let d = Decoder::builder()
+    .with_data(wav_mono_with_rate([0, 10_000, 20_000, 30_000], 16, 1))
+    .with_seekable(true)
+    .build()
+
+  let total = d.total_duration().unwrap()
+  assert_eq(total.secs, (4 : UInt64))
+  d.try_seek(@moon_cpal.Duration::from_secs((3 : UInt64)))
+  assert_eq(d.current_span_len(), Some(1))
+  assert_true(d.next().unwrap() > 0.9)
+  assert_eq(d.next(), None)
 }
 
 ///|

@@ -201,6 +201,21 @@ test "rodio::source::mix" {
 }
 
 ///|
+test "rodio::source::mix_metadata" {
+  let left = SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0, 4.0])
+  let right = SamplesBuffer::new(1, 2, [10.0, 20.0])
+  let mixed = mix(left, right)
+
+  assert_eq(mixed.channels(), 1)
+  assert_eq(mixed.sample_rate(), 2)
+  assert_eq(mixed.current_span_len(), None)
+  let total = mixed.total_duration().unwrap()
+  assert_eq(total.secs, (2 : UInt64))
+  assert_eq(total.nanos, 0)
+  assert_eq(collect_n(mixed, 10), [11.0, 22.0, 3.0, 4.0])
+}
+
+///|
 test "rodio::source::speed" {
   let a = SamplesBuffer::new(1, 44_100, [1.0, 2.0])
   let s = speed(a, 2.0)
