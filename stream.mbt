@@ -57,6 +57,7 @@ pub struct OutputStream {
   config : OutputStreamConfig
   mixer : Mixer
   _stream : @moon_cpal.Stream
+  log_on_drop : Ref[Bool]
 }
 
 ///|
@@ -67,6 +68,11 @@ pub fn OutputStream::mixer(self : OutputStream) -> Mixer {
 ///|
 pub fn OutputStream::config(self : OutputStream) -> OutputStreamConfig {
   self.config
+}
+
+///|
+pub fn OutputStream::log_on_drop(self : OutputStream, enabled : Bool) -> Unit {
+  self.log_on_drop.val = enabled
 }
 
 ///|
@@ -208,8 +214,15 @@ pub fn OutputStreamBuilder::with_config(
   self : OutputStreamBuilder,
   config : @moon_cpal.StreamConfig,
 ) -> OutputStreamBuilder {
-  ignore(config)
-  self
+  {
+    ..self,
+    config: {
+      ..self.config,
+      channel_count: config.channels,
+      sample_rate: config.sample_rate,
+      buffer_size: config.buffer_size,
+    },
+  }
 }
 
 ///|
@@ -386,7 +399,7 @@ pub fn OutputStream::open(
   stream.play() catch {
     err => raise StreamError::PlayStreamError(err)
   }
-  { config, mixer: controller, _stream: stream }
+  { config, mixer: controller, _stream: stream, log_on_drop: @ref.new(true) }
 }
 
 ///|

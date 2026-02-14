@@ -10,6 +10,18 @@ import {
 // Values
 pub fn[S : Source] amplify(S, Double) -> DynSource
 
+pub fn[S : Source] amplify_decibel(S, Double) -> DynSource
+
+pub fn[S : Source] amplify_normalized(S, Double) -> DynSource
+
+pub fn[S : Source] buffered(S) -> SamplesBuffer
+
+pub fn[S : Source] convert_channels(S, Int) -> DynSource
+
+pub fn[S : Source] convert_sample_rate(S, Int) -> DynSource
+
+pub fn[S : Source] delay(S, @core.Duration) -> DynSource
+
 pub fn empty(Int, Int) -> DynSource
 
 pub fn from_iter(Int, Int, Array[Double]) -> SamplesBuffer
@@ -24,6 +36,10 @@ pub fn play(Mixer, Bytes) -> Sink raise PlayError
 
 pub fn queue(Bool) -> (SourcesQueueInput, SourcesQueueOutput)
 
+pub fn[S : Source] repeat_infinite(S) -> DynSource
+
+pub fn[S : Source] skip_duration(S, @core.Duration) -> DynSource
+
 pub fn[S : Source] skippable(S) -> Skippable
 
 pub fn[S : Source] speed(S, Double) -> DynSource
@@ -34,7 +50,11 @@ pub fn supported_output_configs(@spec.Device) -> Array[@core.SupportedStreamConf
 
 pub fn[S : Source] take(S, Int) -> DynSource
 
+pub fn[S : Source] take_duration(S, @core.Duration) -> DynSource
+
 pub fn[S : Source] to_dyn(S) -> DynSource
+
+pub fn[S : Source] uniform(S, Int, Int) -> DynSource
 
 pub fn zero(Int, Int) -> DynSource
 
@@ -51,6 +71,13 @@ pub suberror PlayError {
 }
 pub impl Eq for PlayError
 pub impl Show for PlayError
+
+pub suberror SeekError {
+  NotSupported
+}
+pub fn SeekError::source_intact(Self) -> Bool
+pub impl Eq for SeekError
+pub impl Show for SeekError
 
 pub suberror StreamError {
   PlayStreamError(@core.PlayStreamError)
@@ -119,8 +146,10 @@ pub struct OutputStream {
   config : OutputStreamConfig
   mixer : Mixer
   _stream : @spec.Stream
+  log_on_drop : Ref[Bool]
 }
 pub fn OutputStream::config(Self) -> OutputStreamConfig
+pub fn OutputStream::log_on_drop(Self, Bool) -> Unit
 pub fn OutputStream::mixer(Self) -> Mixer
 pub fn OutputStream::open(@spec.Device, OutputStreamConfig, (@core.StreamError) -> Unit) -> Self raise StreamError
 
@@ -234,6 +263,7 @@ pub fn Sink::clear(Self) -> Unit
 pub fn Sink::connect_new(Mixer) -> Self
 pub fn Sink::detach(Self) -> Unit
 pub fn Sink::empty(Self) -> Bool
+pub fn Sink::get_pos(Self) -> @core.Duration
 pub fn Sink::is_paused(Self) -> Bool
 pub fn Sink::len(Self) -> Int
 pub fn Sink::new() -> (Self, ControlledQueueSource)
@@ -245,6 +275,7 @@ pub fn Sink::skip_one(Self) -> Unit
 pub fn Sink::sleep_until_end(Self) -> Unit
 pub fn Sink::speed(Self) -> Double
 pub fn Sink::stop(Self) -> Unit
+pub fn Sink::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub fn Sink::volume(Self) -> Double
 
 pub struct SinkControls {
@@ -253,6 +284,8 @@ pub struct SinkControls {
   skip_one : Ref[Bool]
   volume : Ref[Double]
   speed : Ref[Double]
+  position_samples : Ref[Int]
+  position_sample_rate : Ref[Int]
 }
 
 pub struct Skippable {
@@ -299,6 +332,7 @@ pub fn SpatialSink::clear(Self) -> Unit
 pub fn SpatialSink::connect_new(Mixer, Array[Double], Array[Double], Array[Double]) -> Self
 pub fn SpatialSink::detach(Self) -> Unit
 pub fn SpatialSink::empty(Self) -> Bool
+pub fn SpatialSink::get_pos(Self) -> @core.Duration
 pub fn SpatialSink::is_paused(Self) -> Bool
 pub fn SpatialSink::len(Self) -> Int
 pub fn SpatialSink::pause(Self) -> Unit
@@ -312,6 +346,7 @@ pub fn SpatialSink::skip_one(Self) -> Unit
 pub fn SpatialSink::sleep_until_end(Self) -> Unit
 pub fn SpatialSink::speed(Self) -> Double
 pub fn SpatialSink::stop(Self) -> Unit
+pub fn SpatialSink::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub fn SpatialSink::volume(Self) -> Double
 
 pub struct SpatialSource {

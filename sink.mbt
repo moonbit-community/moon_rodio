@@ -5,6 +5,8 @@ pub struct SinkControls {
   skip_one : Ref[Bool]
   volume : Ref[Sample]
   speed : Ref[Sample]
+  position_samples : Ref[Int]
+  position_sample_rate : Ref[SampleRate]
 }
 
 ///|
@@ -25,6 +27,7 @@ pub fn ControlledQueueSource::next(self : ControlledQueueSource) -> Sample? {
   if self.controls.skip_one.val {
     self.controls.skip_one.val = false
     self.inner.skip_one()
+    self.controls.position_samples.val = 0
   }
 
   if self.controls.stopped.val || self.controls.pause.val {
@@ -32,7 +35,10 @@ pub fn ControlledQueueSource::next(self : ControlledQueueSource) -> Sample? {
   } else {
     match self.inner.next() {
       None => None
-      Some(v) => Some(v * self.controls.volume.val)
+      Some(v) => {
+        self.controls.position_samples.val += 1
+        Some(v * self.controls.volume.val)
+      }
     }
   }
 }
@@ -81,6 +87,8 @@ pub fn Sink::new() -> (Sink, ControlledQueueSource) {
     skip_one: @ref.new(false),
     volume: @ref.new(1.0),
     speed: @ref.new(1.0),
+    position_samples: @ref.new(0),
+    position_sample_rate: @ref.new(hz_44100),
   }
   (
     { queue_tx, controls, detached: @ref.new(false) },
@@ -99,6 +107,10 @@ pub fn Sink::connect_new(mixer : Mixer) -> Sink {
 pub fn[S : Source] Sink::append(self : Sink, source : S) -> Unit {
   self.controls.stopped.val = false
   let speeded = speed(source, self.controls.speed.val)
+  if self.empty() {
+    self.controls.position_samples.val = 0
+    self.controls.position_sample_rate.val = speeded.sample_rate()
+  }
   self.queue_tx.append(speeded)
 }
 
@@ -141,11 +153,13 @@ pub fn Sink::is_paused(self : Sink) -> Bool {
 ///|
 pub fn Sink::stop(self : Sink) -> Unit {
   self.controls.stopped.val = true
+  self.controls.position_samples.val = 0
   ignore(self.queue_tx.clear())
 }
 
 ///|
 pub fn Sink::clear(self : Sink) -> Unit {
+  self.controls.position_samples.val = 0
   ignore(self.queue_tx.clear())
   self.pause()
 }
@@ -153,6 +167,30 @@ pub fn Sink::clear(self : Sink) -> Unit {
 ///|
 pub fn Sink::skip_one(self : Sink) -> Unit {
   self.controls.skip_one.val = true
+}
+
+///|
+pub fn Sink::try_seek(
+  self : Sink,
+  _pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  ignore(self)
+  raise SeekError::NotSupported
+}
+
+///|
+pub fn Sink::get_pos(self : Sink) -> @moon_cpal.Duration {
+  let sample_rate = self.controls.position_sample_rate.val
+  if sample_rate <= 0 {
+    return @moon_cpal.Duration::from_secs((0 : UInt64))
+  }
+
+  let samples = self.controls.position_samples.val
+  if samples <= 0 {
+    return @moon_cpal.Duration::from_secs((0 : UInt64))
+  }
+
+  @moon_cpal.Duration::from_secs((samples / sample_rate).to_uint64())
 }
 
 ///|

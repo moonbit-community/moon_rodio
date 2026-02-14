@@ -323,3 +323,16 @@ pub fn SpatialSink::empty(self : SpatialSink) -> Bool {
 pub fn SpatialSink::len(self : SpatialSink) -> Int {
   self.sink.len()
 }
+
+///|
+pub fn SpatialSink::try_seek(
+  self : SpatialSink,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  self.sink.try_seek(pos)
+}
+
+///|
+pub fn SpatialSink::get_pos(self : SpatialSink) -> @moon_cpal.Duration {
+  self.sink.get_pos()
+}

@@ -32,3 +32,27 @@ test "rodio::source::spatial_sink_append" {
   assert_true(a > 0.0)
   assert_true(b > 0.0)
 }
+
+///|
+test "rodio::source::spatial_sink_seek_and_pos" {
+  let (mix_tx, mix_rx) = mixer(2, 1)
+  let sink = SpatialSink::connect_new(
+    mix_tx,
+    [0.0, 0.0, 0.0],
+    [-1.0, 0.0, 0.0],
+    [1.0, 0.0, 0.0],
+  )
+
+  sink.append(SamplesBuffer::new(1, 1, [1.0]))
+  ignore(mix_rx.next())
+  ignore(mix_rx.next())
+  ignore(sink.get_pos())
+
+  let err = try {
+    sink.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
+    panic()
+  } catch {
+    e => e
+  }
+  assert_true(err is SeekError::NotSupported)
+}

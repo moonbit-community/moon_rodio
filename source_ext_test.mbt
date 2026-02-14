@@ -82,3 +82,45 @@ test "rodio::source::repeat_infinite" {
   let r = a.repeat_infinite()
   assert_eq(collect_n(r, 6), [2.0, -1.0, 2.0, -1.0, 2.0, -1.0])
 }
+
+///|
+test "rodio::source::buffered_and_repeat_infinite_fn" {
+  let src = SamplesBuffer::new(1, 44_100, [1.0, 2.0, 3.0])
+  let b = buffered(src)
+  assert_eq(collect_n(b, 10), [1.0, 2.0, 3.0])
+
+  let src2 = SamplesBuffer::new(1, 44_100, [2.0, -1.0])
+  let r = repeat_infinite(src2)
+  assert_eq(collect_n(r, 6), [2.0, -1.0, 2.0, -1.0, 2.0, -1.0])
+}
+
+///|
+test "rodio::source::duration_filters" {
+  let src = SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0, 4.0, 5.0])
+  let t = take_duration(src, @moon_cpal.Duration::from_secs((2 : UInt64)))
+  assert_eq(collect_n(t, 10), [1.0, 2.0, 3.0, 4.0])
+
+  let src2 = SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0, 4.0, 5.0])
+  let sk = skip_duration(src2, @moon_cpal.Duration::from_secs((1 : UInt64)))
+  assert_eq(collect_n(sk, 10), [3.0, 4.0, 5.0])
+
+  let src3 = SamplesBuffer::new(1, 2, [9.0, 8.0])
+  let d = delay(src3, @moon_cpal.Duration::from_secs((1 : UInt64)))
+  assert_eq(collect_n(d, 6), [0.0, 0.0, 9.0, 8.0])
+}
+
+///|
+test "rodio::source::amplify_db_and_normalized" {
+  let a = SamplesBuffer::new(1, 44_100, [1.0])
+  let db = amplify_decibel(a, 6.0206)
+  let dbv = db.next().unwrap()
+  assert_true(dbv > 1.99 && dbv < 2.01)
+
+  let b = SamplesBuffer::new(1, 44_100, [1.0])
+  let n0 = amplify_normalized(b, 0.0)
+  assert_eq(n0.next(), Some(0.0))
+
+  let c = SamplesBuffer::new(1, 44_100, [1.0])
+  let n1 = amplify_normalized(c, 1.0)
+  assert_true(n1.next().unwrap() > 0.99)
+}
