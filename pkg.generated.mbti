@@ -148,6 +148,17 @@ pub fn Decoder::next(Self) -> Double?
 pub fn Decoder::sample_rate(Self) -> Int
 pub impl Source for Decoder
 
+pub struct Done {
+  input : DynSource
+  signal : Ref[Int]
+  signal_sent : Ref[Bool]
+}
+pub fn Done::channels(Self) -> Int
+pub fn[S : Source] Done::new(S, Ref[Int]) -> Self
+pub fn Done::next(Self) -> Double?
+pub fn Done::sample_rate(Self) -> Int
+pub impl Source for Done
+
 pub struct DynSource {
   next_sample : () -> Double?
   channels : Int
@@ -158,6 +169,16 @@ pub fn DynSource::new(() -> Double?, Int, Int) -> Self
 pub fn DynSource::next(Self) -> Double?
 pub fn DynSource::sample_rate(Self) -> Int
 pub impl Source for DynSource
+
+pub struct EmptyCallback {
+  callback : () -> Unit
+  called : Ref[Bool]
+}
+pub fn EmptyCallback::channels(Self) -> Int
+pub fn EmptyCallback::new(() -> Unit) -> Self
+pub fn EmptyCallback::next(Self) -> Double?
+pub fn EmptyCallback::sample_rate(Self) -> Int
+pub impl Source for EmptyCallback
 
 pub struct FromFactoryIter[S] {
   factory : () -> S?
@@ -474,6 +495,17 @@ pub fn TriangleWave::new(Double) -> Self
 pub fn TriangleWave::next(Self) -> Double?
 pub fn TriangleWave::sample_rate(Self) -> Int
 pub impl Source for TriangleWave
+
+pub struct UniformSourceIterator {
+  input : DynSource
+  target_channels : Int
+  target_sample_rate : Int
+}
+pub fn UniformSourceIterator::channels(Self) -> Int
+pub fn[S : Source] UniformSourceIterator::new(S, Int, Int) -> Self
+pub fn UniformSourceIterator::next(Self) -> Double?
+pub fn UniformSourceIterator::sample_rate(Self) -> Int
+pub impl Source for UniformSourceIterator
 
 // Type aliases
 pub type ChannelCount = Int

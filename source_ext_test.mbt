@@ -229,3 +229,36 @@ test "rodio::source::from_factory" {
   assert_eq(src.sample_rate(), 44_100)
   assert_eq(collect_n(src, 10), [1.0, 2.0, 3.0])
 }
+
+///|
+test "rodio::source::done" {
+  let signal = @ref.new(2)
+  let d = Done::new(SamplesBuffer::new(1, 44_100, [1.0]), signal)
+  assert_eq(d.next(), Some(1.0))
+  assert_eq(signal.val, 2)
+  assert_eq(d.next(), None)
+  assert_eq(signal.val, 1)
+  assert_eq(d.next(), None)
+  assert_eq(signal.val, 1)
+}
+
+///|
+test "rodio::source::empty_callback" {
+  let calls = @ref.new(0)
+  let e = EmptyCallback::new(fn() { calls.val += 1 })
+  assert_eq(e.next(), None)
+  assert_eq(e.next(), None)
+  assert_eq(calls.val, 1)
+}
+
+///|
+test "rodio::source::uniform_source_iterator" {
+  let s = SamplesBuffer::new(1, 2, [0.0, 2.0, 4.0])
+  let u = UniformSourceIterator::new(s, 2, 4)
+  assert_eq(u.channels(), 2)
+  assert_eq(u.sample_rate(), 4)
+  let vals = collect_n(u, 10)
+  assert_eq(vals[0], 0.0)
+  assert_eq(vals[1], 0.0)
+  assert_true(vals[2] > 0.99 && vals[2] < 1.01)
+}
