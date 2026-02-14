@@ -221,6 +221,23 @@ test "rodio::decoder_api::builder_build" {
 }
 
 ///|
+test "rodio::decoder_api::builder_mime_and_hint_fallbacks" {
+  let from_mime = Decoder::builder()
+    .with_data(@decoder.flac_pop_bytes())
+    .with_mime_type("audio/flac")
+    .build()
+  assert_eq(from_mime.channels(), 1)
+  assert_eq(from_mime.sample_rate(), 44_100)
+
+  let bad_hint_fallback = Decoder::builder()
+    .with_data(@decoder.flac_pop_bytes())
+    .with_hint("mp3")
+    .build()
+  assert_eq(bad_hint_fallback.channels(), 1)
+  assert_eq(bad_hint_fallback.sample_rate(), 44_100)
+}
+
+///|
 test "rodio::decoder_api::builder_requires_data" {
   let failed = try {
     ignore(Decoder::builder().build())

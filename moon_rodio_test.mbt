@@ -171,3 +171,14 @@ test "rodio::queue::tests::clear_keeps_current_source" {
   assert_eq(rx.next(), Some(2.0))
   assert_eq(rx.next(), None)
 }
+
+///|
+test "rodio::queue::tests::set_keep_alive_if_empty_runtime_toggle" {
+  let (tx, rx) = @moon_rodio.queue(true)
+  assert_eq(rx.next(), Some(0.0))
+  tx.set_keep_alive_if_empty(false)
+  for _ in 0..<511 {
+    assert_eq(rx.next(), Some(0.0))
+  }
+  assert_eq(rx.next(), None)
+}
