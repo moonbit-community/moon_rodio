@@ -30,7 +30,7 @@ fn signal_value(function : SignalFunction, phase : Double) -> Sample {
   match function {
     SignalFunction::Sine => @math.sin(2.0 * @math.PI * phase)
     SignalFunction::Square => if phase < 0.5 { 1.0 } else { -1.0 }
-    SignalFunction::Sawtooth => phase * 2.0 - 1.0
+    SignalFunction::Sawtooth => 2.0 * (phase - @math.floor(phase + 0.5))
     SignalFunction::Triangle =>
       if phase < 0.5 {
         phase * 4.0 - 1.0
@@ -47,8 +47,16 @@ pub fn SignalGenerator::new(
   function : SignalFunction,
 ) -> SignalGenerator {
   guard sample_rate > 0 else { panic() }
-  guard frequency >= 0.0 else { panic() }
+  guard frequency != 0.0 else { panic() }
   { channels: 1, sample_rate, frequency, function, phase: @ref.new(0.0) }
+}
+
+///|
+fn signal_phase_from_seek(
+  pos : @moon_cpal.Duration,
+  frequency : Double,
+) -> Double {
+  wrap_phase(duration_secs_f64(pos) * frequency)
 }
 
 ///|
@@ -98,10 +106,10 @@ pub impl Source for SignalGenerator with total_duration(_self : SignalGenerator)
 
 ///|
 pub impl Source for SignalGenerator with try_seek(
-  _self : SignalGenerator,
+  self : SignalGenerator,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  self.phase.val = signal_phase_from_seek(pos, self.frequency)
 }
 
 ///|
@@ -156,10 +164,10 @@ pub impl Source for SineWave with total_duration(_self : SineWave) {
 
 ///|
 pub impl Source for SineWave with try_seek(
-  _self : SineWave,
+  self : SineWave,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  self.inner.try_seek(pos)
 }
 
 ///|
@@ -214,10 +222,10 @@ pub impl Source for SquareWave with total_duration(_self : SquareWave) {
 
 ///|
 pub impl Source for SquareWave with try_seek(
-  _self : SquareWave,
+  self : SquareWave,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  self.inner.try_seek(pos)
 }
 
 ///|
@@ -272,10 +280,10 @@ pub impl Source for SawtoothWave with total_duration(_self : SawtoothWave) {
 
 ///|
 pub impl Source for SawtoothWave with try_seek(
-  _self : SawtoothWave,
+  self : SawtoothWave,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  self.inner.try_seek(pos)
 }
 
 ///|
@@ -330,10 +338,10 @@ pub impl Source for TriangleWave with total_duration(_self : TriangleWave) {
 
 ///|
 pub impl Source for TriangleWave with try_seek(
-  _self : TriangleWave,
+  self : TriangleWave,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  self.inner.try_seek(pos)
 }
 
 ///|

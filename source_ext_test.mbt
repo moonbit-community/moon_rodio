@@ -51,8 +51,8 @@ test "rodio::source::square_wave" {
 ///|
 test "rodio::source::sawtooth_wave" {
   let s = SawtoothWave::new(440.0)
-  assert_eq(s.next(), Some(-1.0))
-  assert_true(s.next().unwrap() > -1.0)
+  assert_eq(s.next(), Some(0.0))
+  assert_true(s.next().unwrap() > 0.0)
 }
 
 ///|
@@ -105,7 +105,7 @@ test "rodio::source::duration_precision_and_subsecond_seek" {
 
 ///|
 test "rodio::source::default_try_seek_not_supported" {
-  let src = SineWave::new(440.0)
+  let src = Zero::new(1, 44_100)
   let got_not_supported = try {
     src.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
     false
@@ -113,6 +113,20 @@ test "rodio::source::default_try_seek_not_supported" {
     SeekError::NotSupported => true
   }
   assert_true(got_not_supported)
+}
+
+///|
+test "rodio::source::signal_generator_seek" {
+  let src = SineWave::new(100.0)
+  assert_eq(src.next(), Some(0.0))
+  assert_true(src.next().unwrap() > 0.01)
+  src.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
+  assert_eq(src.next(), Some(0.0))
+
+  let saw = SawtoothWave::new(50.0)
+  assert_eq(saw.next(), Some(0.0))
+  saw.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
+  assert_eq(saw.next(), Some(0.0))
 }
 
 ///|
