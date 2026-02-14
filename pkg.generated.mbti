@@ -615,7 +615,7 @@ pub impl Show for OutputStreamConfig
 
 pub struct Pausable {
   input : DynSource
-  paused : Ref[Bool]
+  paused_channels : Ref[Int?]
   remaining_paused_samples : Ref[Int]
 }
 pub fn Pausable::channels(Self) -> Int

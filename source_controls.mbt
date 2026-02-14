@@ -1,27 +1,38 @@
 ///|
 pub struct Pausable {
   input : DynSource
-  paused : Ref[Bool]
+  paused_channels : Ref[ChannelCount?]
   remaining_paused_samples : Ref[Int]
 }
 
 ///|
 pub fn[S : Source] pausable(source : S, paused : Bool) -> Pausable {
+  let input = to_dyn(source)
   {
-    input: to_dyn(source),
-    paused: @ref.new(paused),
+    input,
+    paused_channels: @ref.new(
+      if paused {
+        Some(input.channels())
+      } else {
+        None
+      },
+    ),
     remaining_paused_samples: @ref.new(0),
   }
 }
 
 ///|
 pub fn Pausable::set_paused(self : Pausable, paused : Bool) -> Unit {
-  self.paused.val = paused
+  match (self.paused_channels.val, paused) {
+    (None, true) => self.paused_channels.val = Some(self.input.channels())
+    (Some(_), false) => self.paused_channels.val = None
+    _ => ()
+  }
 }
 
 ///|
 pub fn Pausable::is_paused(self : Pausable) -> Bool {
-  self.paused.val
+  self.paused_channels.val is Some(_)
 }
 
 ///|
@@ -46,12 +57,13 @@ pub fn Pausable::next(self : Pausable) -> Sample? {
     return Some(0.0)
   }
 
-  if self.paused.val {
-    self.remaining_paused_samples.val = self.input.channels() - 1
-    return Some(0.0)
+  match self.paused_channels.val {
+    Some(paused_channels) => {
+      self.remaining_paused_samples.val = paused_channels - 1
+      Some(0.0)
+    }
+    None => self.input.next()
   }
-
-  self.input.next()
 }
 
 ///|
