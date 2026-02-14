@@ -1,20 +1,4 @@
 ///|
-fn effects_duration_to_sample_count(
-  duration : @moon_cpal.Duration,
-  channels : ChannelCount,
-  sample_rate : SampleRate,
-) -> Int {
-  if channels <= 0 || sample_rate <= 0 {
-    return 0
-  }
-
-  let per_second = channels * sample_rate
-  let secs_part = duration.secs.to_int() * per_second
-  let nanos_part = duration.nanos * per_second / 1_000_000_000
-  secs_part + nanos_part
-}
-
-///|
 pub fn[S : Source] limit(
   source : S,
   min_value : Sample,
@@ -63,33 +47,10 @@ pub fn[A : Source, B : Source] crossfade(
   right : B,
   duration : @moon_cpal.Duration,
 ) -> DynSource {
-  let lhs = to_dyn(left)
-  let rhs = uniform_source(to_dyn(right), lhs.channels(), lhs.sample_rate())
-  let fade_samples = effects_duration_to_sample_count(
-    duration,
-    lhs.channels(),
-    lhs.sample_rate(),
-  )
-  let idx = @ref.new(0)
-
-  DynSource::new_dynamic(
-    fn() {
-      if fade_samples > 0 && idx.val < fade_samples {
-        let t = Double::from_int(idx.val) / Double::from_int(fade_samples)
-        idx.val += 1
-        match (lhs.next(), rhs.next()) {
-          (None, None) => None
-          (Some(a), None) => Some(a * (1.0 - t))
-          (None, Some(b)) => Some(b * t)
-          (Some(a), Some(b)) => Some(a * (1.0 - t) + b * t)
-        }
-      } else {
-        rhs.next()
-      }
-    },
-    fn() { lhs.channels() },
-    fn() { lhs.sample_rate() },
-  )
+  let lhs = TakeDuration::new(left, duration)
+  lhs.set_filter_fadeout()
+  let rhs = FadeIn::new(TakeDuration::new(right, duration), duration)
+  mix(lhs, rhs)
 }
 
 ///|

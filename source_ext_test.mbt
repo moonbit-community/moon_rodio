@@ -465,20 +465,23 @@ test "rodio::source::limit_and_distortion" {
 
 ///|
 test "rodio::source::crossfade" {
-  let a = SamplesBuffer::new(1, 1, [1.0, 1.0, 1.0])
-  let b = SamplesBuffer::new(1, 1, [0.0, 2.0, 2.0])
-  let x = crossfade(a, b, @moon_cpal.Duration::from_secs((2 : UInt64)))
+  let a = SamplesBuffer::new(1, 1, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+  let b = zero(1, 1)
+  let x = crossfade(a, b, @moon_cpal.Duration::new((5 : UInt64), 1))
   let v = collect_n(x, 10)
+  assert_eq(v.length(), 5)
   assert_eq(v[0], 1.0)
-  assert_true(v[1] > 1.49 && v[1] < 1.51)
-  assert_eq(v[2], 2.0)
+  assert_true(v[1] > 1.59 && v[1] < 1.61)
+  assert_true(v[2] > 1.79 && v[2] < 1.81)
+  assert_true(v[3] > 1.59 && v[3] < 1.61)
+  assert_true(v[4] > 0.99 && v[4] < 1.01)
 
   let y = take_crossfade_with(
-    SamplesBuffer::new(1, 1, [1.0, 1.0, 1.0]),
-    SamplesBuffer::new(1, 1, [0.0, 2.0, 2.0]),
-    @moon_cpal.Duration::from_secs((2 : UInt64)),
+    SamplesBuffer::new(1, 1, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]),
+    zero(1, 1),
+    @moon_cpal.Duration::new((5 : UInt64), 1),
   )
-  assert_eq(collect_n(y, 10), [1.0, 1.5, 2.0])
+  assert_eq(collect_n(y, 10).length(), 5)
 }
 
 ///|
