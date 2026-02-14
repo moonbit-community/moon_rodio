@@ -504,5 +504,19 @@ pub fn SamplesBuffer::repeat_infinite(self : SamplesBuffer) -> DynSource {
     },
     self.channels,
     self.sample_rate,
+    current_span_len=fn() { Some(len - idx.val) },
+    try_seek=fn(pos : @moon_cpal.Duration) {
+      let target = sample_index_from_duration(
+        pos,
+        self.channels,
+        self.sample_rate,
+      )
+      if target <= 0 {
+        idx.val = 0
+      } else {
+        idx.val = target % len
+      }
+      Ok(())
+    },
   )
 }
