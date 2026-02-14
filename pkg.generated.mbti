@@ -22,7 +22,11 @@ pub fn[S : Source] convert_channels(S, Int) -> DynSource
 
 pub fn[S : Source] convert_sample_rate(S, Int) -> DynSource
 
+pub fn[A : Source, B : Source] crossfade(A, B, @core.Duration) -> DynSource
+
 pub fn[S : Source] delay(S, @core.Duration) -> DynSource
+
+pub fn[S : Source] distortion(S, Double) -> DynSource
 
 pub fn empty(Int, Int) -> DynSource
 
@@ -31,6 +35,8 @@ pub fn[S : Source] fade_in(S, @core.Duration) -> DynSource
 pub fn[S : Source] fade_out(S, @core.Duration) -> DynSource
 
 pub fn from_iter(Int, Int, Array[Double]) -> SamplesBuffer
+
+pub fn[S : Source] limit(S, Double, Double) -> DynSource
 
 pub fn[S : Source] linear_gain_ramp(S, Double, Double, @core.Duration) -> DynSource
 

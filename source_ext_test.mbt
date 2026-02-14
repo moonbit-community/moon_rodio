@@ -178,3 +178,25 @@ test "rodio::source::linear_ramp_and_fades" {
   let fout = fade_out(s3, @moon_cpal.Duration::from_secs((2 : UInt64)))
   assert_eq(collect_n(fout, 10), [1.0, 1.0, 0.5, 0.0])
 }
+
+///|
+test "rodio::source::limit_and_distortion" {
+  let a = SamplesBuffer::new(1, 44_100, [-2.0, -0.5, 0.2, 3.0])
+  let l = limit(a, -1.0, 1.0)
+  assert_eq(collect_n(l, 10), [-1.0, -0.5, 0.2, 1.0])
+
+  let b = SamplesBuffer::new(1, 44_100, [-2.0, -0.5, 0.2, 3.0])
+  let d = distortion(b, 0.4)
+  assert_eq(collect_n(d, 10), [-0.4, -0.4, 0.2, 0.4])
+}
+
+///|
+test "rodio::source::crossfade" {
+  let a = SamplesBuffer::new(1, 1, [1.0, 1.0, 1.0])
+  let b = SamplesBuffer::new(1, 1, [0.0, 2.0, 2.0])
+  let x = crossfade(a, b, @moon_cpal.Duration::from_secs((2 : UInt64)))
+  let v = collect_n(x, 10)
+  assert_eq(v[0], 1.0)
+  assert_true(v[1] > 1.49 && v[1] < 1.51)
+  assert_eq(v[2], 2.0)
+}

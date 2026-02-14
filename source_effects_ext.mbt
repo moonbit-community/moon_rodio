@@ -1,0 +1,83 @@
+///|
+fn effects_duration_to_sample_count(
+  duration : @moon_cpal.Duration,
+  channels : ChannelCount,
+  sample_rate : SampleRate,
+) -> Int {
+  if channels <= 0 || sample_rate <= 0 {
+    return 0
+  }
+
+  let per_second = channels * sample_rate
+  let secs_part = duration.secs.to_int() * per_second
+  let nanos_part = duration.nanos * per_second / 1_000_000_000
+  secs_part + nanos_part
+}
+
+///|
+pub fn[S : Source] limit(
+  source : S,
+  min_value : Sample,
+  max_value : Sample,
+) -> DynSource {
+  guard min_value <= max_value else { panic() }
+  let src = to_dyn(source)
+  DynSource::new(
+    fn() {
+      match src.next() {
+        None => None
+        Some(v) =>
+          if v < min_value {
+            Some(min_value)
+          } else if v > max_value {
+            Some(max_value)
+          } else {
+            Some(v)
+          }
+      }
+    },
+    src.channels(),
+    src.sample_rate(),
+  )
+}
+
+///|
+pub fn[S : Source] distortion(source : S, threshold : Sample) -> DynSource {
+  guard threshold >= 0.0 else { panic() }
+  limit(source, -threshold, threshold)
+}
+
+///|
+pub fn[A : Source, B : Source] crossfade(
+  left : A,
+  right : B,
+  duration : @moon_cpal.Duration,
+) -> DynSource {
+  let lhs = to_dyn(left)
+  let rhs = uniform_source(to_dyn(right), lhs.channels(), lhs.sample_rate())
+  let fade_samples = effects_duration_to_sample_count(
+    duration,
+    lhs.channels(),
+    lhs.sample_rate(),
+  )
+  let idx = @ref.new(0)
+
+  DynSource::new(
+    fn() {
+      if fade_samples > 0 && idx.val < fade_samples {
+        let t = Double::from_int(idx.val) / Double::from_int(fade_samples)
+        idx.val += 1
+        match (lhs.next(), rhs.next()) {
+          (None, None) => None
+          (Some(a), None) => Some(a * (1.0 - t))
+          (None, Some(b)) => Some(b * t)
+          (Some(a), Some(b)) => Some(a * (1.0 - t) + b * t)
+        }
+      } else {
+        rhs.next()
+      }
+    },
+    lhs.channels(),
+    lhs.sample_rate(),
+  )
+}
