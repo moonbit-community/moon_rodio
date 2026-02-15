@@ -2,7 +2,7 @@
 pub struct SinkControls {
   pause : Ref[Bool]
   stopped : Ref[Bool]
-  skip_one : Ref[Bool]
+  to_clear : Ref[Int]
   volume : Ref[Sample]
   speed : Ref[Sample]
   sound_count : Ref[Int]
@@ -63,8 +63,11 @@ fn with_done_count(source : DynSource, sound_count : Ref[Int]) -> DynSource {
 
 ///|
 pub fn ControlledQueueSource::next(self : ControlledQueueSource) -> Sample? {
-  if self.controls.skip_one.val {
-    self.controls.skip_one.val = false
+  while self.controls.to_clear.val > 0 {
+    self.controls.to_clear.val -= 1
+    if self.controls.sound_count.val > 0 {
+      self.controls.sound_count.val -= 1
+    }
     self.inner.skip_one()
     self.controls.position_samples.val = 0
   }
@@ -145,7 +148,7 @@ pub fn Sink::new() -> (Sink, ControlledQueueSource) {
   let controls = {
     pause: @ref.new(false),
     stopped: @ref.new(false),
-    skip_one: @ref.new(false),
+    to_clear: @ref.new(0),
     volume: @ref.new(1.0),
     speed: @ref.new(1.0),
     sound_count: @ref.new(0),
@@ -227,7 +230,7 @@ pub fn Sink::is_paused(self : Sink) -> Bool {
 ///|
 pub fn Sink::stop(self : Sink) -> Unit {
   self.controls.stopped.val = true
-  self.controls.skip_one.val = false
+  self.controls.to_clear.val = 0
   self.controls.position_samples.val = 0
   self.controls.sound_count.val = 0
   self.last_signal.val = None
@@ -237,7 +240,7 @@ pub fn Sink::stop(self : Sink) -> Unit {
 
 ///|
 pub fn Sink::clear(self : Sink) -> Unit {
-  self.controls.skip_one.val = false
+  self.controls.to_clear.val = 0
   self.controls.position_samples.val = 0
   self.controls.sound_count.val = 0
   self.last_signal.val = None
@@ -248,10 +251,9 @@ pub fn Sink::clear(self : Sink) -> Unit {
 
 ///|
 pub fn Sink::skip_one(self : Sink) -> Unit {
-  // Keep one pending skip request at most to avoid over-decrementing len().
-  if !self.controls.skip_one.val && self.controls.sound_count.val > 0 {
-    self.controls.sound_count.val -= 1
-    self.controls.skip_one.val = true
+  // Queue skip requests up to current queue length; apply them in playback loop.
+  if self.controls.sound_count.val > self.controls.to_clear.val {
+    self.controls.to_clear.val += 1
   }
 }
 

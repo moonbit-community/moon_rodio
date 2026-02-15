@@ -787,7 +787,7 @@ pub fn Sink::volume(Self) -> Double
 pub struct SinkControls {
   pause : Ref[Bool]
   stopped : Ref[Bool]
-  skip_one : Ref[Bool]
+  to_clear : Ref[Int]
   volume : Ref[Double]
   speed : Ref[Double]
   sound_count : Ref[Int]

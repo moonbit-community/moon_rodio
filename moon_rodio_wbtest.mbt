@@ -97,9 +97,11 @@ test "rodio::sink::tests::skip_one_accumulates_bounded_requests" {
   sink.skip_one()
   sink.skip_one()
   sink.skip_one()
-  assert_eq(sink.len(), 1)
+  // len() is decremented when queued skips are processed by playback loop.
+  assert_eq(sink.len(), 2)
 
-  assert_eq(queue_rx.next(), Some(3.0))
+  assert_eq(queue_rx.next(), Some(0.0))
+  assert_eq(sink.len(), 0)
 }
 
 ///|
