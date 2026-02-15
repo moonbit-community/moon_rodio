@@ -86,6 +86,23 @@ test "rodio::sink::tests::skip_one" {
 }
 
 ///|
+test "rodio::sink::tests::skip_one_accumulates_bounded_requests" {
+  let (sink, queue_rx) = Sink::new()
+  sink.append(SamplesBuffer::new(1, 1, [1.0]))
+  sink.append(SamplesBuffer::new(1, 1, [2.0]))
+  sink.append(SamplesBuffer::new(1, 1, [3.0]))
+  assert_eq(queue_rx.next(), Some(1.0))
+
+  sink.skip_one()
+  sink.skip_one()
+  sink.skip_one()
+  sink.skip_one()
+  assert_eq(sink.len(), 1)
+
+  assert_eq(queue_rx.next(), Some(3.0))
+}
+
+///|
 test "rodio::sink::tests::get_pos_and_try_seek" {
   let (sink, queue_rx) = Sink::new()
   sink.append(SamplesBuffer::new(1, 4, [1.0, 2.0, 3.0, 4.0]))
