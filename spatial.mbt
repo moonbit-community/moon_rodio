@@ -215,6 +215,79 @@ pub impl Source for SpatialSource with try_seek(
 }
 
 ///|
+priv struct SpatialSinkSource {
+  inner : SpatialSource
+  emitter_position : Ref[Array[Double]]
+  left_ear : Ref[Array[Double]]
+  right_ear : Ref[Array[Double]]
+}
+
+///|
+fn[S : Source] spatial_sink_source_new(
+  input : S,
+  emitter_position : Ref[Array[Double]],
+  left_ear : Ref[Array[Double]],
+  right_ear : Ref[Array[Double]],
+) -> SpatialSinkSource {
+  {
+    inner: SpatialSource::new(
+      input,
+      emitter_position.val,
+      left_ear.val,
+      right_ear.val,
+    ),
+    emitter_position,
+    left_ear,
+    right_ear,
+  }
+}
+
+///|
+fn SpatialSinkSource::next(self : SpatialSinkSource) -> Sample? {
+  self.inner.set_positions(
+    self.emitter_position.val,
+    self.left_ear.val,
+    self.right_ear.val,
+  )
+  self.inner.next()
+}
+
+///|
+impl Source for SpatialSinkSource with next(self : SpatialSinkSource) {
+  self.next()
+}
+
+///|
+impl Source for SpatialSinkSource with channels(self : SpatialSinkSource) {
+  self.inner.channels()
+}
+
+///|
+impl Source for SpatialSinkSource with sample_rate(self : SpatialSinkSource) {
+  self.inner.sample_rate()
+}
+
+///|
+impl Source for SpatialSinkSource with current_span_len(
+  self : SpatialSinkSource,
+) {
+  self.inner.current_span_len()
+}
+
+///|
+impl Source for SpatialSinkSource with total_duration(self : SpatialSinkSource) {
+  self.inner.total_duration()
+}
+
+///|
+impl Source for SpatialSinkSource with try_seek(
+  self : SpatialSinkSource,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  self.inner.try_seek(pos)
+}
+
+///|
 pub struct SpatialSink {
   sink : Sink
   emitter_position : Ref[Array[Double]]
@@ -263,11 +336,11 @@ pub fn SpatialSink::set_right_ear_position(
 
 ///|
 pub fn[S : Source] SpatialSink::append(self : SpatialSink, source : S) -> Unit {
-  let spatial = SpatialSource::new(
+  let spatial = spatial_sink_source_new(
     source,
-    self.emitter_position.val,
-    self.left_ear.val,
-    self.right_ear.val,
+    self.emitter_position,
+    self.left_ear,
+    self.right_ear,
   )
   self.sink.append(spatial)
 }

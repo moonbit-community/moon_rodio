@@ -196,3 +196,158 @@ test "rodio::sink::tests::sleep_until_end" {
   sink.sleep_until_end()
   assert_true(sink.empty())
 }
+
+///|
+test "rodio::spatial::shared_positions_update_source" {
+  let emitter = @ref.new([-1.0, 0.0, 0.0])
+  let left = @ref.new([-1.0, 0.0, 0.0])
+  let right = @ref.new([1.0, 0.0, 0.0])
+  let spatial = spatial_sink_source_new(
+    SamplesBuffer::new(1, 1, [1.0, 1.0, 1.0]),
+    emitter,
+    left,
+    right,
+  )
+
+  let l0 = spatial.next().unwrap()
+  let r0 = spatial.next().unwrap()
+  assert_true(l0 > r0)
+
+  emitter.val = [1.0, 0.0, 0.0]
+  let l1 = spatial.next().unwrap()
+  let r1 = spatial.next().unwrap()
+  assert_true(r1 > l1)
+}
+
+///|
+test "rodio::spatial::sink_position_ref_shared_across_calls" {
+  let (mix_tx, _mix_rx) = mixer(2, 44_100)
+  let sink = SpatialSink::connect_new(
+    mix_tx,
+    [-1.0, 0.0, 0.0],
+    [-1.0, 0.0, 0.0],
+    [1.0, 0.0, 0.0],
+  )
+  let emitter_ref = sink.emitter_position
+  sink.set_emitter_position([1.0, 0.0, 0.0])
+  assert_eq(emitter_ref.val[0], 1.0)
+}
+
+///|
+test "rodio::spatial::sink_refs_drive_spatial_sink_source" {
+  let (mix_tx, _mix_rx) = mixer(2, 44_100)
+  let sink = SpatialSink::connect_new(
+    mix_tx,
+    [-1.0, 0.0, 0.0],
+    [-1.0, 0.0, 0.0],
+    [1.0, 0.0, 0.0],
+  )
+  let src = spatial_sink_source_new(
+    SamplesBuffer::new(1, 1, [1.0, 1.0, 1.0]),
+    sink.emitter_position,
+    sink.left_ear,
+    sink.right_ear,
+  )
+
+  let l0 = src.next().unwrap()
+  let r0 = src.next().unwrap()
+  assert_true(l0 > r0)
+
+  sink.set_emitter_position([1.0, 0.0, 0.0])
+  let l1 = src.next().unwrap()
+  let r1 = src.next().unwrap()
+  assert_true(r1 > l1)
+}
+
+///|
+test "rodio::spatial::to_dyn_keeps_runtime_position_updates" {
+  let emitter = @ref.new([-1.0, 0.0, 0.0])
+  let left = @ref.new([-1.0, 0.0, 0.0])
+  let right = @ref.new([1.0, 0.0, 0.0])
+  let dyn_src = to_dyn(
+    spatial_sink_source_new(
+      SamplesBuffer::new(1, 1, [1.0, 1.0, 1.0]),
+      emitter,
+      left,
+      right,
+    ),
+  )
+
+  let l0 = dyn_src.next().unwrap()
+  let r0 = dyn_src.next().unwrap()
+  assert_true(l0 > r0)
+
+  emitter.val = [1.0, 0.0, 0.0]
+  let l1 = dyn_src.next().unwrap()
+  let r1 = dyn_src.next().unwrap()
+  assert_true(r1 > l1)
+}
+
+///|
+test "rodio::spatial::sink_wrappers_keep_runtime_position_updates" {
+  let emitter = @ref.new([-1.0, 0.0, 0.0])
+  let left = @ref.new([-1.0, 0.0, 0.0])
+  let right = @ref.new([1.0, 0.0, 0.0])
+  let speed = @ref.new(1.0)
+  let sound_count = @ref.new(1)
+  let wrapped = with_done_count(
+    speed_with_control(
+      to_dyn(
+        spatial_sink_source_new(
+          SamplesBuffer::new(1, 1, [1.0, 1.0, 1.0]),
+          emitter,
+          left,
+          right,
+        ),
+      ),
+      speed,
+    ),
+    sound_count,
+  )
+
+  let l0 = wrapped.next().unwrap()
+  let r0 = wrapped.next().unwrap()
+  assert_true(l0 > r0)
+
+  emitter.val = [1.0, 0.0, 0.0]
+  let l1 = wrapped.next().unwrap()
+  let r1 = wrapped.next().unwrap()
+  assert_true(r1 > l1)
+}
+
+///|
+test "rodio::spatial::sink_pipeline_keeps_runtime_position_updates" {
+  let emitter = @ref.new([-1.0, 0.0, 0.0])
+  let left = @ref.new([-1.0, 0.0, 0.0])
+  let right = @ref.new([1.0, 0.0, 0.0])
+  let (sink, queue_rx) = Sink::new()
+  sink.append(
+    spatial_sink_source_new(
+      SamplesBuffer::new(1, 1, [1.0, 1.0, 1.0]),
+      emitter,
+      left,
+      right,
+    ),
+  )
+
+  let l0 = queue_rx.next().unwrap()
+  let r0 = queue_rx.next().unwrap()
+  assert_true(l0 > r0)
+
+  emitter.val = [1.0, 0.0, 0.0]
+  let saw_right = @ref.new(false)
+  for _ in 0..<4 {
+    match queue_rx.next() {
+      None => break
+      Some(l) =>
+        match queue_rx.next() {
+          None => break
+          Some(r) => if r > l { saw_right.val = true }
+        }
+    }
+    if saw_right.val {
+      break
+    }
+  }
+  assert_true(saw_right.val)
+}
