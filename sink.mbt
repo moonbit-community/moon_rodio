@@ -6,9 +6,7 @@ pub struct SinkControls {
   volume : Ref[Sample]
   speed : Ref[Sample]
   sound_count : Ref[Int]
-  position_samples : Ref[Int]
-  position_sample_rate : Ref[SampleRate]
-  position_channels : Ref[ChannelCount]
+  position : Ref[@moon_cpal.Duration]
 }
 
 ///|
@@ -29,7 +27,7 @@ pub struct Sink {
 ///|
 fn with_done_count(source : DynSource, sound_count : Ref[Int]) -> DynSource {
   let ended = @ref.new(false)
-  DynSource::new(
+  DynSource::new_dynamic(
     fn() {
       if ended.val {
         return None
@@ -46,13 +44,45 @@ fn with_done_count(source : DynSource, sound_count : Ref[Int]) -> DynSource {
         Some(v) => Some(v)
       }
     },
-    source.channels(),
-    source.sample_rate(),
+    fn() { source.channels() },
+    fn() { source.sample_rate() },
     current_span_len=fn() { source.current_span_len() },
     total_duration=fn() { source.total_duration() },
     try_seek=fn(pos : @moon_cpal.Duration) {
       try {
         source.try_seek(pos)
+        Ok(())
+      } catch {
+        err => Err(err)
+      }
+    },
+  )
+}
+
+///|
+fn speed_with_control(source : DynSource, speed : Ref[Sample]) -> DynSource {
+  DynSource::new_dynamic(
+    fn() { source.next() },
+    fn() { source.channels() },
+    fn() {
+      let rate = (Double::from_int(source.sample_rate()) * speed.val).to_int()
+      if rate <= 0 {
+        1
+      } else {
+        rate
+      }
+    },
+    // Keep spans short so runtime speed changes are observed quickly by consumers.
+    current_span_len=fn() { Some(1) },
+    total_duration=fn() {
+      source
+      .total_duration()
+      .map(fn(d) { duration_div_ratio_floor(d, speed.val) })
+    },
+    try_seek=fn(pos : @moon_cpal.Duration) {
+      let mapped = duration_mul_ratio_floor(pos, speed.val)
+      try {
+        source.try_seek(mapped)
         Ok(())
       } catch {
         err => Err(err)
@@ -69,7 +99,7 @@ pub fn ControlledQueueSource::next(self : ControlledQueueSource) -> Sample? {
       self.controls.sound_count.val -= 1
     }
     self.inner.skip_one()
-    self.controls.position_samples.val = 0
+    self.controls.position.val = @moon_cpal.Duration::from_secs((0 : UInt64))
   }
 
   if self.controls.stopped.val || self.controls.pause.val {
@@ -78,7 +108,19 @@ pub fn ControlledQueueSource::next(self : ControlledQueueSource) -> Sample? {
     match self.inner.next() {
       None => None
       Some(v) => {
-        self.controls.position_samples.val += 1
+        let step = match
+          duration_from_sample_count(
+            1,
+            self.inner.channels(),
+            self.inner.sample_rate(),
+          ) {
+          Some(d) => d
+          None => @moon_cpal.Duration::from_secs((0 : UInt64))
+        }
+        self.controls.position.val = duration_add(
+          self.controls.position.val,
+          step,
+        )
         Some(v * self.controls.volume.val)
       }
     }
@@ -152,9 +194,7 @@ pub fn Sink::new() -> (Sink, ControlledQueueSource) {
     volume: @ref.new(1.0),
     speed: @ref.new(1.0),
     sound_count: @ref.new(0),
-    position_samples: @ref.new(0),
-    position_sample_rate: @ref.new(hz_44100),
-    position_channels: @ref.new(1),
+    position: @ref.new(@moon_cpal.Duration::from_secs((0 : UInt64))),
   }
   (
     {
@@ -178,11 +218,9 @@ pub fn Sink::connect_new(mixer : Mixer) -> Sink {
 ///|
 pub fn[S : Source] Sink::append(self : Sink, source : S) -> Unit {
   self.controls.stopped.val = false
-  let speeded = speed(source, self.controls.speed.val)
+  let speeded = speed_with_control(to_dyn(source), self.controls.speed)
   if self.empty() {
-    self.controls.position_samples.val = 0
-    self.controls.position_sample_rate.val = speeded.sample_rate()
-    self.controls.position_channels.val = speeded.channels()
+    self.controls.position.val = @moon_cpal.Duration::from_secs((0 : UInt64))
   }
   self.controls.sound_count.val += 1
   let signal = self.queue_tx.append_with_signal(
@@ -231,7 +269,7 @@ pub fn Sink::is_paused(self : Sink) -> Bool {
 pub fn Sink::stop(self : Sink) -> Unit {
   self.controls.stopped.val = true
   self.controls.to_clear.val = 0
-  self.controls.position_samples.val = 0
+  self.controls.position.val = @moon_cpal.Duration::from_secs((0 : UInt64))
   self.controls.sound_count.val = 0
   self.last_signal.val = None
   ignore(self.queue_tx.clear())
@@ -241,7 +279,7 @@ pub fn Sink::stop(self : Sink) -> Unit {
 ///|
 pub fn Sink::clear(self : Sink) -> Unit {
   self.controls.to_clear.val = 0
-  self.controls.position_samples.val = 0
+  self.controls.position.val = @moon_cpal.Duration::from_secs((0 : UInt64))
   self.controls.sound_count.val = 0
   self.last_signal.val = None
   ignore(self.queue_tx.clear())
@@ -266,22 +304,12 @@ pub fn Sink::try_seek(
     return
   }
   self.queue_rx.try_seek(pos)
-  self.controls.position_samples.val = sample_index_from_duration(
-    pos,
-    self.controls.position_channels.val,
-    self.controls.position_sample_rate.val,
-  )
+  self.controls.position.val = pos
 }
 
 ///|
 pub fn Sink::get_pos(self : Sink) -> @moon_cpal.Duration {
-  let sample_rate = self.controls.position_sample_rate.val
-  let channels = self.controls.position_channels.val
-  let samples = self.controls.position_samples.val
-  match duration_from_sample_count(samples, channels, sample_rate) {
-    Some(pos) => pos
-    None => @moon_cpal.Duration::from_secs((0 : UInt64))
-  }
+  self.controls.position.val
 }
 
 ///|

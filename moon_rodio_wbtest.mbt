@@ -75,6 +75,33 @@ test "rodio::sink::tests::speed" {
 }
 
 ///|
+test "rodio::sink::tests::speed_runtime_update_affects_current_source" {
+  let (sink, queue_rx) = Sink::new()
+  sink.append(SamplesBuffer::new(1, 10, [1.0, 2.0, 3.0]))
+  assert_eq(queue_rx.sample_rate(), 10)
+  sink.set_speed(2.0)
+  assert_eq(queue_rx.sample_rate(), 20)
+  sink.set_speed(0.5)
+  assert_eq(queue_rx.sample_rate(), 5)
+}
+
+///|
+test "rodio::sink::tests::get_pos_tracks_runtime_speed_changes" {
+  let (sink, queue_rx) = Sink::new()
+  sink.append(SamplesBuffer::new(1, 10, [1.0, 2.0, 3.0, 4.0]))
+  assert_eq(queue_rx.next(), Some(1.0))
+  let p1 = sink.get_pos()
+  assert_eq(p1.secs, (0 : UInt64))
+  assert_eq(p1.nanos, 100_000_000)
+
+  sink.set_speed(2.0)
+  assert_eq(queue_rx.next(), Some(2.0))
+  let p2 = sink.get_pos()
+  assert_eq(p2.secs, (0 : UInt64))
+  assert_eq(p2.nanos, 150_000_000)
+}
+
+///|
 test "rodio::sink::tests::skip_one" {
   let (sink, queue_rx) = Sink::new()
   sink.append(SamplesBuffer::new(1, 1, [1.0, 2.0]))

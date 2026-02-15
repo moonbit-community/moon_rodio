@@ -791,9 +791,7 @@ pub struct SinkControls {
   volume : Ref[Double]
   speed : Ref[Double]
   sound_count : Ref[Int]
-  position_samples : Ref[Int]
-  position_sample_rate : Ref[Int]
-  position_channels : Ref[Int]
+  position : Ref[@core.Duration]
 }
 
 pub struct SkipDuration {
