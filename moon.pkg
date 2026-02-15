@@ -10,9 +10,5 @@ import {
 }
 
 options(
-  link: {
-    "native": {
-      "cc-link-flags": "-framework CoreAudio -framework CoreFoundation -framework AudioToolbox",
-    },
-  },
+  link: { "native": { "cc-link-flags": "${build.MOON_RODIO_CC_LINK_FLAGS}" } },
 )

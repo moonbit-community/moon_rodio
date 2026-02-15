@@ -10,5 +10,6 @@
   "license": "Apache-2.0",
   "keywords": [],
   "description": "",
-  "preferred-target": "native"
+  "preferred-target": "native",
+  "--moonbit-unstable-prebuild": "build.js"
 }
