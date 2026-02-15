@@ -92,17 +92,36 @@ fn speed_with_control(source : DynSource, speed : Ref[Sample]) -> DynSource {
 }
 
 ///|
+fn skip_one_sound(queue : SourcesQueueOutput, sound_count : Ref[Int]) -> Unit {
+  if sound_count.val <= 0 {
+    return
+  }
+  // When queue is on fallback silence, the first skip only advances to the next
+  // real source. Skip once more to actually drop one logical source.
+  if queue.current_is_fallback.val && !queue.input.next_sounds.val.is_empty() {
+    queue.skip_one()
+  }
+  queue.skip_one()
+  if sound_count.val > 0 {
+    sound_count.val -= 1
+  }
+}
+
+///|
 pub fn ControlledQueueSource::next(self : ControlledQueueSource) -> Sample? {
   while self.controls.to_clear.val > 0 {
     self.controls.to_clear.val -= 1
-    if self.controls.sound_count.val > 0 {
-      self.controls.sound_count.val -= 1
-    }
-    self.inner.skip_one()
+    skip_one_sound(self.inner, self.controls.sound_count)
     self.controls.position.val = @moon_cpal.Duration::from_secs((0 : UInt64))
   }
 
-  if self.controls.stopped.val || self.controls.pause.val {
+  if self.controls.stopped.val {
+    while self.controls.sound_count.val > 0 {
+      skip_one_sound(self.inner, self.controls.sound_count)
+    }
+    self.controls.position.val = @moon_cpal.Duration::from_secs((0 : UInt64))
+    Some(0.0)
+  } else if self.controls.pause.val {
     Some(0.0)
   } else {
     match self.inner.next() {
@@ -217,7 +236,12 @@ pub fn Sink::connect_new(mixer : Mixer) -> Sink {
 
 ///|
 pub fn[S : Source] Sink::append(self : Sink, source : S) -> Unit {
-  self.controls.stopped.val = false
+  if self.controls.stopped.val {
+    if self.controls.sound_count.val > 0 {
+      self.sleep_until_end()
+    }
+    self.controls.stopped.val = false
+  }
   let speeded = speed_with_control(to_dyn(source), self.controls.speed)
   if self.empty() {
     self.controls.position.val = @moon_cpal.Duration::from_secs((0 : UInt64))
@@ -268,22 +292,12 @@ pub fn Sink::is_paused(self : Sink) -> Bool {
 ///|
 pub fn Sink::stop(self : Sink) -> Unit {
   self.controls.stopped.val = true
-  self.controls.to_clear.val = 0
-  self.controls.position.val = @moon_cpal.Duration::from_secs((0 : UInt64))
-  self.controls.sound_count.val = 0
-  self.last_signal.val = None
-  ignore(self.queue_tx.clear())
-  self.queue_rx.skip_one()
 }
 
 ///|
 pub fn Sink::clear(self : Sink) -> Unit {
-  self.controls.to_clear.val = 0
-  self.controls.position.val = @moon_cpal.Duration::from_secs((0 : UInt64))
-  self.controls.sound_count.val = 0
-  self.last_signal.val = None
-  ignore(self.queue_tx.clear())
-  self.queue_rx.skip_one()
+  self.controls.to_clear.val = self.controls.sound_count.val
+  self.sleep_until_end()
   self.pause()
 }
 

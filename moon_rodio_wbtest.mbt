@@ -41,6 +41,20 @@ test "rodio::sink::tests::test_stop_and_start" {
 }
 
 ///|
+test "rodio::sink::tests::stop_flushes_queue_on_poll" {
+  let (sink, queue_rx) = Sink::new()
+  sink.append(SamplesBuffer::new(1, 1, [1.0]))
+  sink.append(SamplesBuffer::new(1, 1, [2.0]))
+  assert_eq(sink.len(), 2)
+
+  sink.stop()
+  // stop() only marks sink as stopped; queue is flushed by playback polling.
+  assert_eq(sink.len(), 2)
+  assert_eq(queue_rx.next(), Some(0.0))
+  assert_eq(sink.len(), 0)
+}
+
+///|
 test "rodio::sink::tests::test_volume" {
   let (sink, queue_rx) = Sink::new()
 
