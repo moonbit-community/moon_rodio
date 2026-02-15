@@ -602,6 +602,79 @@ fn uniform_source(
   target_channels : ChannelCount,
   target_sample_rate : SampleRate,
 ) -> DynSource {
-  let sampled = sample_rate_convert(input, target_sample_rate)
-  channel_convert(sampled, target_channels)
+  let total_duration = input.total_duration()
+  let max_span_len = 32_768
+
+  fn bootstrap_uniform() -> DynSource {
+    let from_channels = input.channels()
+    let span_len = match input.current_span_len() {
+      None => None
+      Some(n) => Some(if n < max_span_len { n } else { max_span_len })
+    }
+
+    let limited = match span_len {
+      None => input
+      Some(remaining0) => {
+        let remaining = @ref.new(remaining0)
+        DynSource::new_dynamic(
+          fn() {
+            if remaining.val <= 0 {
+              None
+            } else {
+              remaining.val -= 1
+              input.next()
+            }
+          },
+          fn() { from_channels },
+          fn() { input.sample_rate() },
+          current_span_len=fn() {
+            if remaining.val <= 0 {
+              Some(0)
+            } else {
+              Some(remaining.val)
+            }
+          },
+          total_duration=fn() { input.total_duration() },
+          try_seek=fn(pos : @moon_cpal.Duration) {
+            try {
+              input.try_seek(pos)
+              Ok(())
+            } catch {
+              err => Err(err)
+            }
+          },
+        )
+      }
+    }
+
+    let sampled = sample_rate_convert(limited, target_sample_rate)
+    channel_convert(sampled, target_channels)
+  }
+
+  let inner = @ref.new(bootstrap_uniform())
+
+  DynSource::new_dynamic(
+    fn() {
+      match inner.val.next() {
+        Some(v) => Some(v)
+        None => {
+          inner.val = bootstrap_uniform()
+          inner.val.next()
+        }
+      }
+    },
+    fn() { target_channels },
+    fn() { target_sample_rate },
+    current_span_len=fn() { None },
+    total_duration=fn() { total_duration },
+    try_seek=fn(pos : @moon_cpal.Duration) {
+      try {
+        input.try_seek(pos)
+        inner.val = bootstrap_uniform()
+        Ok(())
+      } catch {
+        err => Err(err)
+      }
+    },
+  )
 }
