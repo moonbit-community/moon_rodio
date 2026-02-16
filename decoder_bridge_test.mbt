@@ -358,6 +358,35 @@ test "rodio::decoder_api::builder_seekability_controls_try_seek" {
 }
 
 ///|
+test "rodio::decoder_api::mp3_seek_without_byte_len_is_forward_only" {
+  let bytes = @decoder.mp3_ill2_mono_bytes()
+
+  let forward_only = Decoder::builder()
+    .with_data(bytes)
+    .with_hint("mp3")
+    .with_seekable(true)
+    .build()
+  forward_only.try_seek(@moon_cpal.Duration::new((0 : UInt64), 20_000_000))
+  let backward_blocked = try {
+    forward_only.try_seek(@moon_cpal.Duration::new((0 : UInt64), 5_000_000))
+    false
+  } catch {
+    SeekError::NotSupported => true
+  }
+  assert_true(backward_blocked)
+
+  let random_access = Decoder::builder()
+    .with_data(bytes)
+    .with_hint("mp3")
+    .with_byte_len(bytes.length())
+    .with_seekable(true)
+    .build()
+  random_access.try_seek(@moon_cpal.Duration::new((0 : UInt64), 20_000_000))
+  random_access.try_seek(@moon_cpal.Duration::new((0 : UInt64), 5_000_000))
+  assert_true(random_access.next() is Some(_))
+}
+
+///|
 test "rodio::decoder_api::metadata_methods" {
   let d = Decoder::new(wav_mono([0, 32767], 16))
   assert_eq(d.current_span_len(), Some(2))

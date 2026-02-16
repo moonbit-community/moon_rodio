@@ -10,9 +10,20 @@ pub suberror PlayError {
 } derive(Show, Eq)
 
 ///|
+enum DecoderKind {
+  Wav
+  Flac
+  Vorbis
+  Mp3
+  Mp4a
+} derive(Show, Eq)
+
+///|
 pub struct Decoder {
   inner : @decoder.DecodedSamples
   seekable : Bool
+  allow_backward_seek : Bool
+  kind : DecoderKind
 }
 
 ///|
@@ -178,7 +189,16 @@ fn DecoderBuilder::decoder_builder_build(
     }
   }
 
-  { ..decoded, seekable: self.settings.is_seekable }
+  let allow_backward_seek = if !self.settings.is_seekable {
+    false
+  } else {
+    match decoded.kind {
+      DecoderKind::Mp3 => self.settings.byte_len is Some(_)
+      _ => true
+    }
+  }
+
+  { ..decoded, seekable: self.settings.is_seekable, allow_backward_seek }
 }
 
 ///|
@@ -352,7 +372,12 @@ fn decode_wav_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
   } noraise {
     src => src
   }
-  { inner: decoded, seekable: true }
+  {
+    inner: decoded,
+    seekable: true,
+    allow_backward_seek: true,
+    kind: DecoderKind::Wav,
+  }
 }
 
 ///|
@@ -362,7 +387,12 @@ fn decode_flac_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
   } noraise {
     src => src
   }
-  { inner: decoded, seekable: true }
+  {
+    inner: decoded,
+    seekable: true,
+    allow_backward_seek: true,
+    kind: DecoderKind::Flac,
+  }
 }
 
 ///|
@@ -372,7 +402,12 @@ fn decode_vorbis_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
   } noraise {
     src => src
   }
-  { inner: decoded, seekable: true }
+  {
+    inner: decoded,
+    seekable: true,
+    allow_backward_seek: true,
+    kind: DecoderKind::Vorbis,
+  }
 }
 
 ///|
@@ -382,7 +417,12 @@ fn decode_mp3_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
   } noraise {
     src => src
   }
-  { inner: decoded, seekable: true }
+  {
+    inner: decoded,
+    seekable: true,
+    allow_backward_seek: true,
+    kind: DecoderKind::Mp3,
+  }
 }
 
 ///|
@@ -392,7 +432,12 @@ fn decode_mp4a_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
   } noraise {
     src => src
   }
-  { inner: decoded, seekable: true }
+  {
+    inner: decoded,
+    seekable: true,
+    allow_backward_seek: true,
+    kind: DecoderKind::Mp4a,
+  }
 }
 
 ///|
@@ -567,6 +612,9 @@ pub impl Source for Decoder with try_seek(
     self.channels(),
     self.sample_rate(),
   )
+  if !self.allow_backward_seek && target < self.inner.position() {
+    raise SeekError::NotSupported
+  }
   self.inner.seek_to(target)
 }
 

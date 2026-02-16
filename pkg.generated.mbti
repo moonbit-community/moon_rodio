@@ -320,6 +320,8 @@ pub impl Source for Crossfade
 pub struct Decoder {
   inner : @decoder.DecodedSamples
   seekable : Bool
+  allow_backward_seek : Bool
+  kind : DecoderKind
 }
 pub fn Decoder::builder() -> DecoderBuilder
 pub fn Decoder::channels(Self) -> Int
@@ -350,6 +352,10 @@ pub fn DecoderBuilder::with_gapless(Self, Bool) -> Self
 pub fn DecoderBuilder::with_hint(Self, StringView) -> Self
 pub fn DecoderBuilder::with_mime_type(Self, StringView) -> Self
 pub fn DecoderBuilder::with_seekable(Self, Bool) -> Self
+
+type DecoderKind
+pub impl Eq for DecoderKind
+pub impl Show for DecoderKind
 
 pub struct Delay {
   inner : DynSource
