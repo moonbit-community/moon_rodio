@@ -1,13 +1,16 @@
 import {
   "Milky2018/moon_cpal",
   "Milky2018/moon_rodio/decoder",
-  "moonbitlang/async",
   "moonbitlang/async/fs",
   "moonbitlang/async/io",
   "moonbitlang/core/buffer",
   "moonbitlang/core/math",
   "moonbitlang/core/ref",
 }
+
+import {
+  "moonbitlang/async",
+} for "test"
 
 options(
   link: { "native": { "cc-link-flags": "${build.MOON_RODIO_CC_LINK_FLAGS}" } },
