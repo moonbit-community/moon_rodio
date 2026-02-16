@@ -33,9 +33,7 @@ pub fn decode_mp4a_bytes(bytes : Bytes) -> DecodedSamples raise DecoderError {
 
   let status = out_meta[0].reinterpret_as_int()
   if status == 100 {
-    raise DecoderError::Unsupported(
-      "mp4a decoder is only available on Apple platforms",
-    )
+    raise DecoderError::Unsupported("mp4a decoder backend is unavailable")
   }
   guard status == 0 else {
     raise DecoderError::InvalidFormat(

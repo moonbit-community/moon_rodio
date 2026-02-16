@@ -1,0 +1,118 @@
+name: Native CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: native-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native-linux-ffmpeg:
+    name: native (ubuntu, FFmpeg)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            pkg-config \
+            libasound2-dev \
+            libjack-jackd2-dev \
+            libavformat-dev \
+            libavcodec-dev \
+            libavutil-dev \
+            libswresample-dev
+
+      - name: Install MoonBit
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+
+      - name: Verify FFmpeg prebuild detection
+        shell: bash
+        run: |
+          set -euo pipefail
+          build_json="$(node build.js)"
+          echo "$build_json"
+          echo "$build_json" | grep -q "MOON_RODIO_ENABLE_FFMPEG=1"
+
+      - name: Native test
+        shell: bash
+        run: |
+          set -euo pipefail
+          moon version --all
+          moon update
+          moon test --target native
+
+  native-windows-ffmpeg:
+    name: native (windows, FFmpeg)
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install MoonBit
+        shell: pwsh
+        run: |
+          iwr -useb https://cli.moonbitlang.com/install/powershell.ps1 | iex
+          $mb = "$env:USERPROFILE\.moon\bin"
+          $mb | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          $env:PATH = "$mb;$env:PATH"
+          moon version
+
+      - name: Install FFmpeg dev package (vcpkg)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $vcpkgRoot = $env:VCPKG_INSTALLATION_ROOT
+          if ([string]::IsNullOrEmpty($vcpkgRoot)) {
+            $vcpkgRoot = "C:\vcpkg"
+          }
+          $vcpkgExe = Join-Path $vcpkgRoot "vcpkg.exe"
+          if (-not (Test-Path $vcpkgExe)) {
+            throw "vcpkg.exe not found at $vcpkgExe"
+          }
+
+          & $vcpkgExe install ffmpeg:x64-windows
+
+          $inc = Join-Path $vcpkgRoot "installed\x64-windows\include"
+          $lib = Join-Path $vcpkgRoot "installed\x64-windows\lib"
+          $bin = Join-Path $vcpkgRoot "installed\x64-windows\bin"
+          if (-not (Test-Path $inc) -or -not (Test-Path $lib)) {
+            throw "FFmpeg include/lib paths are missing under $vcpkgRoot\installed\x64-windows"
+          }
+
+          $incUnix = $inc.Replace("\", "/")
+          $libUnix = $lib.Replace("\", "/")
+          "MOON_RODIO_FFMPEG_CFLAGS=-I$incUnix" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "MOON_RODIO_FFMPEG_LIBS=-L$libUnix -lavformat -lavcodec -lavutil -lswresample" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          $bin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Verify FFmpeg prebuild detection
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $json = node build.js
+          $json | Write-Host
+          if ($json -notmatch "MOON_RODIO_ENABLE_FFMPEG=1") {
+            throw "FFmpeg backend was not enabled by build.js"
+          }
+
+      - name: Native test
+        shell: pwsh
+        run: |
+          moon version --all
+          moon update
+          moon test --target native

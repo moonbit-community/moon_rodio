@@ -10,4 +10,4 @@
 /// Known gaps versus upstream rodio:
 /// - no automatic drop-hook parity (MoonBit currently lacks Rust-style `Drop`)
 /// - some APIs are compatibility aliases over simplified internals
-/// - decoder sample-format and seek semantics are still a native-slice subset
+/// - non-Apple MP4A decode requires FFmpeg dev toolchain at build time
