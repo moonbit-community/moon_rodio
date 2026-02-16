@@ -278,20 +278,83 @@ pub fn OutputStreamBuilder::open_stream_or_fallback(
 
 ///|
 fn sample_to_i16(value : Sample) -> Int16 {
-  let v = if value < -1.0 { -1.0 } else if value > 1.0 { 1.0 } else { value }
+  let v = sample_clamped(value)
   Int16::from_int((v * 32767.0).to_int())
 }
 
 ///|
 fn sample_to_u16(value : Sample) -> UInt16 {
-  let v = if value < -1.0 { -1.0 } else if value > 1.0 { 1.0 } else { value }
+  let v = sample_clamped(value)
   ((v * 0.5 + 0.5) * 65535.0).to_int().to_uint16()
 }
 
 ///|
 fn sample_to_u8(value : Sample) -> Byte {
-  let v = if value < -1.0 { -1.0 } else if value > 1.0 { 1.0 } else { value }
+  let v = sample_clamped(value)
   ((v * 0.5 + 0.5) * 255.0).to_int().to_byte()
+}
+
+///|
+fn sample_clamped(value : Sample) -> Sample {
+  if value < -1.0 {
+    -1.0
+  } else if value > 1.0 {
+    1.0
+  } else {
+    value
+  }
+}
+
+///|
+fn sample_to_i8(value : Sample) -> Int {
+  let v = sample_clamped(value)
+  Int::clamp((v * 127.0).to_int(), min=-128, max=127)
+}
+
+///|
+fn sample_to_i24(value : Sample) -> @moon_cpal.I24 {
+  let v = sample_clamped(value)
+  @moon_cpal.I24::new((v * 8_388_607.0).to_int())
+}
+
+///|
+fn sample_to_u24(value : Sample) -> @moon_cpal.U24 {
+  let v = sample_clamped(value)
+  @moon_cpal.U24::new(((v * 0.5 + 0.5) * 16_777_215.0).to_int())
+}
+
+///|
+fn sample_to_i32(value : Sample) -> Int {
+  let v = sample_clamped(value)
+  Int::clamp(
+    (v * 2_147_483_647.0).to_int(),
+    min=-2_147_483_648,
+    max=2_147_483_647,
+  )
+}
+
+///|
+fn sample_to_u32(value : Sample) -> UInt {
+  let v = sample_clamped(value)
+  ((v * 0.5 + 0.5) * 4_294_967_295.0).to_uint()
+}
+
+///|
+fn sample_to_i64(value : Sample) -> Int64 {
+  let v = sample_clamped(value)
+  if v <= -1.0 {
+    -9223372036854775808L
+  } else if v >= 1.0 {
+    9223372036854775807L
+  } else {
+    (v * 9_223_372_036_854_775_807.0).to_int64()
+  }
+}
+
+///|
+fn sample_to_u64(value : Sample) -> UInt64 {
+  let v = sample_clamped(value)
+  ((v * 0.5 + 0.5) * 18_446_744_073_709_551_615.0).to_uint64()
 }
 
 ///|
@@ -299,6 +362,98 @@ fn next_or_silence(samples : MixerSource) -> Sample {
   match samples.next() {
     None => 0.0
     Some(v) => v
+  }
+}
+
+///|
+fn fill_raw_output_data(data : @spec.Data, samples : MixerSource) -> Unit {
+  let len = data.len()
+  match data.sample_format() {
+    @moon_cpal.SampleFormat::I8 => {
+      let out = Array::make(len, 0)
+      for i in 0..<len {
+        out[i] = sample_to_i8(next_or_silence(samples))
+      }
+      ignore(data.write_i8(out))
+    }
+    @moon_cpal.SampleFormat::I16 => {
+      let out = Array::make(len, Int16::from_int(0))
+      for i in 0..<len {
+        out[i] = sample_to_i16(next_or_silence(samples))
+      }
+      ignore(data.write_i16(out))
+    }
+    @moon_cpal.SampleFormat::I24 => {
+      let out = Array::make(len, @moon_cpal.I24::new(0))
+      for i in 0..<len {
+        out[i] = sample_to_i24(next_or_silence(samples))
+      }
+      ignore(data.write_i24(out))
+    }
+    @moon_cpal.SampleFormat::I32 => {
+      let out = Array::make(len, 0)
+      for i in 0..<len {
+        out[i] = sample_to_i32(next_or_silence(samples))
+      }
+      ignore(data.write_i32(out))
+    }
+    @moon_cpal.SampleFormat::I64 => {
+      let out = Array::make(len, 0L)
+      for i in 0..<len {
+        out[i] = sample_to_i64(next_or_silence(samples))
+      }
+      ignore(data.write_i64(out))
+    }
+    @moon_cpal.SampleFormat::U8 => {
+      let out = Array::make(len, (0 : Int).to_byte())
+      for i in 0..<len {
+        out[i] = sample_to_u8(next_or_silence(samples))
+      }
+      ignore(data.write_u8(out))
+    }
+    @moon_cpal.SampleFormat::U16 => {
+      let out = Array::make(len, (0 : Int).to_uint16())
+      for i in 0..<len {
+        out[i] = sample_to_u16(next_or_silence(samples))
+      }
+      ignore(data.write_u16(out))
+    }
+    @moon_cpal.SampleFormat::U24 => {
+      let out = Array::make(len, @moon_cpal.U24::new(0))
+      for i in 0..<len {
+        out[i] = sample_to_u24(next_or_silence(samples))
+      }
+      ignore(data.write_u24(out))
+    }
+    @moon_cpal.SampleFormat::U32 => {
+      let out = Array::make(len, 0.0.to_uint())
+      for i in 0..<len {
+        out[i] = sample_to_u32(next_or_silence(samples))
+      }
+      ignore(data.write_u32(out))
+    }
+    @moon_cpal.SampleFormat::U64 => {
+      let out = Array::make(len, 0UL)
+      for i in 0..<len {
+        out[i] = sample_to_u64(next_or_silence(samples))
+      }
+      ignore(data.write_u64(out))
+    }
+    @moon_cpal.SampleFormat::F32 => {
+      let out = Array::make(len, Float::from_double(0.0))
+      for i in 0..<len {
+        out[i] = Float::from_double(sample_clamped(next_or_silence(samples)))
+      }
+      ignore(data.write_f32(out))
+    }
+    @moon_cpal.SampleFormat::F64 => {
+      let out = Array::make(len, 0.0)
+      for i in 0..<len {
+        out[i] = sample_clamped(next_or_silence(samples))
+      }
+      ignore(data.write_f64(out))
+    }
+    _ => data.clear()
   }
 }
 
@@ -384,7 +539,38 @@ fn build_output_stream(
       } noraise {
         stream => stream
       }
+    @moon_cpal.SampleFormat::I8
+    | @moon_cpal.SampleFormat::I24
+    | @moon_cpal.SampleFormat::I32
+    | @moon_cpal.SampleFormat::I64
+    | @moon_cpal.SampleFormat::U24
+    | @moon_cpal.SampleFormat::U32
+    | @moon_cpal.SampleFormat::U64
+    | @moon_cpal.SampleFormat::F64 =>
+      try
+        device.build_output_stream_raw(
+          stream_config,
+          config.sample_format,
+          fn(data, _) { fill_raw_output_data(data, samples) },
+          error_callback,
+          None,
+        )
+      catch {
+        err => raise StreamError::BuildStreamError(err)
+      } noraise {
+        stream => stream
+      }
     _ => raise StreamError::UnsupportedSampleFormat
+  }
+}
+
+///|
+fn validate_output_stream_config(config : OutputStreamConfig) -> Unit {
+  guard config.sample_rate > 0 else { panic() }
+  guard config.channel_count > 0 else { panic() }
+  match config.buffer_size {
+    @moon_cpal.BufferSize::Default => ()
+    @moon_cpal.BufferSize::Fixed(n) => if n <= 0 { panic() }
   }
 }
 
@@ -394,6 +580,7 @@ pub fn OutputStream::open(
   config : OutputStreamConfig,
   error_callback : (@moon_cpal.StreamError) -> Unit,
 ) -> OutputStream raise StreamError {
+  validate_output_stream_config(config)
   let (controller, source) = mixer(config.channel_count, config.sample_rate)
   let stream = build_output_stream(device, config, source, error_callback)
   stream.play() catch {
