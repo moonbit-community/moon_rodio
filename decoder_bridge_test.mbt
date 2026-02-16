@@ -155,8 +155,23 @@ fn wav_stereo_with_rate(
 
 ///|
 async fn read_reference_asset(path : String) -> Bytes {
+  let (code, toplevel_output, _) = @process.collect_output("git", [
+    "rev-parse", "--show-toplevel",
+  ])
+  if code == 0 {
+    let toplevel = toplevel_output
+      .text()
+      .trim(char_set="\n\r ")
+      .replace_all(old="\\", new="/")
+    try {
+      return @fs.read_file(toplevel + "/rodio-reference/assets/" + path).binary()
+    } catch {
+      _ => ()
+    }
+  }
+
   let mut prefix = ""
-  for _ in 0..<20 {
+  for _ in 0..<64 {
     let full_path = prefix + "rodio-reference/assets/" + path
     try {
       return @fs.read_file(full_path).binary()

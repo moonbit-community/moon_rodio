@@ -10,6 +10,7 @@ import {
 }
 
 import {
+  "moonbitlang/async/process",
   "moonbitlang/async",
 } for "test"
 
