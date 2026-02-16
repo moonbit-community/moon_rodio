@@ -531,7 +531,7 @@ test "rodio::source::linear_ramp_and_fades" {
 
   let s3 = SamplesBuffer::new(1, 1, [1.0, 1.0, 1.0, 1.0])
   let fout = fade_out(s3, @moon_cpal.Duration::from_secs((2 : UInt64)))
-  assert_eq(collect_n(fout, 10), [1.0, 1.0, 0.5, 0.0])
+  assert_eq(collect_n(fout, 10), [1.0, 0.5, 0.0, 0.0])
 
   let s4 = SamplesBuffer::new(1, 1, [1.0, 1.0, 1.0, 1.0])
   let unclamped = linear_gain_ramp_with_clamp(

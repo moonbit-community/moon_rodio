@@ -1,20 +1,4 @@
 ///|
-fn gain_duration_to_sample_count(
-  duration : @moon_cpal.Duration,
-  channels : ChannelCount,
-  sample_rate : SampleRate,
-) -> Int {
-  if channels <= 0 || sample_rate <= 0 {
-    return 0
-  }
-
-  let per_second = channels * sample_rate
-  let secs_part = duration.secs.to_int() * per_second
-  let nanos_part = duration.nanos * per_second / 1_000_000_000
-  secs_part + nanos_part
-}
-
-///|
 fn gain_duration_to_nanos(duration : @moon_cpal.Duration) -> Double {
   Double::from_int(duration.secs.to_int()) * 1_000_000_000.0 +
   Double::from_int(duration.nanos)
@@ -147,27 +131,9 @@ pub fn[S : Source] fade_out(
   source : S,
   duration : @moon_cpal.Duration,
 ) -> DynSource {
-  let buf = buffered(source)
-  let data = buf.samples
-  let len = data.length()
-  let count = gain_duration_to_sample_count(
-    duration,
-    buf.channels(),
-    buf.sample_rate(),
-  )
-
-  if count <= 0 || len == 0 {
-    return to_dyn(buf)
-  }
-
-  let n = if count < len { count } else { len }
-  let start = len - n
-  for i in 0..<n {
-    let t = Double::from_int(i + 1) / Double::from_int(n)
-    data[start + i] *= 1.0 - t
-  }
-
-  to_dyn(SamplesBuffer::new(buf.channels(), buf.sample_rate(), data))
+  // Match rodio fadeout semantics: apply a forward linear ramp 1.0 -> 0.0,
+  // then keep output clamped at 0.0 after the ramp duration.
+  linear_gain_ramp(source, 1.0, 0.0, duration)
 }
 
 ///|
