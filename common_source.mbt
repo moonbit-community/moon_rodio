@@ -406,19 +406,44 @@ pub impl Source for SamplesBuffer with try_seek(
   self : SamplesBuffer,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
+  let channel_count = self.channels()
+  let current_channel = if channel_count > 0 {
+    self.cursor.val % channel_count
+  } else {
+    0
+  }
   let target = sample_index_from_duration(
     pos,
-    self.channels(),
+    channel_count,
     self.sample_rate(),
   )
-  let clamped = if target < 0 {
+  let clamped_target = if target < 0 {
     0
   } else if target > self.samples.length() {
     self.samples.length()
   } else {
     target
   }
-  self.cursor.val = clamped
+  let aligned_target = if channel_count > 0 {
+    let rem = clamped_target % channel_count
+    if rem == 0 {
+      clamped_target
+    } else {
+      clamped_target + channel_count - rem
+    }
+  } else {
+    clamped_target
+  }
+  let with_channel_offset = if aligned_target >= current_channel {
+    aligned_target - current_channel
+  } else {
+    0
+  }
+  self.cursor.val = if with_channel_offset > self.samples.length() {
+    self.samples.length()
+  } else {
+    with_channel_offset
+  }
 }
 
 ///|

@@ -142,6 +142,21 @@ test "rodio::source::duration_precision_and_subsecond_seek" {
 }
 
 ///|
+test "rodio::source::samples_buffer_seek_preserves_channel_order" {
+  let src = SamplesBuffer::new(2, 100, [
+    0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
+  ])
+  src.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
+  assert_eq(src.next(), Some(0.0))
+  assert_eq(src.next(), Some(1.0))
+  // Consume one extra sample so current channel offset is odd.
+  assert_eq(src.next(), Some(2.0))
+
+  src.try_seek(@moon_cpal.Duration::new((0 : UInt64), 20_000_000))
+  assert_eq(src.next(), Some(3.0))
+}
+
+///|
 test "rodio::source::default_try_seek_not_supported" {
   let src = Empty::new(1, 44_100)
   let got_not_supported = try {

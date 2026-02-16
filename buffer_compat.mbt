@@ -86,22 +86,10 @@ pub impl Source for StaticSamplesBuffer with total_duration(
 
 ///|
 pub impl Source for StaticSamplesBuffer with try_seek(
-  self : StaticSamplesBuffer,
-  pos : @moon_cpal.Duration,
+  _self : StaticSamplesBuffer,
+  _pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  let target = sample_index_from_duration(
-    pos,
-    self.channels(),
-    self.sample_rate(),
-  )
-  let clamped = if target < 0 {
-    0
-  } else if target > self.samples.length() {
-    self.samples.length()
-  } else {
-    target
-  }
-  self.cursor.val = clamped
+  raise SeekError::NotSupported
 }
 
 ///|
