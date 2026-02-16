@@ -6,7 +6,7 @@ pub suberror DecoderError {
 
 ///|
 pub suberror PlayError {
-  Decode(DecoderError)
+  DecoderError(DecoderError)
 } derive(Show, Eq)
 
 ///|
@@ -536,7 +536,7 @@ pub impl Source for Decoder with try_seek(
 ///|
 pub fn play(mixer : Mixer, bytes : Bytes) -> Sink raise PlayError {
   let source = try Decoder::new(bytes) catch {
-    err => raise PlayError::Decode(err)
+    err => raise PlayError::DecoderError(err)
   } noraise {
     src => src
   }

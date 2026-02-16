@@ -208,6 +208,19 @@ test "rodio::decoder_api::play" {
 }
 
 ///|
+test "rodio::decoder_api::play_decode_error_variant" {
+  let (tx, _rx) = mixer(1, 44_100)
+  let got = try {
+    ignore(play(tx, b"not audio"))
+    false
+  } catch {
+    PlayError::DecoderError(DecoderError::UnknownFormat) => true
+    _ => false
+  }
+  assert_true(got)
+}
+
+///|
 test "rodio::decoder_api::builder_build" {
   let decoder = Decoder::builder()
     .with_data(@decoder.mp3_ill2_mono_bytes())

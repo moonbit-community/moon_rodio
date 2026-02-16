@@ -135,7 +135,7 @@ pub impl Eq for DecoderError
 pub impl Show for DecoderError
 
 pub suberror PlayError {
-  Decode(DecoderError)
+  DecoderError(DecoderError)
 }
 pub impl Eq for PlayError
 pub impl Show for PlayError
