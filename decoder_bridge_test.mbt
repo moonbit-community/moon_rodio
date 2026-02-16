@@ -154,6 +154,25 @@ fn wav_stereo_with_rate(
 }
 
 ///|
+async fn read_reference_asset(path : String) -> Bytes {
+  let candidates = [
+    "", "../", "../../", "../../../", "../../../../", "../../../../../", "../../../../../../",
+  ]
+
+  for p in candidates {
+    let full_path = p + "rodio-reference/assets/" + path
+    try {
+      return @fs.read_file(full_path).binary()
+    } catch {
+      _ => ()
+    }
+  }
+
+  // Fallback with the original path for a clear failure message.
+  @fs.read_file("rodio-reference/assets/" + path).binary()
+}
+
+///|
 test "rodio::decoder_api::new_wav" {
   let d = Decoder::new(wav_mono([0, 32767, -32768], 16))
   assert_eq(d.channels(), 1)
@@ -188,7 +207,7 @@ test "rodio::decoder_api::new_vorbis" {
 ///|
 #cfg(target="native")
 async test "rodio::decoder_api::mp4a_native_decode_and_builder_paths" {
-  let bytes = @fs.read_file("rodio-reference/assets/monkeys.mp4a").binary()
+  let bytes = read_reference_asset("monkeys.mp4a")
 
   let decode_supported = try {
     let d = Decoder::new_mp4a(bytes)
@@ -510,12 +529,11 @@ fn decoder_has_non_zero_sample(decoder : Decoder) -> Bool {
 #cfg(target="native")
 async test "rodio::decoder_api::wav_encodings_reference_assets" {
   let files = [
-    "rodio-reference/assets/audacity16bit.wav", "rodio-reference/assets/lmms16bit.wav",
-    "rodio-reference/assets/lmms24bit.wav", "rodio-reference/assets/audacity32bit.wav",
-    "rodio-reference/assets/lmms32bit.wav", "rodio-reference/assets/audacity32bit_int.wav",
+    "audacity16bit.wav", "lmms16bit.wav", "lmms24bit.wav", "audacity32bit.wav", "lmms32bit.wav",
+    "audacity32bit_int.wav",
   ]
   for path in files {
-    let bytes = @fs.read_file(path).binary()
+    let bytes = read_reference_asset(path)
     let decoder = Decoder::new_wav(bytes)
     assert_true(decoder_has_non_zero_sample(decoder))
   }
@@ -525,17 +543,16 @@ async test "rodio::decoder_api::wav_encodings_reference_assets" {
 #cfg(target="native")
 async test "rodio::decoder_api::flac_encodings_reference_assets" {
   let base = Decoder::new_flac(
-    @fs.read_file("rodio-reference/assets/audacity16bit_level5.flac").binary(),
+    read_reference_asset("audacity16bit_level5.flac"),
   )
   assert_true(decoder_has_non_zero_sample(base))
   assert_eq(base.total_duration().unwrap().secs, (3 : UInt64))
 
   let files = [
-    "rodio-reference/assets/audacity24bit_level0.flac", "rodio-reference/assets/audacity24bit_level5.flac",
-    "rodio-reference/assets/audacity24bit_level8.flac",
+    "audacity24bit_level0.flac", "audacity24bit_level5.flac", "audacity24bit_level8.flac",
   ]
   for path in files {
-    let decoder = Decoder::new_flac(@fs.read_file(path).binary())
+    let decoder = Decoder::new_flac(read_reference_asset(path))
     assert_true(decoder_has_non_zero_sample(decoder))
     assert_eq(decoder.total_duration().unwrap().secs, (3 : UInt64))
   }
