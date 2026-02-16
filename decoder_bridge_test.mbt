@@ -164,7 +164,7 @@ async fn read_reference_asset(path : String) -> Bytes {
       .trim(char_set="\n\r ")
       .replace_all(old="\\", new="/")
     try {
-      return @fs.read_file(toplevel + "/rodio-reference/assets/" + path).binary()
+      return @fs.read_file(toplevel + "/test_assets/rodio/" + path).binary()
     } catch {
       _ => ()
     }
@@ -172,7 +172,7 @@ async fn read_reference_asset(path : String) -> Bytes {
 
   let mut prefix = ""
   for _ in 0..<64 {
-    let full_path = prefix + "rodio-reference/assets/" + path
+    let full_path = prefix + "test_assets/rodio/" + path
     try {
       return @fs.read_file(full_path).binary()
     } catch {
@@ -182,7 +182,7 @@ async fn read_reference_asset(path : String) -> Bytes {
   }
 
   // Fallback with the original path for a clear failure message.
-  @fs.read_file("rodio-reference/assets/" + path).binary()
+  @fs.read_file("test_assets/rodio/" + path).binary()
 }
 
 ///|
