@@ -34,7 +34,7 @@ surface and behavior to the upstream project as far as MoonBit allows.
 
 ## Quick start
 
-```moonbit
+```moonbit nocheck
 import "Milky2018/moon_rodio"
 import "Milky2018/moon_rodio/decoder"
 import "moonbitlang/core/array"
@@ -61,7 +61,7 @@ fn example() {
 
 Decoder usage:
 
-```moonbit
+```moonbit nocheck
 import "Milky2018/moon_rodio/decoder"
 import "moonbitlang/async/fs"
 

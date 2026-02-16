@@ -14,5 +14,9 @@ import {
 } for "test"
 
 options(
-  link: { "native": { "cc-link-flags": "${build.MOON_RODIO_CC_LINK_FLAGS}" } },
+  link: {
+    "native": {
+      "cc-link-flags": "${build.MOON_RODIO_CC_LINK_FLAGS} ${build.MOON_RODIO_DECODER_CC_LINK_FLAGS}",
+    },
+  },
 )
