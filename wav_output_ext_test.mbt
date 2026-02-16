@@ -30,7 +30,6 @@ fn bytes_eq4(
 ///|
 #cfg(target="native")
 async test "rodio::wav_output::output_to_wav" {
-  ignore(@async.now())
   let path = "_build/rodio_output_to_wav_test.wav"
   if @fs.exists(path) {
     @fs.remove(path)
