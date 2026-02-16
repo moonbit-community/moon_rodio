@@ -155,17 +155,15 @@ fn wav_stereo_with_rate(
 
 ///|
 async fn read_reference_asset(path : String) -> Bytes {
-  let candidates = [
-    "", "../", "../../", "../../../", "../../../../", "../../../../../", "../../../../../../",
-  ]
-
-  for p in candidates {
-    let full_path = p + "rodio-reference/assets/" + path
+  let mut prefix = ""
+  for _ in 0..<20 {
+    let full_path = prefix + "rodio-reference/assets/" + path
     try {
       return @fs.read_file(full_path).binary()
     } catch {
       _ => ()
     }
+    prefix = prefix + "../"
   }
 
   // Fallback with the original path for a clear failure message.
