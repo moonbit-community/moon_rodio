@@ -593,12 +593,27 @@ test "rodio::source::linear_ramp_and_fades" {
 ///|
 test "rodio::source::limit_and_distortion" {
   let a = SamplesBuffer::new(1, 44_100, [-2.0, -0.5, 0.2, 3.0])
-  let l = limit(a, -1.0, 1.0)
-  assert_eq(collect_n(l, 10), [-1.0, -0.5, 0.2, 1.0])
+  let l = limit(
+    a,
+    LimitSettings::new()
+    .with_min(-1.0)
+    .with_max(1.0)
+    .with_knee_width(0.0)
+    .with_attack(@moon_cpal.Duration::from_secs((0 : UInt64)))
+    .with_release(@moon_cpal.Duration::from_secs((0 : UInt64))),
+  )
+  let lv = collect_n(l, 10)
+  assert_true((lv[0] + 1.0).abs() < 1.0e-9)
+  assert_eq(lv[1], -0.5)
+  assert_eq(lv[2], 0.2)
+  assert_true((lv[3] - 1.0).abs() < 1.0e-9)
 
   let b = SamplesBuffer::new(1, 44_100, [-2.0, -0.5, 0.2, 3.0])
-  let d = distortion(b, 0.4)
+  let d = distortion(b, 1.0, 0.4)
   assert_eq(collect_n(d, 10), [-0.4, -0.4, 0.2, 0.4])
+
+  let c = SamplesBuffer::new(1, 44_100, [0.25, 0.6, -0.8])
+  assert_eq(collect_n(distortion_threshold(c, 10.0), 10), [0.25, 0.6, -0.8])
 }
 
 ///|
@@ -1153,6 +1168,10 @@ test "rodio::source::noise_white_and_pink" {
 ///|
 test "rodio::source::distortion_with_gain" {
   let s = SamplesBuffer::new(1, 44_100, [0.25, 0.6, -0.8])
+  let d0 = distortion(s, 2.0, 0.9)
+  assert_eq(collect_n(d0, 10), [0.5, 0.9, -0.9])
+
+  let s = SamplesBuffer::new(1, 44_100, [0.25, 0.6, -0.8])
   let d = distortion_with_gain(s, 2.0, 0.9)
   assert_eq(collect_n(d, 10), [0.5, 0.9, -0.9])
 }
@@ -1162,6 +1181,28 @@ test "rodio::source::reverb" {
   let src = SamplesBuffer::new(1, 1, [1.0, 0.0, 0.0, 0.0])
   let out = reverb(src, @moon_cpal.Duration::from_secs((1 : UInt64)), 0.5)
   assert_eq(collect_n(out, 10), [1.0, 0.5, 0.0, 0.0, 0.0])
+
+  let pulls = @ref.new(0)
+  let streaming = DynSource::new(
+    fn() {
+      pulls.val += 1
+      if pulls.val <= 3 {
+        Some(1.0)
+      } else {
+        None
+      }
+    },
+    1,
+    1,
+  )
+  let streaming_reverb = reverb(
+    streaming,
+    @moon_cpal.Duration::from_secs((1 : UInt64)),
+    0.5,
+  )
+  // Ensure reverb no longer pre-buffers all input on construction.
+  assert_eq(pulls.val, 0)
+  assert_eq(collect_n(streaming_reverb, 10), [1.0, 1.5, 1.5, 0.5])
 }
 
 ///|

@@ -176,14 +176,6 @@ pub struct Distortion {
 ///|
 pub fn[S : Source] Distortion::new(
   source : S,
-  threshold : Sample,
-) -> Distortion {
-  { input: to_dyn(source), gain: @ref.new(1.0), threshold: @ref.new(threshold) }
-}
-
-///|
-pub fn[S : Source] Distortion::with_gain(
-  source : S,
   gain : Sample,
   threshold : Sample,
 ) -> Distortion {
@@ -192,6 +184,23 @@ pub fn[S : Source] Distortion::with_gain(
     gain: @ref.new(gain),
     threshold: @ref.new(threshold),
   }
+}
+
+///|
+pub fn[S : Source] Distortion::new_with_threshold(
+  source : S,
+  threshold : Sample,
+) -> Distortion {
+  Distortion::new(source, 1.0, threshold)
+}
+
+///|
+pub fn[S : Source] Distortion::with_gain(
+  source : S,
+  gain : Sample,
+  threshold : Sample,
+) -> Distortion {
+  Distortion::new(source, gain, threshold)
 }
 
 ///|

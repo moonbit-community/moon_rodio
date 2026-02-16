@@ -34,7 +34,9 @@ pub fn db_to_linear(Double) -> Double
 
 pub fn[S : Source] delay(S, @core.Duration) -> DynSource
 
-pub fn[S : Source] distortion(S, Double) -> DynSource
+pub fn[S : Source] distortion(S, Double, Double) -> DynSource
+
+pub fn[S : Source] distortion_threshold(S, Double) -> DynSource
 
 pub fn[S : Source] distortion_with_gain(S, Double, Double) -> DynSource
 
@@ -58,7 +60,9 @@ pub fn[S : Source] high_pass_with_q(S, Int, Double) -> BltFilter
 
 pub fn lerp(Double, Double, Int, Int) -> Double
 
-pub fn[S : Source] limit(S, Double, Double) -> DynSource
+pub fn[S : Source] limit(S, LimitSettings) -> DynSource
+
+pub fn[S : Source] limit_range(S, Double, Double) -> DynSource
 
 pub fn[S : Source] linear_gain_ramp(S, Double, Double, @core.Duration) -> DynSource
 
@@ -374,7 +378,8 @@ pub struct Distortion {
 pub fn Distortion::inner(Self) -> DynSource
 pub fn Distortion::inner_mut(Self) -> DynSource
 pub fn Distortion::into_inner(Self) -> DynSource
-pub fn[S : Source] Distortion::new(S, Double) -> Self
+pub fn[S : Source] Distortion::new(S, Double, Double) -> Self
+pub fn[S : Source] Distortion::new_with_threshold(S, Double) -> Self
 pub fn Distortion::set_gain(Self, Double) -> Unit
 pub fn Distortion::set_threshold(Self, Double) -> Unit
 pub fn[S : Source] Distortion::with_gain(S, Double, Double) -> Self
