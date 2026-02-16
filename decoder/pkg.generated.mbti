@@ -6,6 +6,8 @@ pub fn decode_flac_bytes(Bytes) -> DecodedSamples raise DecoderError
 
 pub fn decode_mp3_bytes(Bytes) -> DecodedSamples raise DecoderError
 
+pub fn decode_mp4a_bytes(Bytes) -> DecodedSamples raise DecoderError
+
 pub fn decode_vorbis_bytes(Bytes) -> DecodedSamples raise DecoderError
 
 pub fn decode_wav_bytes(Bytes) -> DecodedSamples raise DecoderError

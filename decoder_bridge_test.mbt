@@ -186,6 +186,50 @@ test "rodio::decoder_api::new_vorbis" {
 }
 
 ///|
+#cfg(target="native")
+async test "rodio::decoder_api::mp4a_native_decode_and_builder_paths" {
+  let bytes = @fs.read_file("rodio-reference/assets/monkeys.mp4a").binary()
+
+  let decode_supported = try {
+    let d = Decoder::new_mp4a(bytes)
+    assert_true(d.channels() > 0)
+    assert_true(d.sample_rate() > 0)
+    assert_true(decoder_has_non_zero_sample(d))
+    true
+  } catch {
+    DecoderError::Backend(@decoder.DecoderError::Unsupported(_)) => false
+    _ => false
+  }
+
+  if decode_supported {
+    let hinted = Decoder::builder().with_data(bytes).with_hint("m4a").build()
+    assert_true(hinted.channels() > 0)
+    assert_true(hinted.sample_rate() > 0)
+
+    let mime = Decoder::builder()
+      .with_data(bytes)
+      .with_mime_type("audio/mp4")
+      .build()
+    assert_true(mime.channels() > 0)
+    assert_true(mime.sample_rate() > 0)
+
+    let auto = Decoder::new(bytes)
+    assert_true(auto.channels() > 0)
+    assert_true(auto.sample_rate() > 0)
+  } else {
+    let hinted_fails = try {
+      ignore(Decoder::builder().with_data(bytes).with_hint("m4a").build())
+      false
+    } catch {
+      DecoderError::UnknownFormat => true
+      DecoderError::Backend(@decoder.DecoderError::Unsupported(_)) => true
+      _ => false
+    }
+    assert_true(hinted_fails)
+  }
+}
+
+///|
 test "rodio::decoder_api::reject_unknown_format" {
   let bad = try {
     ignore(Decoder::new(b"abc"))

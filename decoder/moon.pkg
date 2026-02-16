@@ -3,10 +3,12 @@ import {
 }
 
 options(
-  "native-stub": [ "mp3_native.c", "flac_vorbis_native.c" ],
+  link: { "native": { "cc-link-flags": "${build.MOON_RODIO_CC_LINK_FLAGS}" } },
+  "native-stub": [ "mp3_native.c", "flac_vorbis_native.c", "mp4a_native.c" ],
   targets: {
     "flac_decoder_native.mbt": [ "native" ],
     "mp3_decoder_native.mbt": [ "native" ],
+    "mp4a_decoder_native.mbt": [ "native" ],
     "vorbis_decoder_native.mbt": [ "native" ],
   },
 )

@@ -125,6 +125,14 @@ fn hinted_decode(bytes : Bytes, hint : String) -> Decoder? {
   if hint.contains("wav") || hint.contains("WAV") {
     return Some(decode_wav_or_raise(bytes)) catch { _ => None }
   }
+  if hint.contains("m4a") ||
+    hint.contains("M4A") ||
+    hint.contains("mp4") ||
+    hint.contains("MP4") ||
+    hint.contains("aac") ||
+    hint.contains("AAC") {
+    return Some(decode_mp4a_or_raise(bytes)) catch { _ => None }
+  }
   if hint.contains("flac") || hint.contains("FLAC") {
     return Some(decode_flac_or_raise(bytes)) catch { _ => None }
   }
@@ -333,6 +341,11 @@ fn looks_like_mp3(bytes : Bytes) -> Bool {
 }
 
 ///|
+fn looks_like_mp4a(bytes : Bytes) -> Bool {
+  bytes.length() >= 12 && bytes_eq4(bytes, 4, 0x66, 0x74, 0x79, 0x70)
+}
+
+///|
 fn decode_wav_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
   let decoded = try @decoder.decode_wav_bytes(bytes) catch {
     err => raise DecoderError::Backend(err)
@@ -373,11 +386,24 @@ fn decode_mp3_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
 }
 
 ///|
+fn decode_mp4a_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
+  let decoded = try @decoder.decode_mp4a_bytes(bytes) catch {
+    err => raise DecoderError::Backend(err)
+  } noraise {
+    src => src
+  }
+  { inner: decoded, seekable: true }
+}
+
+///|
 pub fn Decoder::new(bytes : Bytes) -> Decoder raise DecoderError {
   guard bytes.length() > 0 else { raise DecoderError::UnknownFormat }
 
   if looks_like_wav(bytes) {
     return decode_wav_or_raise(bytes)
+  }
+  if looks_like_mp4a(bytes) {
+    return decode_mp4a_or_raise(bytes)
   }
   if looks_like_flac(bytes) {
     return decode_flac_or_raise(bytes)
@@ -409,6 +435,12 @@ pub fn Decoder::new(bytes : Bytes) -> Decoder raise DecoderError {
 
   let try_mp3 = Some(decode_mp3_or_raise(bytes)) catch { _ => None }
   match try_mp3 {
+    Some(decoder) => return decoder
+    None => ()
+  }
+
+  let try_mp4a = Some(decode_mp4a_or_raise(bytes)) catch { _ => None }
+  match try_mp4a {
     Some(decoder) => return decoder
     None => raise DecoderError::UnknownFormat
   }
@@ -466,6 +498,11 @@ pub fn Decoder::new_vorbis(bytes : Bytes) -> Decoder raise DecoderError {
 ///|
 pub fn Decoder::new_mp3(bytes : Bytes) -> Decoder raise DecoderError {
   decode_mp3_or_raise(bytes)
+}
+
+///|
+pub fn Decoder::new_mp4a(bytes : Bytes) -> Decoder raise DecoderError {
+  decode_mp4a_or_raise(bytes)
 }
 
 ///|

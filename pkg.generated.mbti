@@ -327,6 +327,7 @@ pub fn Decoder::new(Bytes) -> Self raise DecoderError
 pub fn Decoder::new_flac(Bytes) -> Self raise DecoderError
 pub fn Decoder::new_looped(Bytes) -> LoopedDecoder raise DecoderError
 pub fn Decoder::new_mp3(Bytes) -> Self raise DecoderError
+pub fn Decoder::new_mp4a(Bytes) -> Self raise DecoderError
 pub fn Decoder::new_vorbis(Bytes) -> Self raise DecoderError
 pub fn Decoder::new_wav(Bytes) -> Self raise DecoderError
 pub fn Decoder::next(Self) -> Double?
