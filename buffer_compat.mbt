@@ -63,14 +63,9 @@ pub impl Source for StaticSamplesBuffer with sample_rate(
 
 ///|
 pub impl Source for StaticSamplesBuffer with current_span_len(
-  self : StaticSamplesBuffer,
+  _self : StaticSamplesBuffer,
 ) {
-  let remaining = self.samples.length() - self.cursor.val
-  if remaining <= 0 {
-    Some(0)
-  } else {
-    Some(remaining)
-  }
+  None
 }
 
 ///|

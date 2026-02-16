@@ -28,3 +28,9 @@ test "rodio::buffer::static_samples_buffer_seek_not_supported" {
   }
   assert_true(not_supported)
 }
+
+///|
+test "rodio::buffer::static_samples_buffer_current_span_len_none" {
+  let s = StaticSamplesBuffer::new(1, 44_100, [1.0, 2.0, 3.0])
+  assert_eq(s.current_span_len(), None)
+}
