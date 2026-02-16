@@ -4,66 +4,123 @@ fn ints_to_bytes(xs : Array[Int]) -> Bytes {
 }
 
 ///|
-fn wav_mono(samples : Array[Int], bits_per_sample : Int) -> Bytes {
+fn push_u16_le(xs : Array[Int], v : Int) -> Unit {
+  xs.push(v & 0xff)
+  xs.push((v >> 8) & 0xff)
+}
+
+///|
+fn push_u24_le(xs : Array[Int], v : Int) -> Unit {
+  xs.push(v & 0xff)
+  xs.push((v >> 8) & 0xff)
+  xs.push((v >> 16) & 0xff)
+}
+
+///|
+fn push_u32_le(xs : Array[Int], v : Int) -> Unit {
+  xs.push(v & 0xff)
+  xs.push((v >> 8) & 0xff)
+  xs.push((v >> 16) & 0xff)
+  xs.push((v >> 24) & 0xff)
+}
+
+///|
+fn append_pcm_sample(
+  xs : Array[Int],
+  sample : Int,
+  bits_per_sample : Int,
+) -> Unit {
+  match bits_per_sample {
+    8 => xs.push(sample & 0xff)
+    16 => {
+      let u = if sample < 0 { sample + 0x10000 } else { sample }
+      push_u16_le(xs, u)
+    }
+    24 => {
+      let u = if sample < 0 { sample + 0x1000000 } else { sample }
+      push_u24_le(xs, u)
+    }
+    32 => push_u32_le(xs, sample)
+    _ => panic()
+  }
+}
+
+///|
+fn wav_mono_pcm(samples : Array[Int], bits_per_sample : Int) -> Bytes {
   let channels = 1
   let bytes_per_sample = bits_per_sample / 8
-  let data_len = samples.length() * 2
+  let data_len = samples.length() * bytes_per_sample
   let riff_size = 36 + data_len
   let sr = 44_100
   let br = sr * channels * bytes_per_sample
   let block_align = channels * bytes_per_sample
 
-  let xs = [
-    0x52,
-    0x49,
-    0x46,
-    0x46,
-    riff_size & 0xff,
-    (riff_size >> 8) & 0xff,
-    (riff_size >> 16) & 0xff,
-    (riff_size >> 24) & 0xff,
-    0x57,
-    0x41,
-    0x56,
-    0x45,
-    0x66,
-    0x6d,
-    0x74,
-    0x20,
-    16,
-    0,
-    0,
-    0,
-    1,
-    0,
-    channels,
-    0,
-    sr & 0xff,
-    (sr >> 8) & 0xff,
-    (sr >> 16) & 0xff,
-    (sr >> 24) & 0xff,
-    br & 0xff,
-    (br >> 8) & 0xff,
-    (br >> 16) & 0xff,
-    (br >> 24) & 0xff,
-    block_align,
-    0,
-    bits_per_sample,
-    0,
-    0x64,
-    0x61,
-    0x74,
-    0x61,
-    data_len & 0xff,
-    (data_len >> 8) & 0xff,
-    (data_len >> 16) & 0xff,
-    (data_len >> 24) & 0xff,
-  ]
+  let xs : Array[Int] = [0x52, 0x49, 0x46, 0x46]
+  push_u32_le(xs, riff_size)
+  xs.push(0x57)
+  xs.push(0x41)
+  xs.push(0x56)
+  xs.push(0x45)
+  xs.push(0x66)
+  xs.push(0x6d)
+  xs.push(0x74)
+  xs.push(0x20)
+  push_u32_le(xs, 16)
+  push_u16_le(xs, 1)
+  push_u16_le(xs, channels)
+  push_u32_le(xs, sr)
+  push_u32_le(xs, br)
+  push_u16_le(xs, block_align)
+  push_u16_le(xs, bits_per_sample)
+  xs.push(0x64)
+  xs.push(0x61)
+  xs.push(0x74)
+  xs.push(0x61)
+  push_u32_le(xs, data_len)
 
   for s in samples {
-    let u = if s < 0 { s + 0x10000 } else { s }
-    xs.push(u & 0xff)
-    xs.push((u >> 8) & 0xff)
+    append_pcm_sample(xs, s, bits_per_sample)
+  }
+
+  ints_to_bytes(xs)
+}
+
+///|
+fn wav_mono_float32(float_bits : Array[Int]) -> Bytes {
+  let channels = 1
+  let bits_per_sample = 32
+  let bytes_per_sample = 4
+  let data_len = float_bits.length() * bytes_per_sample
+  let riff_size = 36 + data_len
+  let sr = 44_100
+  let br = sr * channels * bytes_per_sample
+  let block_align = channels * bytes_per_sample
+
+  let xs : Array[Int] = [0x52, 0x49, 0x46, 0x46]
+  push_u32_le(xs, riff_size)
+  xs.push(0x57)
+  xs.push(0x41)
+  xs.push(0x56)
+  xs.push(0x45)
+  xs.push(0x66)
+  xs.push(0x6d)
+  xs.push(0x74)
+  xs.push(0x20)
+  push_u32_le(xs, 16)
+  push_u16_le(xs, 3)
+  push_u16_le(xs, channels)
+  push_u32_le(xs, sr)
+  push_u32_le(xs, br)
+  push_u16_le(xs, block_align)
+  push_u16_le(xs, bits_per_sample)
+  xs.push(0x64)
+  xs.push(0x61)
+  xs.push(0x74)
+  xs.push(0x61)
+  push_u32_le(xs, data_len)
+
+  for bits in float_bits {
+    push_u32_le(xs, bits)
   }
 
   ints_to_bytes(xs)
@@ -71,7 +128,7 @@ fn wav_mono(samples : Array[Int], bits_per_sample : Int) -> Bytes {
 
 ///|
 test "rodio::decoder::wav::decode_pcm16_mono" {
-  let bytes = wav_mono([0, 32767, -32768], 16)
+  let bytes = wav_mono_pcm([0, 32767, -32768], 16)
   let src = decode_wav_bytes(bytes)
   assert_eq(src.channels(), 1)
   assert_eq(src.sample_rate(), 44_100)
@@ -82,10 +139,56 @@ test "rodio::decoder::wav::decode_pcm16_mono" {
 }
 
 ///|
-test "rodio::decoder::wav::reject_non_pcm16" {
-  let bytes = wav_mono([0, 1], 24)
+test "rodio::decoder::wav::decode_pcm8_mono" {
+  let bytes = wav_mono_pcm([0, 128, 255], 8)
+  let src = decode_wav_bytes(bytes)
+  assert_true(src.next().unwrap() <= -0.99)
+  assert_eq(src.next(), Some(0.0))
+  assert_true(src.next().unwrap() > 0.99)
+  assert_eq(src.next(), None)
+}
+
+///|
+test "rodio::decoder::wav::decode_pcm24_mono" {
+  let bytes = wav_mono_pcm([0, 8_388_607, -8_388_608], 24)
+  let src = decode_wav_bytes(bytes)
+  assert_eq(src.next(), Some(0.0))
+  assert_true(src.next().unwrap() > 0.99)
+  assert_eq(src.next(), Some(-1.0))
+  assert_eq(src.next(), None)
+}
+
+///|
+test "rodio::decoder::wav::decode_pcm32_mono" {
+  let bytes = wav_mono_pcm([0, 2_147_483_647, -2_147_483_648], 32)
+  let src = decode_wav_bytes(bytes)
+  assert_eq(src.next(), Some(0.0))
+  assert_true(src.next().unwrap() > 0.99)
+  assert_eq(src.next(), Some(-1.0))
+  assert_eq(src.next(), None)
+}
+
+///|
+test "rodio::decoder::wav::decode_float32_mono" {
+  let bytes = wav_mono_float32([0, 1_056_964_608, -1_082_130_432])
+  let src = decode_wav_bytes(bytes)
+  assert_eq(src.next(), Some(0.0))
+  assert_eq(src.next(), Some(0.5))
+  assert_eq(src.next(), Some(-1.0))
+  assert_eq(src.next(), None)
+}
+
+///|
+test "rodio::decoder::wav::reject_unsupported_format" {
+  let bytes = wav_mono_pcm([0, 1], 16)
+  let ints : Array[Int] = []
+  for i in 0..<bytes.length() {
+    ints.push(bytes[i].to_int())
+  }
+  ints[20] = 0x02
+  ints[21] = 0x00
   let unsupported = try {
-    ignore(decode_wav_bytes(bytes))
+    ignore(decode_wav_bytes(ints_to_bytes(ints)))
     false
   } catch {
     DecoderError::Unsupported(_) => true

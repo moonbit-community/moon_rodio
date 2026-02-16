@@ -408,6 +408,59 @@ test "rodio::decoder_api::seek_resets_stereo_channel_alignment" {
 
 ///|
 #cfg(target="native")
+fn decoder_has_non_zero_sample(decoder : Decoder) -> Bool {
+  let mut found = false
+  let mut done = false
+  while !done {
+    match decoder.next() {
+      Some(v) =>
+        if v != 0.0 {
+          found = true
+          done = true
+        }
+      None => done = true
+    }
+  }
+  found
+}
+
+///|
+#cfg(target="native")
+async test "rodio::decoder_api::wav_encodings_reference_assets" {
+  let files = [
+    "rodio-reference/assets/audacity16bit.wav", "rodio-reference/assets/lmms16bit.wav",
+    "rodio-reference/assets/lmms24bit.wav", "rodio-reference/assets/audacity32bit.wav",
+    "rodio-reference/assets/lmms32bit.wav", "rodio-reference/assets/audacity32bit_int.wav",
+  ]
+  for path in files {
+    let bytes = @fs.read_file(path).binary()
+    let decoder = Decoder::new_wav(bytes)
+    assert_true(decoder_has_non_zero_sample(decoder))
+  }
+}
+
+///|
+#cfg(target="native")
+async test "rodio::decoder_api::flac_encodings_reference_assets" {
+  let base = Decoder::new_flac(
+    @fs.read_file("rodio-reference/assets/audacity16bit_level5.flac").binary(),
+  )
+  assert_true(decoder_has_non_zero_sample(base))
+  assert_eq(base.total_duration().unwrap().secs, (3 : UInt64))
+
+  let files = [
+    "rodio-reference/assets/audacity24bit_level0.flac", "rodio-reference/assets/audacity24bit_level5.flac",
+    "rodio-reference/assets/audacity24bit_level8.flac",
+  ]
+  for path in files {
+    let decoder = Decoder::new_flac(@fs.read_file(path).binary())
+    assert_true(decoder_has_non_zero_sample(decoder))
+    assert_eq(decoder.total_duration().unwrap().secs, (3 : UInt64))
+  }
+}
+
+///|
+#cfg(target="native")
 async test "rodio::decoder_api::try_from_file_variants" {
   let path = "rodio_decoder_try_from_file_test.wav"
   if @fs.exists(path) {
