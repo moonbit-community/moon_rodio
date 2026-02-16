@@ -1,7 +1,7 @@
 ///|
 pub suberror DecoderError {
   Backend(@decoder.DecoderError)
-  UnknownFormat
+  UnrecognizedFormat
 } derive(Show, Eq)
 
 ///|
@@ -167,7 +167,7 @@ fn DecoderBuilder::decoder_builder_build(
   self : DecoderBuilder,
 ) -> Decoder raise DecoderError {
   let data = match self.data {
-    None => raise DecoderError::UnknownFormat
+    None => raise DecoderError::UnrecognizedFormat
     Some(data) => data
   }
 
@@ -442,7 +442,7 @@ fn decode_mp4a_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
 
 ///|
 pub fn Decoder::new(bytes : Bytes) -> Decoder raise DecoderError {
-  guard bytes.length() > 0 else { raise DecoderError::UnknownFormat }
+  guard bytes.length() > 0 else { raise DecoderError::UnrecognizedFormat }
 
   if looks_like_wav(bytes) {
     return decode_wav_or_raise(bytes)
@@ -487,7 +487,7 @@ pub fn Decoder::new(bytes : Bytes) -> Decoder raise DecoderError {
   let try_mp4a = Some(decode_mp4a_or_raise(bytes)) catch { _ => None }
   match try_mp4a {
     Some(decoder) => return decoder
-    None => raise DecoderError::UnknownFormat
+    None => raise DecoderError::UnrecognizedFormat
   }
 }
 
@@ -506,7 +506,7 @@ pub async fn Decoder::try_from_file(
   path : StringView,
 ) -> Decoder raise DecoderError {
   let bytes = try @fs.read_file(path).binary() catch {
-    _ => raise DecoderError::UnknownFormat
+    _ => raise DecoderError::UnrecognizedFormat
   } noraise {
     bs => bs
   }
@@ -518,7 +518,7 @@ pub async fn Decoder::try_from_file_looped(
   path : StringView,
 ) -> LoopedDecoder raise DecoderError {
   let bytes = try @fs.read_file(path).binary() catch {
-    _ => raise DecoderError::UnknownFormat
+    _ => raise DecoderError::UnrecognizedFormat
   } noraise {
     bs => bs
   }

@@ -230,7 +230,7 @@ async test "rodio::decoder_api::mp4a_native_decode_and_builder_paths" {
       ignore(Decoder::builder().with_data(bytes).with_hint("m4a").build())
       false
     } catch {
-      DecoderError::UnknownFormat => true
+      DecoderError::UnrecognizedFormat => true
       DecoderError::Backend(@decoder.DecoderError::Unsupported(_)) => true
       _ => false
     }
@@ -244,7 +244,7 @@ test "rodio::decoder_api::reject_unknown_format" {
     ignore(Decoder::new(b"abc"))
     false
   } catch {
-    DecoderError::UnknownFormat => true
+    DecoderError::UnrecognizedFormat => true
     _ => false
   }
   assert_true(bad)
@@ -267,7 +267,7 @@ test "rodio::decoder_api::play_decode_error_variant" {
     ignore(play(tx, b"not audio"))
     false
   } catch {
-    PlayError::DecoderError(DecoderError::UnknownFormat) => true
+    PlayError::DecoderError(DecoderError::UnrecognizedFormat) => true
     _ => false
   }
   assert_true(got)
@@ -309,7 +309,7 @@ test "rodio::decoder_api::builder_requires_data" {
     ignore(Decoder::builder().build())
     false
   } catch {
-    DecoderError::UnknownFormat => true
+    DecoderError::UnrecognizedFormat => true
     _ => false
   }
   assert_true(failed)

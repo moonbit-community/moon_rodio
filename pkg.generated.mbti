@@ -133,7 +133,7 @@ pub fn zero_samples(Int, Int, Int) -> DynSource
 // Errors
 pub suberror DecoderError {
   Backend(@decoder.DecoderError)
-  UnknownFormat
+  UnrecognizedFormat
 }
 pub impl Eq for DecoderError
 pub impl Show for DecoderError
