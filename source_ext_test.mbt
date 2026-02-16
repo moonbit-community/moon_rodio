@@ -602,6 +602,62 @@ test "rodio::source::limit_and_distortion" {
 }
 
 ///|
+test "rodio::source::limit_passthrough_below_threshold" {
+  let dry = take_duration(
+    amplify(SineWave::new(1_000.0), 0.2),
+    @moon_cpal.Duration::new((0 : UInt64), 20_000_000),
+  )
+  let limited = Limit::new(
+    take_duration(
+      amplify(SineWave::new(1_000.0), 0.2),
+      @moon_cpal.Duration::new((0 : UInt64), 20_000_000),
+    ),
+    LimitSettings::default().with_threshold(-6.0),
+  )
+
+  let original_samples = collect_n(dry, 1_200)
+  let limited_samples = collect_n(limited, 1_200)
+  assert_eq(original_samples.length(), limited_samples.length())
+  for i in 0..<original_samples.length() {
+    let diff = (original_samples[i] - limited_samples[i]).abs()
+    assert_true(diff < 0.01)
+  }
+}
+
+///|
+test "rodio::source::limit_stereo_processing" {
+  let stereo_samples : Array[Sample] = []
+  for i in 0..<1_000 {
+    let wave = @math.sin(Double::from_int(i) * 0.01)
+    stereo_samples.push(wave * 1.5)
+    stereo_samples.push(wave * 0.8)
+  }
+
+  let limited = Limit::new(
+    SamplesBuffer::new(2, 44_100, stereo_samples),
+    LimitSettings::default().with_threshold(-3.0),
+  )
+  let out = collect_n(limited, 5_000)
+
+  let left_peak = @ref.new(0.0)
+  let right_peak = @ref.new(0.0)
+  for i in 0..<out.length() {
+    let peak = out[i].abs()
+    if i % 2 == 0 {
+      if peak > left_peak.val {
+        left_peak.val = peak
+      }
+    } else if peak > right_peak.val {
+      right_peak.val = peak
+    }
+  }
+
+  assert_true(left_peak.val <= 1.5)
+  assert_true(right_peak.val <= 1.5)
+  assert_true(left_peak.val >= right_peak.val)
+}
+
+///|
 test "rodio::source::crossfade" {
   let a = SamplesBuffer::new(1, 1, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
   let b = zero(1, 1)

@@ -205,6 +205,7 @@ async test "rodio::decoder_api::mp4a_native_decode_and_builder_paths" {
     let hinted = Decoder::builder().with_data(bytes).with_hint("m4a").build()
     assert_true(hinted.channels() > 0)
     assert_true(hinted.sample_rate() > 0)
+    assert_true(decoder_has_non_zero_sample(hinted))
 
     let mime = Decoder::builder()
       .with_data(bytes)
@@ -212,10 +213,18 @@ async test "rodio::decoder_api::mp4a_native_decode_and_builder_paths" {
       .build()
     assert_true(mime.channels() > 0)
     assert_true(mime.sample_rate() > 0)
+    assert_true(decoder_has_non_zero_sample(mime))
 
     let auto = Decoder::new(bytes)
     assert_true(auto.channels() > 0)
     assert_true(auto.sample_rate() > 0)
+    assert_true(decoder_has_non_zero_sample(auto))
+
+    let seekable = Decoder::new_mp4a(bytes)
+    let total = seekable.total_duration().unwrap()
+    assert_true(total.secs > (0 : UInt64) || total.nanos > 0)
+    seekable.try_seek(@moon_cpal.Duration::new((0 : UInt64), 0))
+    assert_true(decoder_has_non_zero_sample(seekable))
   } else {
     let hinted_fails = try {
       ignore(Decoder::builder().with_data(bytes).with_hint("m4a").build())
