@@ -1,31 +1,121 @@
 # Milky2018/moon_rodio
 
-Native-only MoonBit port of `rodio` (`preferred-target: native`).
+Native-only MoonBit port of Rust `rodio` with `preferred-target: native`.
+
+This package focuses on `Stream`/`Sink` style playback composition while aligning API
+surface and behavior to the upstream project as far as MoonBit allows.
+
+## Supported Targets
+
+- Preferred target: `native`
+- Native output is powered by `Milky2018/moon_cpal`
+- Lifecycle-drop semantics are intentionally simplified (MoonBit does not expose the same
+  Rust lifetime/drop model)
+
+## Modules
+
+- `Milky2018/moon_rodio`
+  - Playback pipeline (`Stream`, `Sink`, `Mixer`, `Source`, helpers)
+  - Audio effects and transforms (speed, gain, filters, controls, spatial helpers, queue, etc.)
+  - Built-in WAV decoding bridge
+- `Milky2018/moon_rodio/decoder`
+  - Generic decoder builder and `LoopedDecoder`
+  - Format detection via hints, MIME, and data heuristics
 
 ## Decoder backends
 
-- WAV: native parser
-- MP3: `minimp3` (vendored C backend)
-- FLAC: `dr_flac` (vendored C backend)
-- Vorbis: `stb_vorbis` (vendored C backend)
+- WAV: native parser (always available)
+- MP3: vendored `minimp3`
+- FLAC: vendored `dr_flac`
+- Vorbis: vendored `stb_vorbis`
 - MP4A/AAC:
   - macOS: AudioToolbox backend
-  - Linux/Windows: optional FFmpeg backend
+  - Linux/Windows: FFmpeg backend (optional)
 
-## FFmpeg backend (Linux/Windows MP4A)
+## Quick start
 
-`build.js` enables FFmpeg MP4A decode when FFmpeg flags are available.
+```moonbit
+import "Milky2018/moon_rodio"
+import "Milky2018/moon_rodio/decoder"
+import "moonbitlang/core/array"
 
-- Linux: auto-detected via `pkg-config` for
-  `libavformat`, `libavcodec`, `libavutil`, `libswresample`
-- Any platform: manual override with environment variables
-  - `MOON_RODIO_FFMPEG_CFLAGS`
-  - `MOON_RODIO_FFMPEG_LIBS`
+fn example() {
+  // open a native output stream from the default device
+  let stream = try {
+    OutputStreamBuilder::open_default_stream()
+  } catch err {
+    // handle StreamError
+    return
+  }
+
+  // connect a sink to the stream mixer
+  let sink = Sink::connect_new(stream.mixer())
+
+  // play synthetic samples
+  sink.append(SamplesBuffer::new(1, 44_100, [0.0, 0.0, 0.0]))
+
+  // optionally block until playback is finished
+  sink.sleep_until_end()
+}
+```
+
+Decoder usage:
+
+```moonbit
+import "Milky2018/moon_rodio/decoder"
+import "moonbitlang/async/fs"
+
+pub async fn play_file(path : String) {
+  let bytes = await fs.read_file(path)
+  let decoded = DecoderBuilder::new()
+    .with_data(bytes)
+    .with_mime_type("audio/mpeg")
+    .build()
+}
+```
+
+The returned decoder implements `Source`, so you can append it to `Sink` directly.
+
+## FFmpeg backend (Linux / Windows MP4A)
+
+`build.js` enables MP4A/AAC decoding via FFmpeg when link flags are available.
+
+### Linux auto-detect
+- `pkg-config` is used to discover:
+  - `libavformat`
+  - `libavcodec`
+  - `libavutil`
+  - `libswresample`
+
+### Manual override (any platform)
+- `MOON_RODIO_FFMPEG_CFLAGS`
+- `MOON_RODIO_FFMPEG_LIBS`
+- `MOON_RODIO_ENABLE_FFMPEG=1` (forced enable by environment)
 
 Example:
 
 ```bash
 MOON_RODIO_FFMPEG_CFLAGS="-I/path/to/include" \
 MOON_RODIO_FFMPEG_LIBS="-L/path/to/lib -lavformat -lavcodec -lavutil -lswresample" \
+MOON_RODIO_ENABLE_FFMPEG=1 \
 moon test --target native
 ```
+
+## Build & test
+
+```bash
+moon test --target native
+moon test --target native --update   # refresh snapshot tests if needed
+```
+
+For publish/update metadata:
+
+```bash
+moon info && moon fmt
+```
+
+## Links
+
+- `Milky2018/moon_rodio` (this package)
+- `Milky2018/moon_cpal`
+- `Milky2018/moon_rodio/decoder`
