@@ -9,7 +9,7 @@ if (platform === 'darwin') {
 } else if (platform === 'linux') {
   ccLinkFlags = '-pthread -lasound -ljack';
 } else if (platform === 'win32') {
-  ccLinkFlags = '-lole32 -luuid -lmmdevapi -lavrt';
+  ccLinkFlags = 'ole32.lib uuid.lib mmdevapi.lib avrt.lib';
 } else {
   throw new Error(`Unsupported platform: ${platform}`);
 }
