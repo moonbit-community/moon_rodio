@@ -453,6 +453,26 @@ pub fn FadeOut::into_inner(Self) -> DynSource
 pub fn[S : Source] FadeOut::new(S, @core.Duration) -> Self
 pub impl Source for FadeOut
 
+pub struct FixedSamplesBuffer {
+  channels : Int
+  sample_rate : Int
+  samples : Array[Double]
+  cursor : Ref[Int]
+  duration : @core.Duration?
+}
+pub fn FixedSamplesBuffer::new(Int, Int, Array[Double]) -> Self
+pub impl FixedSource for FixedSamplesBuffer
+
+pub struct FixedSourceAdapter {
+  inner : DynSource
+}
+pub fn FixedSourceAdapter::channels(Self) -> Int
+pub fn FixedSourceAdapter::inner(Self) -> DynSource
+pub fn[S : FixedSource] FixedSourceAdapter::new(S) -> Self
+pub fn FixedSourceAdapter::next(Self) -> Double?
+pub fn FixedSourceAdapter::sample_rate(Self) -> Int
+pub impl Source for FixedSourceAdapter
+
 pub struct FromFactoryIter[S] {
   factory : () -> S?
   current : Ref[DynSource?]
@@ -1084,6 +1104,13 @@ pub type Sample = Double
 pub type SampleRate = Int
 
 // Traits
+pub trait FixedSource {
+  next(Self) -> Double?
+  channels(Self) -> Int
+  sample_rate(Self) -> Int
+  total_duration(Self) -> @core.Duration?
+}
+
 pub trait Source {
   next(Self) -> Double?
   channels(Self) -> Int

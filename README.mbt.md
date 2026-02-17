@@ -20,6 +20,7 @@ surface and behavior to the upstream project as far as MoonBit allows.
   - Playback pipeline (`Stream`, `Sink`, `Mixer`, `Source`, helpers)
   - Audio effects and transforms (speed, gain, filters, controls, spatial helpers, queue, etc.)
   - Built-in WAV decoding bridge
+  - Compatibility slices: `StaticSamplesBuffer`, `FixedSource`, `FixedSamplesBuffer`, `FixedSourceAdapter`
 - `Milky2018/moon_rodio/decoder`
   - Generic decoder builder and `LoopedDecoder`
   - Format detection via hints, MIME, and data heuristics
