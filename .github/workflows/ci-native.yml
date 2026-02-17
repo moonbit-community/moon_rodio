@@ -110,8 +110,15 @@ jobs:
             throw "FFmpeg backend was not enabled by build.js"
           }
 
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Native test
         shell: pwsh
+        env:
+          CC: cl
+          CXX: cl
+          AR: lib
         run: |
           moon version --all
           moon update

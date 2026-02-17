@@ -86,6 +86,7 @@ static SInt64 moon_rodio_get_size_proc(void *inClientData) {
 #include <libavutil/mem.h>
 #include <libavutil/opt.h>
 #include <libavutil/samplefmt.h>
+#include <libavutil/version.h>
 #include <libavutil/channel_layout.h>
 
 static int moon_rodio_write_temp_file(const uint8_t *input, int32_t input_len, char *path, size_t path_len) {
@@ -132,18 +133,43 @@ static int moon_rodio_write_temp_file(const uint8_t *input, int32_t input_len, c
   return 0;
 }
 
-static int64_t moon_rodio_get_channel_layout(const AVCodecContext *ctx, int channels) {
+static int moon_rodio_get_channels_from_codec_ctx(const AVCodecContext *ctx) {
   if (ctx == NULL) {
     return 0;
   }
 #if LIBAVUTIL_VERSION_MAJOR >= 57
-  if (ctx->ch_layout.nb_channels > 0 && ctx->ch_layout.u.mask != 0) {
-    return (int64_t)ctx->ch_layout.u.mask;
-  }
   if (ctx->ch_layout.nb_channels > 0) {
-    channels = (int)ctx->ch_layout.nb_channels;
+    return (int)ctx->ch_layout.nb_channels;
+  }
+#else
+  if (ctx->channels > 0) {
+    return ctx->channels;
   }
 #endif
+  return 0;
+}
+
+static int moon_rodio_get_channels_from_codecpar(const AVCodecParameters *codecpar) {
+  if (codecpar == NULL) {
+    return 0;
+  }
+#if LIBAVUTIL_VERSION_MAJOR >= 57
+  if (codecpar->ch_layout.nb_channels > 0) {
+    return (int)codecpar->ch_layout.nb_channels;
+  }
+#else
+  if (codecpar->channels > 0) {
+    return codecpar->channels;
+  }
+#endif
+  return 0;
+}
+
+#if LIBAVUTIL_VERSION_MAJOR < 57
+static int64_t moon_rodio_get_channel_layout(const AVCodecContext *ctx, int channels) {
+  if (ctx == NULL) {
+    return 0;
+  }
   if (ctx->channel_layout != 0) {
     return (int64_t)ctx->channel_layout;
   }
@@ -155,6 +181,7 @@ static int64_t moon_rodio_get_channel_layout(const AVCodecContext *ctx, int chan
   }
   return av_get_default_channel_layout(channels);
 }
+#endif
 
 static int moon_rodio_convert_frame_to_s16(SwrContext *swr,
                                            AVFrame *frame,
@@ -230,6 +257,12 @@ static int moon_rodio_decode_mp4a_ffmpeg(const uint8_t *input,
   SwrContext *swr = NULL;
   AVPacket *packet = NULL;
   AVFrame *frame = NULL;
+#if LIBAVUTIL_VERSION_MAJOR >= 57
+  AVChannelLayout input_layout = {0};
+  AVChannelLayout output_layout = {0};
+  int input_layout_initialized = 0;
+  int output_layout_initialized = 0;
+#endif
 
   int16_t *pcm_all = NULL;
   size_t pcm_len = 0;
@@ -271,25 +304,54 @@ static int moon_rodio_decode_mp4a_ffmpeg(const uint8_t *input,
     goto cleanup;
   }
 
-  int channels = codec_ctx->channels;
-#if LIBAVUTIL_VERSION_MAJOR >= 57
+  int channels = moon_rodio_get_channels_from_codec_ctx(codec_ctx);
   if (channels <= 0) {
-    channels = (int)codec_ctx->ch_layout.nb_channels;
-  }
-#endif
-  if (channels <= 0) {
-    channels = audio_stream->codecpar->channels;
+    channels = moon_rodio_get_channels_from_codecpar(audio_stream->codecpar);
   }
   int sample_rate = codec_ctx->sample_rate;
   if (sample_rate <= 0) {
     sample_rate = audio_stream->codecpar->sample_rate;
   }
-  int64_t input_layout = moon_rodio_get_channel_layout(codec_ctx, channels);
-  if (channels <= 0 || sample_rate <= 0 || input_layout == 0) {
+  if (channels <= 0 || sample_rate <= 0) {
     status_code = 105;
     goto cleanup;
   }
 
+#if LIBAVUTIL_VERSION_MAJOR >= 57
+  if (codec_ctx->ch_layout.nb_channels > 0) {
+    if (av_channel_layout_copy(&input_layout, &codec_ctx->ch_layout) < 0) {
+      status_code = 106;
+      goto cleanup;
+    }
+  } else {
+    av_channel_layout_default(&input_layout, channels);
+  }
+  input_layout_initialized = 1;
+
+  av_channel_layout_default(&output_layout, channels);
+  output_layout_initialized = 1;
+
+  if (swr_alloc_set_opts2(
+          &swr,
+          &output_layout,
+          AV_SAMPLE_FMT_S16,
+          sample_rate,
+          &input_layout,
+          codec_ctx->sample_fmt,
+          sample_rate,
+          0,
+          NULL) < 0 ||
+      swr == NULL ||
+      swr_init(swr) < 0) {
+    status_code = 106;
+    goto cleanup;
+  }
+#else
+  int64_t input_layout = moon_rodio_get_channel_layout(codec_ctx, channels);
+  if (input_layout == 0) {
+    status_code = 105;
+    goto cleanup;
+  }
   int64_t output_layout = av_get_default_channel_layout(channels);
   swr = swr_alloc_set_opts(
       NULL,
@@ -305,6 +367,7 @@ static int moon_rodio_decode_mp4a_ffmpeg(const uint8_t *input,
     status_code = 106;
     goto cleanup;
   }
+#endif
 
   packet = av_packet_alloc();
   frame = av_frame_alloc();
@@ -389,6 +452,14 @@ cleanup:
   if (swr != NULL) {
     swr_free(&swr);
   }
+#if LIBAVUTIL_VERSION_MAJOR >= 57
+  if (input_layout_initialized) {
+    av_channel_layout_uninit(&input_layout);
+  }
+  if (output_layout_initialized) {
+    av_channel_layout_uninit(&output_layout);
+  }
+#endif
   if (codec_ctx != NULL) {
     avcodec_free_context(&codec_ctx);
   }
