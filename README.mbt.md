@@ -91,7 +91,8 @@ The returned decoder implements `Source`, so you can append it to `Sink` directl
 
 ### Windows notes
 - FFmpeg development libraries can be installed with `vcpkg` (`ffmpeg:x64-mingw-dynamic`)
-- Current CI uses MinGW on Windows because `Milky2018/moon_cpal@0.11.2` still fails under MSVC (`alsa_stub.c` includes `strings.h`)
+- `Milky2018/moon_cpal@0.11.3` removed the previous `strings.h` MSVC blocker in ALSA stub
+- CI currently stays on MinGW for stability until Windows billing-enabled CI can re-validate an MSVC lane end-to-end
 
 ### Manual override (any platform)
 - `MOON_RODIO_FFMPEG_CFLAGS`
