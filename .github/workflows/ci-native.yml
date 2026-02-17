@@ -75,6 +75,7 @@ jobs:
       - name: Install FFmpeg dev package (vcpkg, msvc, optional)
         id: ffmpeg
         continue-on-error: true
+        timeout-minutes: 8
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
