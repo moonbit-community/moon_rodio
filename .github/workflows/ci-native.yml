@@ -72,10 +72,7 @@ jobs:
           $env:PATH = "$mb;$env:PATH"
           moon version
 
-      - name: Install FFmpeg dev package (vcpkg, msvc, optional)
-        id: ffmpeg
-        continue-on-error: true
-        timeout-minutes: 8
+      - name: Install FFmpeg dev package (vcpkg, msvc)
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
@@ -88,7 +85,25 @@ jobs:
             throw "vcpkg.exe not found at $vcpkgExe"
           }
 
-          & $vcpkgExe install ffmpeg:x64-windows
+          # Use binary caching + minimal FFmpeg features for faster and more reliable CI installs.
+          $env:VCPKG_FEATURE_FLAGS = "binarycaching"
+          $env:VCPKG_BINARY_SOURCES = "clear;x-gha,readwrite"
+          $spec = "ffmpeg[avcodec,avformat,avutil,swresample]:x64-windows"
+          $ok = $false
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+            Write-Host "Installing $spec (attempt $attempt/3)"
+            & $vcpkgExe install $spec --clean-after-build
+            if ($LASTEXITCODE -eq 0) {
+              $ok = $true
+              break
+            }
+            if ($attempt -lt 3) {
+              Start-Sleep -Seconds (15 * $attempt)
+            }
+          }
+          if (-not $ok) {
+            throw "Failed to install $spec via vcpkg after 3 attempts"
+          }
 
           $inc = Join-Path $vcpkgRoot "installed\x64-windows\include"
           $lib = Join-Path $vcpkgRoot "installed\x64-windows\lib"
@@ -103,7 +118,6 @@ jobs:
           $bin | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Verify FFmpeg prebuild detection
-        if: steps.ffmpeg.outcome == 'success'
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
@@ -112,12 +126,6 @@ jobs:
           if ($json -notmatch "MOON_RODIO_ENABLE_FFMPEG=1") {
             throw "FFmpeg backend was not enabled by build.js"
           }
-
-      - name: FFmpeg unavailable fallback
-        if: steps.ffmpeg.outcome != 'success'
-        shell: pwsh
-        run: |
-          Write-Host "FFmpeg installation failed on this runner; continuing without FFmpeg backend on Windows."
 
       - name: Set up MSVC
         uses: ilammy/msvc-dev-cmd@v1

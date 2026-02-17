@@ -93,7 +93,7 @@ The returned decoder implements `Source`, so you can append it to `Sink` directl
 - FFmpeg development libraries can be installed with `vcpkg` (`ffmpeg:x64-windows`)
 - `Milky2018/moon_cpal@0.11.3` removed the previous `strings.h` MSVC blocker in ALSA stub
 - CI Windows lane uses MSVC (`cl`/`lib`) for compatibility with `moonbitlang/async` on Windows
-- CI treats Windows FFmpeg setup as best-effort; Linux lane remains the required FFmpeg validation path
+- CI validates FFmpeg on Windows strictly (vcpkg install + prebuild detection + native tests)
 
 ### Manual override (any platform)
 - `MOON_RODIO_FFMPEG_CFLAGS`
