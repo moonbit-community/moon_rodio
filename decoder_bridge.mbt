@@ -502,10 +502,8 @@ pub fn Decoder::new_looped(bytes : Bytes) -> LoopedDecoder raise DecoderError {
 }
 
 ///|
-pub async fn Decoder::try_from_file(
-  path : StringView,
-) -> Decoder raise DecoderError {
-  let bytes = try @fs.read_file(path).binary() catch {
+pub fn Decoder::try_from_file(path : StringView) -> Decoder raise DecoderError {
+  let bytes = try @fs.read_file_to_bytes(path.to_string()) catch {
     _ => raise DecoderError::UnrecognizedFormat
   } noraise {
     bs => bs
@@ -514,10 +512,10 @@ pub async fn Decoder::try_from_file(
 }
 
 ///|
-pub async fn Decoder::try_from_file_looped(
+pub fn Decoder::try_from_file_looped(
   path : StringView,
 ) -> LoopedDecoder raise DecoderError {
-  let bytes = try @fs.read_file(path).binary() catch {
+  let bytes = try @fs.read_file_to_bytes(path.to_string()) catch {
     _ => raise DecoderError::UnrecognizedFormat
   } noraise {
     bs => bs

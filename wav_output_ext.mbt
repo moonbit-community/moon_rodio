@@ -10,10 +10,7 @@ fn clamp_sample(value : Sample) -> Sample {
 }
 
 ///|
-pub async fn[S : Source] output_to_wav(
-  source : S,
-  wav_file : StringView,
-) -> Unit {
+pub fn[S : Source] output_to_wav(source : S, wav_file : StringView) -> Unit {
   let channels = source.channels()
   let sample_rate = source.sample_rate()
   guard channels > 0 else { panic() }
@@ -51,5 +48,7 @@ pub async fn[S : Source] output_to_wav(
     buf.write_float_le(Float::from_double(sample))
   }
 
-  @fs.write_file(wav_file, buf.to_bytes(), create=0o644, truncate=true)
+  @fs.write_bytes_to_file(wav_file.to_string(), buf.to_bytes()) catch {
+    _ => panic()
+  }
 }

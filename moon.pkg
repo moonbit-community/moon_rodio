@@ -2,17 +2,11 @@ import {
   "Milky2018/moon_cpal",
   "Milky2018/moon_cpal/spec",
   "Milky2018/moon_rodio/decoder",
-  "moonbitlang/async/fs",
-  "moonbitlang/async/io",
+  "moonbitlang/x/fs",
   "moonbitlang/core/buffer",
   "moonbitlang/core/math",
   "moonbitlang/core/ref",
 }
-
-import {
-  "moonbitlang/async/process",
-  "moonbitlang/async",
-} for "test"
 
 options(
   link: {

@@ -78,7 +78,7 @@ pub fn[A : Source, B : Source] mix(A, B) -> DynSource
 
 pub fn mixer(Int, Int) -> (Mixer, MixerSource)
 
-pub async fn[S : Source] output_to_wav(S, StringView) -> Unit
+pub fn[S : Source] output_to_wav(S, StringView) -> Unit
 
 pub fn[S : Source] pausable(S, Bool) -> Pausable
 
@@ -338,8 +338,8 @@ pub fn Decoder::new_vorbis(Bytes) -> Self raise DecoderError
 pub fn Decoder::new_wav(Bytes) -> Self raise DecoderError
 pub fn Decoder::next(Self) -> Double?
 pub fn Decoder::sample_rate(Self) -> Int
-pub async fn Decoder::try_from_file(StringView) -> Self raise DecoderError
-pub async fn Decoder::try_from_file_looped(StringView) -> LoopedDecoder raise DecoderError
+pub fn Decoder::try_from_file(StringView) -> Self raise DecoderError
+pub fn Decoder::try_from_file_looped(StringView) -> LoopedDecoder raise DecoderError
 pub impl Source for Decoder
 
 pub struct DecoderBuilder {

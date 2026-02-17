@@ -1,5 +1,7 @@
 # Milky2018/moon_rodio
 
+[![Native CI](https://github.com/moonbit-community/moon_rodio/actions/workflows/ci-native.yml/badge.svg)](https://github.com/moonbit-community/moon_rodio/actions/workflows/ci-native.yml)
+
 Native-only MoonBit port of Rust `rodio` with `preferred-target: native`.
 
 This package focuses on `Stream`/`Sink` style playback composition while aligning API
@@ -87,6 +89,10 @@ The returned decoder implements `Source`, so you can append it to `Sink` directl
   - `libavutil`
   - `libswresample`
 
+### Windows notes
+- FFmpeg development libraries can be installed with `vcpkg` (`ffmpeg:x64-mingw-dynamic`)
+- Current CI uses MinGW on Windows because `Milky2018/moon_cpal@0.11.1` still fails under MSVC (`alsa_stub.c` includes `strings.h`)
+
 ### Manual override (any platform)
 - `MOON_RODIO_FFMPEG_CFLAGS`
 - `MOON_RODIO_FFMPEG_LIBS`
@@ -113,6 +119,14 @@ For publish/update metadata:
 ```bash
 moon info && moon fmt
 ```
+
+## Test assets
+
+Reference fixtures required by native decoder tests are vendored in:
+
+- `test_assets/rodio`
+
+This avoids CI depending on a local ignored `rodio-reference` checkout.
 
 ## Links
 

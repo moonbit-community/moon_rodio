@@ -28,18 +28,34 @@ fn bytes_eq4(
 }
 
 ///|
-#cfg(target="native")
-async test "rodio::wav_output::output_to_wav" {
-  let path = "_build/rodio_output_to_wav_test.wav"
-  if @fs.exists(path) {
-    @fs.remove(path)
+fn wav_test_read_file_bytes(path : String) -> Bytes {
+  try @fs.read_file_to_bytes(path) catch {
+    _ => panic()
+  } noraise {
+    bytes => bytes
   }
+}
+
+///|
+fn wav_test_remove_file_if_exists(path : String) -> Unit {
+  if @fs.path_exists(path) {
+    @fs.remove_file(path) catch {
+      _ => panic()
+    }
+  }
+}
+
+///|
+#cfg(target="native")
+test "rodio::wav_output::output_to_wav" {
+  let path = "_build/rodio_output_to_wav_test.wav"
+  wav_test_remove_file_if_exists(path)
 
   let source = SamplesBuffer::new(1, 48_000, [0.0, 0.5, -0.5, 1.0])
   output_to_wav(source, path)
 
-  assert_true(@fs.exists(path))
-  let bytes = @fs.read_file(path).binary()
+  assert_true(@fs.path_exists(path))
+  let bytes = wav_test_read_file_bytes(path)
   assert_true(bytes.length() >= 44)
   assert_true(bytes_eq4(bytes, 0, 0x52, 0x49, 0x46, 0x46))
   assert_true(bytes_eq4(bytes, 8, 0x57, 0x41, 0x56, 0x45))
@@ -53,5 +69,5 @@ async test "rodio::wav_output::output_to_wav" {
   assert_eq(read_u32_le(bytes, 40), 16)
   assert_eq(bytes.length(), 60)
 
-  @fs.remove(path)
+  wav_test_remove_file_if_exists(path)
 }

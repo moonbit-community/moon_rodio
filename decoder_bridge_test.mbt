@@ -154,35 +154,43 @@ fn wav_stereo_with_rate(
 }
 
 ///|
-async fn read_reference_asset(path : String) -> Bytes {
-  let (code, toplevel_output, _) = @process.collect_output("git", [
-    "rev-parse", "--show-toplevel",
-  ])
-  if code == 0 {
-    let toplevel = toplevel_output
-      .text()
-      .trim(char_set="\n\r ")
-      .replace_all(old="\\", new="/")
-    try {
-      return @fs.read_file(toplevel + "/test_assets/rodio/" + path).binary()
-    } catch {
-      _ => ()
+fn read_file_bytes(path : String) -> Bytes {
+  try @fs.read_file_to_bytes(path) catch {
+    _ => panic()
+  } noraise {
+    bytes => bytes
+  }
+}
+
+///|
+fn write_file_bytes(path : String, bytes : Bytes) -> Unit {
+  @fs.write_bytes_to_file(path, bytes) catch {
+    _ => panic()
+  }
+}
+
+///|
+fn remove_file_if_exists(path : String) -> Unit {
+  if @fs.path_exists(path) {
+    @fs.remove_file(path) catch {
+      _ => panic()
     }
   }
+}
 
+///|
+fn read_reference_asset(path : String) -> Bytes {
   let mut prefix = ""
   for _ in 0..<64 {
     let full_path = prefix + "test_assets/rodio/" + path
-    try {
-      return @fs.read_file(full_path).binary()
-    } catch {
-      _ => ()
+    if @fs.path_exists(full_path) {
+      return read_file_bytes(full_path)
     }
     prefix = prefix + "../"
   }
 
   // Fallback with the original path for a clear failure message.
-  @fs.read_file("test_assets/rodio/" + path).binary()
+  read_file_bytes("test_assets/rodio/" + path)
 }
 
 ///|
@@ -219,7 +227,7 @@ test "rodio::decoder_api::new_vorbis" {
 
 ///|
 #cfg(target="native")
-async test "rodio::decoder_api::mp4a_native_decode_and_builder_paths" {
+test "rodio::decoder_api::mp4a_native_decode_and_builder_paths" {
   let bytes = read_reference_asset("monkeys.mp4a")
 
   let decode_supported = try {
@@ -540,7 +548,7 @@ fn decoder_has_non_zero_sample(decoder : Decoder) -> Bool {
 
 ///|
 #cfg(target="native")
-async test "rodio::decoder_api::wav_encodings_reference_assets" {
+test "rodio::decoder_api::wav_encodings_reference_assets" {
   let files = [
     "audacity16bit.wav", "lmms16bit.wav", "lmms24bit.wav", "audacity32bit.wav", "lmms32bit.wav",
     "audacity32bit_int.wav",
@@ -554,7 +562,7 @@ async test "rodio::decoder_api::wav_encodings_reference_assets" {
 
 ///|
 #cfg(target="native")
-async test "rodio::decoder_api::flac_encodings_reference_assets" {
+test "rodio::decoder_api::flac_encodings_reference_assets" {
   let base = Decoder::new_flac(
     read_reference_asset("audacity16bit_level5.flac"),
   )
@@ -573,17 +581,10 @@ async test "rodio::decoder_api::flac_encodings_reference_assets" {
 
 ///|
 #cfg(target="native")
-async test "rodio::decoder_api::try_from_file_variants" {
+test "rodio::decoder_api::try_from_file_variants" {
   let path = "rodio_decoder_try_from_file_test.wav"
-  if @fs.exists(path) {
-    @fs.remove(path)
-  }
-  @fs.write_file(
-    path,
-    wav_mono([0, 12000, -12000], 16),
-    create=0o644,
-    truncate=true,
-  )
+  remove_file_if_exists(path)
+  write_file_bytes(path, wav_mono([0, 12000, -12000], 16))
 
   let d = Decoder::try_from_file(path)
   assert_eq(d.channels(), 1)
@@ -598,5 +599,5 @@ async test "rodio::decoder_api::try_from_file_variants" {
   assert_true(looped.next().unwrap() < -0.35)
   assert_eq(looped.next(), Some(0.0))
 
-  @fs.remove(path)
+  remove_file_if_exists(path)
 }
