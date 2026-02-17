@@ -72,45 +72,78 @@ jobs:
           $env:PATH = "$mb;$env:PATH"
           moon version
 
-      - name: Install FFmpeg dev package (vcpkg, msvc)
+      - name: Install FFmpeg dev package (pinned prebuilt)
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          $vcpkgRoot = $env:VCPKG_INSTALLATION_ROOT
-          if ([string]::IsNullOrEmpty($vcpkgRoot)) {
-            $vcpkgRoot = "C:\vcpkg"
-          }
-          $vcpkgExe = Join-Path $vcpkgRoot "vcpkg.exe"
-          if (-not (Test-Path $vcpkgExe)) {
-            throw "vcpkg.exe not found at $vcpkgExe"
-          }
+          $ffmpegVersion = "8.0.1"
+          $ffmpegAsset = "ffmpeg-8.0.1-full_build-shared.zip"
+          $ffmpegSha256 = "e4a40b46e3a3f3e5f2ed28352bd1fd6c733ae3808a8743682ef7f0d4e20c7d51"
+          $ffmpegUrl = "https://github.com/GyanD/codexffmpeg/releases/download/$ffmpegVersion/$ffmpegAsset"
 
-          # Use binary caching + minimal FFmpeg features for faster and more reliable CI installs.
-          $env:VCPKG_FEATURE_FLAGS = "binarycaching"
-          $env:VCPKG_BINARY_SOURCES = "clear;x-gha,readwrite"
-          $spec = "ffmpeg[avcodec,avformat,swresample]:x64-windows"
-          $ok = $false
+          $downloadRoot = Join-Path $env:RUNNER_TEMP "ffmpeg-download"
+          $extractRoot = Join-Path $env:RUNNER_TEMP "ffmpeg-extract"
+          New-Item -ItemType Directory -Force -Path $downloadRoot | Out-Null
+          New-Item -ItemType Directory -Force -Path $extractRoot | Out-Null
+          $archive = Join-Path $downloadRoot $ffmpegAsset
+
+          $downloadOk = $false
           for ($attempt = 1; $attempt -le 3; $attempt++) {
-            Write-Host "Installing $spec (attempt $attempt/3)"
-            & $vcpkgExe install $spec --clean-after-build
-            if ($LASTEXITCODE -eq 0) {
-              $ok = $true
+            try {
+              if (Test-Path $archive) {
+                Remove-Item -Force $archive
+              }
+              Write-Host "Downloading $ffmpegAsset (attempt $attempt/3)"
+              Invoke-WebRequest -Uri $ffmpegUrl -OutFile $archive -MaximumRetryCount 3 -RetryIntervalSec 5
+              $actualSha256 = (Get-FileHash -Path $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+              if ($actualSha256 -ne $ffmpegSha256) {
+                throw "SHA256 mismatch. expected=$ffmpegSha256 actual=$actualSha256"
+              }
+              $downloadOk = $true
               break
-            }
-            if ($attempt -lt 3) {
-              Start-Sleep -Seconds (15 * $attempt)
+            } catch {
+              if ($attempt -eq 3) {
+                throw
+              }
+              Start-Sleep -Seconds (10 * $attempt)
             }
           }
-          if (-not $ok) {
-            throw "Failed to install $spec via vcpkg after 3 attempts"
+          if (-not $downloadOk) {
+            throw "Failed to download and verify $ffmpegAsset"
           }
 
-          $inc = Join-Path $vcpkgRoot "installed\x64-windows\include"
-          $lib = Join-Path $vcpkgRoot "installed\x64-windows\lib"
-          $bin = Join-Path $vcpkgRoot "installed\x64-windows\bin"
-          if (-not (Test-Path $inc) -or -not (Test-Path $lib)) {
-            throw "FFmpeg include/lib paths are missing under $vcpkgRoot\installed\x64-windows"
+          Expand-Archive -Path $archive -DestinationPath $extractRoot -Force
+
+          $root = Join-Path $extractRoot "ffmpeg-8.0.1-full_build-shared"
+          if (-not (Test-Path $root)) {
+            $dirs = @(Get-ChildItem -Path $extractRoot -Directory)
+            if ($dirs.Count -ne 1) {
+              throw "Unexpected FFmpeg archive layout under $extractRoot"
+            }
+            $root = $dirs[0].FullName
           }
+
+          $inc = Join-Path $root "include"
+          $lib = Join-Path $root "lib"
+          $bin = Join-Path $root "bin"
+          $requiredPaths = @(
+            (Join-Path (Join-Path $inc "libavformat") "avformat.h"),
+            (Join-Path (Join-Path $inc "libavcodec") "avcodec.h"),
+            (Join-Path (Join-Path $inc "libavutil") "avutil.h"),
+            (Join-Path (Join-Path $inc "libswresample") "swresample.h"),
+            (Join-Path $lib "avformat.lib"),
+            (Join-Path $lib "avcodec.lib"),
+            (Join-Path $lib "avutil.lib"),
+            (Join-Path $lib "swresample.lib"),
+            (Join-Path $bin "ffmpeg.exe")
+          )
+          foreach ($requiredPath in $requiredPaths) {
+            if (-not (Test-Path $requiredPath)) {
+              throw "Required FFmpeg file missing: $requiredPath"
+            }
+          }
+
+          & (Join-Path $bin "ffmpeg.exe") -version | Select-Object -First 1 | Write-Host
 
           $incUnix = $inc.Replace("\", "/")
           "MOON_RODIO_FFMPEG_CFLAGS=-I$incUnix" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
