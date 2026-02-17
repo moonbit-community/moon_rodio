@@ -72,7 +72,7 @@ jobs:
           $env:PATH = "$mb;$env:PATH"
           moon version
 
-      - name: Install FFmpeg dev package (vcpkg, mingw)
+      - name: Install FFmpeg dev package (vcpkg, msvc)
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
@@ -85,13 +85,13 @@ jobs:
             throw "vcpkg.exe not found at $vcpkgExe"
           }
 
-          & $vcpkgExe install ffmpeg:x64-mingw-dynamic
+          & $vcpkgExe install ffmpeg:x64-windows
 
-          $inc = Join-Path $vcpkgRoot "installed\x64-mingw-dynamic\include"
-          $lib = Join-Path $vcpkgRoot "installed\x64-mingw-dynamic\lib"
-          $bin = Join-Path $vcpkgRoot "installed\x64-mingw-dynamic\bin"
+          $inc = Join-Path $vcpkgRoot "installed\x64-windows\include"
+          $lib = Join-Path $vcpkgRoot "installed\x64-windows\lib"
+          $bin = Join-Path $vcpkgRoot "installed\x64-windows\bin"
           if (-not (Test-Path $inc) -or -not (Test-Path $lib)) {
-            throw "FFmpeg include/lib paths are missing under $vcpkgRoot\installed\x64-mingw-dynamic"
+            throw "FFmpeg include/lib paths are missing under $vcpkgRoot\installed\x64-windows"
           }
 
           $incUnix = $inc.Replace("\", "/")
@@ -110,8 +110,15 @@ jobs:
             throw "FFmpeg backend was not enabled by build.js"
           }
 
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Native test
         shell: pwsh
+        env:
+          CC: cl
+          CXX: cl
+          AR: lib
         run: |
           moon version --all
           moon update
