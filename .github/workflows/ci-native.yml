@@ -88,7 +88,7 @@ jobs:
           # Use binary caching + minimal FFmpeg features for faster and more reliable CI installs.
           $env:VCPKG_FEATURE_FLAGS = "binarycaching"
           $env:VCPKG_BINARY_SOURCES = "clear;x-gha,readwrite"
-          $spec = "ffmpeg[avcodec,avformat,avutil,swresample]:x64-windows"
+          $spec = "ffmpeg[avcodec,avformat,swresample]:x64-windows"
           $ok = $false
           for ($attempt = 1; $attempt -le 3; $attempt++) {
             Write-Host "Installing $spec (attempt $attempt/3)"
