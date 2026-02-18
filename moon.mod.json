@@ -6,10 +6,17 @@
     "moonbitlang/x": "0.4.40"
   },
   "readme": "README.mbt.md",
-  "repository": "",
+  "repository": "https://github.com/moonbit-community/moon_rodio",
   "license": "Apache-2.0",
-  "keywords": [],
-  "description": "",
+  "keywords": [
+    "audio",
+    "rodio",
+    "cpal",
+    "native",
+    "decoder",
+    "moonbit"
+  ],
+  "description": "Native-only MoonBit port of Rust rodio with playback pipeline, source effects, and WAV/MP3/FLAC/Vorbis/MP4A decoding.",
   "preferred-target": "native",
   "--moonbit-unstable-prebuild": "build.js"
 }
