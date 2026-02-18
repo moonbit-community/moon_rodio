@@ -3,6 +3,7 @@ _build/
 .mooncakes/
 .moonagent/
 target/
+target
 rodio-reference/
 mp3-reference/
 wav-reference/
