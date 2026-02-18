@@ -1347,13 +1347,6 @@ pub fn Violet::next(Self) -> Double?
 pub fn Violet::sample_rate(Self) -> Int
 pub impl Source for Violet
 
-pub struct WavBytesCollector {
-  out : Ref[Bytes]
-}
-pub fn WavBytesCollector::new() -> Self
-pub fn WavBytesCollector::to_bytes(Self) -> Bytes
-pub impl WavWriter for WavBytesCollector
-
 pub struct WhiteGaussian {
   sample_rate : Int
   state : Ref[UInt64]
@@ -1420,7 +1413,7 @@ pub trait Source {
   try_seek(Self, @core.Duration) -> Unit raise SeekError
 }
 
-pub trait WavWriter {
+pub(open) trait WavWriter {
   write_all(Self, Bytes) -> Unit
 }
 pub impl WavWriter for @buffer.Buffer

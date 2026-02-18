@@ -60,6 +60,29 @@ fn wav_test_remove_file_if_exists(path : String) -> Unit {
 }
 
 ///|
+struct WavBytesCollector {
+  out : Ref[Bytes]
+}
+
+///|
+fn WavBytesCollector::new() -> WavBytesCollector {
+  { out: @ref.new(b"") }
+}
+
+///|
+fn WavBytesCollector::to_bytes(self : WavBytesCollector) -> Bytes {
+  self.out.val
+}
+
+///|
+impl WavWriter for WavBytesCollector with write_all(
+  self : WavBytesCollector,
+  bytes : Bytes,
+) {
+  self.out.val = bytes
+}
+
+///|
 #cfg(target="native")
 test "rodio::wav_output::output_to_wav" {
   let path = "_build/rodio_output_to_wav_test.wav"
