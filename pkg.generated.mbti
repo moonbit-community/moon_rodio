@@ -40,6 +40,8 @@ pub fn[S : Source] distortion_threshold(S, Double) -> DynSource
 
 pub fn[S : Source] distortion_with_gain(S, Double, Double) -> DynSource
 
+pub fn[S : Source] dither(S, BitDepth, DitherAlgorithm) -> Dither
+
 pub fn empty(Int, Int) -> DynSource
 
 pub fn[S : Source] fade_in(S, @core.Duration) -> DynSource
@@ -131,6 +133,12 @@ pub fn zero(Int, Int) -> DynSource
 pub fn zero_samples(Int, Int, Int) -> DynSource
 
 // Errors
+pub suberror BitDepthError {
+  OutOfRange(Int)
+}
+pub impl Eq for BitDepthError
+pub impl Show for BitDepthError
+
 pub suberror DecoderError {
   Backend(@decoder.DecoderError)
   UnrecognizedFormat
@@ -151,6 +159,7 @@ pub fn SeekError::source_intact(Self) -> Bool
 pub impl Eq for SeekError
 pub impl Show for SeekError
 
+#alias(DeviceSinkError)
 pub suberror StreamError {
   PlayStreamError(@core.PlayStreamError)
   DefaultStreamConfigError(@core.DefaultStreamConfigError)
@@ -197,6 +206,14 @@ pub fn AutomaticGainControl::next(Self) -> Double?
 pub fn AutomaticGainControl::sample_rate(Self) -> Int
 pub fn AutomaticGainControl::set_enabled(Self, Bool) -> Unit
 pub impl Source for AutomaticGainControl
+
+pub struct BitDepth {
+  bits : Int
+}
+pub fn BitDepth::get(Self) -> Int
+pub fn BitDepth::new(Int) -> Self raise BitDepthError
+pub impl Eq for BitDepth
+pub impl Show for BitDepth
 
 pub struct BltFilter {
   input : DynSource
@@ -370,6 +387,25 @@ pub fn Delay::into_inner(Self) -> DynSource
 pub fn[S : Source] Delay::new(S, @core.Duration) -> Self
 pub impl Source for Delay
 
+pub struct DeviceSinkBuilder {
+  inner : OutputStreamBuilder
+}
+pub fn DeviceSinkBuilder::config(Self) -> OutputStreamConfig
+pub fn DeviceSinkBuilder::default() -> Self
+pub fn DeviceSinkBuilder::from_default_device() -> Self raise StreamError
+pub fn DeviceSinkBuilder::from_device(@spec.Device) -> Self raise StreamError
+pub fn DeviceSinkBuilder::open_default_sink() -> MixerDeviceSink raise StreamError
+pub fn DeviceSinkBuilder::open_sink_or_fallback(Self) -> MixerDeviceSink raise StreamError
+pub fn DeviceSinkBuilder::open_stream(Self) -> MixerDeviceSink raise StreamError
+pub fn DeviceSinkBuilder::with_buffer_size(Self, @core.BufferSize) -> Self
+pub fn DeviceSinkBuilder::with_channels(Self, Int) -> Self
+pub fn DeviceSinkBuilder::with_config(Self, @core.StreamConfig) -> Self
+pub fn DeviceSinkBuilder::with_device(Self, @spec.Device) -> Self
+pub fn DeviceSinkBuilder::with_error_callback(Self, (@core.StreamError) -> Unit) -> Self
+pub fn DeviceSinkBuilder::with_sample_format(Self, @core.SampleFormat) -> Self
+pub fn DeviceSinkBuilder::with_sample_rate(Self, Int) -> Self
+pub fn DeviceSinkBuilder::with_supported_config(Self, @core.SupportedStreamConfig) -> Self
+
 pub struct Distortion {
   input : DynSource
   gain : Ref[Double]
@@ -384,6 +420,34 @@ pub fn Distortion::set_gain(Self, Double) -> Unit
 pub fn Distortion::set_threshold(Self, Double) -> Unit
 pub fn[S : Source] Distortion::with_gain(S, Double, Double) -> Self
 pub impl Source for Distortion
+
+pub struct Dither {
+  input : DynSource
+  noise : Ref[DitherAlgorithm]
+  current_channel : Ref[Int]
+  lsb_amplitude : Ref[Double]
+  rng_state : Ref[UInt64]
+  highpass_prev : Ref[Array[Double]]
+}
+pub fn Dither::algorithm(Self) -> DitherAlgorithm
+pub fn Dither::channels(Self) -> Int
+pub fn Dither::next(Self) -> Double?
+pub fn Dither::sample_rate(Self) -> Int
+pub fn Dither::set_algorithm(Self, DitherAlgorithm) -> Unit
+pub impl Source for Dither
+
+pub enum DitherAlgorithm {
+  GPDF
+  HighPass
+  RPDF
+  TPDF
+}
+pub fn DitherAlgorithm::gpdf() -> Self
+pub fn DitherAlgorithm::high_pass() -> Self
+pub fn DitherAlgorithm::rpdf() -> Self
+pub fn DitherAlgorithm::tpdf() -> Self
+pub impl Eq for DitherAlgorithm
+pub impl Show for DitherAlgorithm
 
 pub struct Done {
   input : DynSource
@@ -590,6 +654,13 @@ pub struct Mixer {
 }
 pub fn[S : Source] Mixer::add(Self, S) -> Unit
 
+pub struct MixerDeviceSink {
+  inner : OutputStream
+}
+pub fn MixerDeviceSink::config(Self) -> OutputStreamConfig
+pub fn MixerDeviceSink::log_on_drop(Self, Bool) -> Unit
+pub fn MixerDeviceSink::mixer(Self) -> Mixer
+
 pub struct MixerSource {
   current_sources : Ref[Array[DynSource]]
   input : Mixer
@@ -631,6 +702,7 @@ pub fn OutputStreamBuilder::with_sample_format(Self, @core.SampleFormat) -> Self
 pub fn OutputStreamBuilder::with_sample_rate(Self, Int) -> Self
 pub fn OutputStreamBuilder::with_supported_config(Self, @core.SupportedStreamConfig) -> Self
 
+#alias(DeviceSinkConfig)
 pub struct OutputStreamConfig {
   channel_count : Int
   sample_rate : Int
@@ -684,6 +756,29 @@ pub fn Pink::new(Int) -> Self
 pub fn Pink::next(Self) -> Double?
 pub fn Pink::sample_rate(Self) -> Int
 pub impl Source for Pink
+
+pub struct Player {
+  inner : Sink
+}
+pub fn[S : Source] Player::append(Self, S) -> Unit
+pub fn Player::clear(Self) -> Unit
+pub fn Player::connect_new(Mixer) -> Self
+pub fn Player::detach(Self) -> Unit
+pub fn Player::empty(Self) -> Bool
+pub fn Player::get_pos(Self) -> @core.Duration
+pub fn Player::is_paused(Self) -> Bool
+pub fn Player::len(Self) -> Int
+pub fn Player::new() -> (Self, ControlledQueueSource)
+pub fn Player::pause(Self) -> Unit
+pub fn Player::play(Self) -> Unit
+pub fn Player::set_speed(Self, Double) -> Unit
+pub fn Player::set_volume(Self, Double) -> Unit
+pub fn Player::skip_one(Self) -> Unit
+pub fn Player::sleep_until_end(Self) -> Unit
+pub fn Player::speed(Self) -> Double
+pub fn Player::stop(Self) -> Unit
+pub fn Player::try_seek(Self, @core.Duration) -> Unit raise SeekError
+pub fn Player::volume(Self) -> Double
 
 pub struct QueueSignal {
   done : Ref[Bool]

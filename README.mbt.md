@@ -21,6 +21,8 @@ surface and behavior to the upstream project as far as MoonBit allows.
   - Audio effects and transforms (speed, gain, filters, controls, spatial helpers, queue, etc.)
   - Built-in WAV decoding bridge
   - Compatibility slices: `StaticSamplesBuffer`, `FixedSource`, `FixedSamplesBuffer`, `FixedSourceAdapter`
+  - Naming-compat wrappers: `Player`, `DeviceSinkBuilder`, `MixerDeviceSink`
+  - Dither API slice: `BitDepth`, `DitherAlgorithm`, `dither(...)`
 - `Milky2018/moon_rodio/decoder`
   - Generic decoder builder and `LoopedDecoder`
   - Format detection via hints, MIME, and data heuristics
