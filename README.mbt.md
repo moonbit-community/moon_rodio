@@ -20,8 +20,10 @@ surface and behavior to the upstream project as far as MoonBit allows.
   - Playback pipeline (`Stream`, `Sink`, `Mixer`, `Source`, helpers)
   - Audio effects and transforms (speed, gain, filters, controls, spatial helpers, queue, etc.)
   - Built-in WAV decoding bridge
+  - Native input/output builders: `MicrophoneBuilder`, `SpeakersBuilder`
   - Compatibility slices: `StaticSamplesBuffer`, `FixedSource`, `FixedSamplesBuffer`, `FixedSourceAdapter`
-  - Naming-compat wrappers: `Player`, `DeviceSinkBuilder`, `MixerDeviceSink`
+  - Naming-compat wrappers: `Player`, `SpatialPlayer`, `DeviceSinkBuilder`, `MixerDeviceSink`
+  - Convenience helpers: `play(...)`, `play_reader(...)`, `play_file(...)`, `wav_to_file(...)`, `wav_to_writer(...)`
   - Dither API slice: `BitDepth`, `DitherAlgorithm`, `dither(...)`
 - `Milky2018/moon_rodio/decoder`
   - Generic decoder builder and `LoopedDecoder`
@@ -68,10 +70,14 @@ Decoder usage:
 
 ```moonbit nocheck
 import "Milky2018/moon_rodio/decoder"
-import "moonbitlang/async/fs"
+import "moonbitlang/x/fs"
 
-pub async fn play_file(path : String) {
-  let bytes = await fs.read_file(path)
+fn decode_file(path : String) {
+  let bytes = try fs.read_file_to_bytes(path) catch {
+    _ => return
+  } noraise {
+    bs => bs
+  }
   let decoded = DecoderBuilder::new()
     .with_data(bytes)
     .with_mime_type("audio/mpeg")
