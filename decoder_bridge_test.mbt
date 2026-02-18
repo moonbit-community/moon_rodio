@@ -193,18 +193,124 @@ fn remove_file_if_exists(path : String) -> Unit {
 }
 
 ///|
-fn read_reference_asset(path : String) -> Bytes {
+fn resolve_reference_asset_path(path : String) -> String {
   let mut prefix = ""
   for _ in 0..<64 {
     let full_path = prefix + "test_assets/rodio/" + path
     if @fs.path_exists(full_path) {
-      return read_file_bytes(full_path)
+      return full_path
     }
     prefix = prefix + "../"
   }
+  "test_assets/rodio/" + path
+}
 
-  // Fallback with the original path for a clear failure message.
-  read_file_bytes("test_assets/rodio/" + path)
+///|
+fn read_reference_asset(path : String) -> Bytes {
+  read_file_bytes(resolve_reference_asset_path(path))
+}
+
+///|
+fn abs_int(value : Int) -> Int {
+  if value < 0 {
+    -value
+  } else {
+    value
+  }
+}
+
+///|
+fn count_decoder_samples(decoder : Decoder) -> Int {
+  let mut total = 0
+  while true {
+    match decoder.next() {
+      Some(_) => total += 1
+      None => break
+    }
+  }
+  total
+}
+
+///|
+fn duration_from_sample_count_test(
+  total_samples : Int,
+  channels : ChannelCount,
+  sample_rate : SampleRate,
+) -> @moon_cpal.Duration {
+  if total_samples <= 0 || channels <= 0 || sample_rate <= 0 {
+    return @moon_cpal.Duration::from_secs((0 : UInt64))
+  }
+  let per_second = channels.to_uint64() * sample_rate.to_uint64()
+  let total = total_samples.to_uint64()
+  let secs = total / per_second
+  let rem_samples = total % per_second
+  let nanos = (rem_samples * (1_000_000_000 : UInt64) / per_second).to_int()
+  @moon_cpal.Duration::new(secs, nanos)
+}
+
+///|
+fn duration_to_nanos_test(duration : @moon_cpal.Duration) -> Int {
+  duration.secs.to_int() * 1_000_000_000 + duration.nanos
+}
+
+///|
+fn assert_total_duration_matches_counted(path : String) -> Unit {
+  let full_path = resolve_reference_asset_path(path)
+  let d = try Decoder::try_from_file(full_path) catch {
+    _ => panic()
+  } noraise {
+    decoder => decoder
+  }
+  let reported = d.total_duration().unwrap()
+  let channels = d.channels()
+  let sample_rate = d.sample_rate()
+
+  let counted_source = try Decoder::try_from_file(full_path) catch {
+    _ => panic()
+  } noraise {
+    decoder => decoder
+  }
+  let counted_samples = count_decoder_samples(counted_source)
+  let counted = duration_from_sample_count_test(
+    counted_samples, channels, sample_rate,
+  )
+  let diff = abs_int(
+    duration_to_nanos_test(reported) - duration_to_nanos_test(counted),
+  )
+  // Keep a small tolerance for rounding and decoder backend differences.
+  guard diff <= 50_000_000 else { panic() }
+}
+
+///|
+fn assert_seek_remaining_playtime(path : String) -> Unit {
+  let full_path = resolve_reference_asset_path(path)
+  let base = try Decoder::try_from_file(full_path) catch {
+    _ => panic()
+  } noraise {
+    decoder => decoder
+  }
+  let channels = base.channels()
+  let sample_rate = base.sample_rate()
+  let total_samples = count_decoder_samples(base)
+
+  let target_remaining = channels * sample_rate * 5
+  guard total_samples > target_remaining + channels else { panic() }
+
+  let seek_target = total_samples - target_remaining
+  let d = try Decoder::try_from_file(full_path) catch {
+    _ => panic()
+  } noraise {
+    decoder => decoder
+  }
+  d.try_seek(
+    duration_from_sample_count_test(seek_target, channels, sample_rate),
+  ) catch {
+    _ => panic()
+  }
+  let remaining = count_decoder_samples(d)
+  let tolerance = channels * sample_rate / 4
+  let diff = abs_int(remaining - target_remaining)
+  guard diff <= tolerance else { panic() }
 }
 
 ///|
@@ -627,6 +733,22 @@ test "rodio::decoder_api::flac_encodings_reference_assets" {
     let decoder = Decoder::new_flac(read_reference_asset(path))
     assert_true(decoder_has_non_zero_sample(decoder))
     assert_eq(decoder.total_duration().unwrap().secs, (3 : UInt64))
+  }
+}
+
+///|
+#cfg(target="native")
+test "rodio::decoder_api::total_duration_reference_assets_matrix" {
+  for path in ["music.wav", "music.flac", "music.mp3", "music.ogg"] {
+    assert_total_duration_matches_counted(path)
+  }
+}
+
+///|
+#cfg(target="native")
+test "rodio::decoder_api::seek_remaining_playtime_reference_assets" {
+  for path in ["music.wav", "music.flac", "music.mp3", "music.ogg"] {
+    assert_seek_remaining_playtime(path)
   }
 }
 
