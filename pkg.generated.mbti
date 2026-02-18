@@ -5,6 +5,7 @@ import {
   "Milky2018/moon_cpal/core",
   "Milky2018/moon_cpal/spec",
   "Milky2018/moon_rodio/decoder",
+  "moonbitlang/core/buffer",
 }
 
 // Values
@@ -15,6 +16,10 @@ pub fn[S : Source] amplify_decibel(S, Double) -> DynSource
 pub fn[S : Source] amplify_normalized(S, Double) -> DynSource
 
 pub fn[S : Source] automatic_gain_control(S, Double, @core.Duration, @core.Duration, Double) -> AutomaticGainControl
+
+pub fn available_inputs() -> Array[Input] raise MicrophoneListError
+
+pub fn available_outputs() -> Array[Output] raise SpeakersListError
 
 pub fn buffer_from_iter(Int, Int, Array[Double]) -> SamplesBuffer
 
@@ -94,7 +99,11 @@ pub fn[S : Source] periodic_with_source(S, @core.Duration, (DynSource) -> Unit) 
 
 pub fn pink(Int) -> Pink
 
-pub fn play(Mixer, Bytes) -> Sink raise PlayError
+pub fn play(Mixer, Bytes) -> Player raise PlayError
+
+pub fn play_file(Mixer, StringView) -> Player raise PlayError
+
+pub fn play_reader(Mixer, Reader) -> Player raise PlayError
 
 pub fn queue(Bool) -> (SourcesQueueInput, SourcesQueueOutput)
 
@@ -126,6 +135,10 @@ pub fn[S : Source] track_position(S) -> TrackPosition
 
 pub fn[S : Source] uniform(S, Int, Int) -> DynSource
 
+pub fn[S : Source] wav_to_file(S, StringView) -> Unit
+
+pub fn[S : Source] wav_to_writer(S, @buffer.Buffer) -> Unit
+
 pub fn white(Int) -> WhiteUniform
 
 pub fn zero(Int, Int) -> DynSource
@@ -146,6 +159,25 @@ pub suberror DecoderError {
 pub impl Eq for DecoderError
 pub impl Show for DecoderError
 
+pub suberror MicrophoneError {
+  NoDevice
+  NoConfig
+  DefaultInputConfigError(@core.DefaultStreamConfigError)
+  SupportedInputConfigsError(@core.SupportedStreamConfigsError)
+  UnsupportedByDevice
+  BuildStreamError(@core.BuildStreamError)
+  PlayStreamError(@core.PlayStreamError)
+  UnsupportedSampleFormat
+}
+pub impl Eq for MicrophoneError
+pub impl Show for MicrophoneError
+
+pub suberror MicrophoneListError {
+  DevicesError(@core.DevicesError)
+}
+pub impl Eq for MicrophoneListError
+pub impl Show for MicrophoneListError
+
 pub suberror PlayError {
   DecoderError(DecoderError)
 }
@@ -158,6 +190,23 @@ pub suberror SeekError {
 pub fn SeekError::source_intact(Self) -> Bool
 pub impl Eq for SeekError
 pub impl Show for SeekError
+
+pub suberror SpeakersError {
+  NoDevice
+  NoConfig
+  DefaultOutputConfigError(@core.DefaultStreamConfigError)
+  SupportedOutputConfigsError(@core.SupportedStreamConfigsError)
+  UnsupportedByDevice
+  DeviceSinkError(StreamError)
+}
+pub impl Eq for SpeakersError
+pub impl Show for SpeakersError
+
+pub suberror SpeakersListError {
+  DevicesError(@core.DevicesError)
+}
+pub impl Eq for SpeakersListError
+pub impl Show for SpeakersListError
 
 #alias(DeviceSinkError)
 pub suberror StreamError {
@@ -576,6 +625,30 @@ pub struct GeneratorFunction {
 }
 pub fn GeneratorFunction::new((Double) -> Double) -> Self
 
+pub struct Input {
+  inner : @spec.Device
+}
+pub fn Input::into_inner(Self) -> @spec.Device
+pub fn Input::name(Self) -> String
+
+pub struct InputConfig {
+  channel_count : Int
+  sample_rate : Int
+  buffer_size : @core.BufferSize
+  sample_format : @core.SampleFormat
+}
+pub fn InputConfig::default() -> Self
+pub fn InputConfig::from_supported(@core.SupportedStreamConfig) -> Self
+pub fn InputConfig::new(Int, Int, @core.BufferSize, @core.SampleFormat) -> Self
+pub fn InputConfig::stream_config(Self) -> @core.StreamConfig
+pub fn InputConfig::supported_given(Self, @core.SupportedStreamConfigRange) -> Bool
+pub fn InputConfig::with_buffer_size(Self, @core.BufferSize) -> Self
+pub fn InputConfig::with_channel_count(Self, Int) -> Self
+pub fn InputConfig::with_sample_format(Self, @core.SampleFormat) -> Self
+pub fn InputConfig::with_sample_rate(Self, Int) -> Self
+pub impl Eq for InputConfig
+pub impl Show for InputConfig
+
 pub struct Limit {
   input : DynSource
   settings : LimitSettings
@@ -637,6 +710,38 @@ pub fn LoopedDecoder::next(Self) -> Double?
 pub fn LoopedDecoder::sample_rate(Self) -> Int
 pub impl Source for LoopedDecoder
 
+pub struct Microphone {
+  _stream_handle : @spec.Stream
+  queued_samples : Ref[Array[Double]]
+  read_pos : Ref[Int]
+  config : InputConfig
+  error_occurred : Ref[Bool]
+}
+pub fn Microphone::config(Self) -> InputConfig
+pub fn Microphone::next(Self) -> Double?
+pub impl Source for Microphone
+
+pub struct MicrophoneBuilder {
+  device : @spec.Device?
+  supported_configs : Array[@core.SupportedStreamConfigRange]
+  config : InputConfig?
+  error_callback : (@core.StreamError) -> Unit
+}
+pub fn MicrophoneBuilder::config(Self, InputConfig) -> Self raise MicrophoneError
+pub fn MicrophoneBuilder::default_config(Self) -> Self raise MicrophoneError
+pub fn MicrophoneBuilder::default_device(Self) -> Self raise MicrophoneError
+pub fn MicrophoneBuilder::device(Self, Input) -> Self raise MicrophoneError
+pub fn MicrophoneBuilder::get_config(Self) -> InputConfig raise MicrophoneError
+pub fn MicrophoneBuilder::new() -> Self
+pub fn MicrophoneBuilder::open_stream(Self) -> Microphone raise MicrophoneError
+pub fn MicrophoneBuilder::prefer_buffer_sizes(Self, Array[Int]) -> Self
+pub fn MicrophoneBuilder::prefer_channel_counts(Self, Array[Int]) -> Self
+pub fn MicrophoneBuilder::prefer_sample_rates(Self, Array[Int]) -> Self
+pub fn MicrophoneBuilder::try_buffer_size(Self, Int) -> Self raise MicrophoneError
+pub fn MicrophoneBuilder::try_channels(Self, Int) -> Self raise MicrophoneError
+pub fn MicrophoneBuilder::try_sample_rate(Self, Int) -> Self raise MicrophoneError
+pub fn MicrophoneBuilder::with_error_callback(Self, (@core.StreamError) -> Unit) -> Self
+
 pub struct Mix {
   inner : DynSource
 }
@@ -670,6 +775,31 @@ pub fn MixerSource::channels(Self) -> Int
 pub fn MixerSource::next(Self) -> Double?
 pub fn MixerSource::sample_rate(Self) -> Int
 pub impl Source for MixerSource
+
+pub struct Output {
+  inner : @spec.Device
+  default : Bool
+}
+pub fn Output::into_inner(Self) -> @spec.Device
+pub fn Output::is_default(Self) -> Bool
+pub fn Output::name(Self) -> String
+
+pub struct OutputConfig {
+  channel_count : Int
+  sample_rate : Int
+  buffer_size : @core.BufferSize
+  sample_format : @core.SampleFormat
+}
+pub fn OutputConfig::default() -> Self
+pub fn OutputConfig::from_supported(@core.SupportedStreamConfig) -> Self
+pub fn OutputConfig::new(Int, Int, @core.BufferSize, @core.SampleFormat) -> Self
+pub fn OutputConfig::supported_given(Self, @core.SupportedStreamConfigRange) -> Bool
+pub fn OutputConfig::with_buffer_size(Self, @core.BufferSize) -> Self
+pub fn OutputConfig::with_channel_count(Self, Int) -> Self
+pub fn OutputConfig::with_sample_format(Self, @core.SampleFormat) -> Self
+pub fn OutputConfig::with_sample_rate(Self, Int) -> Self
+pub impl Eq for OutputConfig
+pub impl Show for OutputConfig
 
 pub struct OutputStream {
   config : OutputStreamConfig
@@ -787,6 +917,13 @@ pub fn QueueSignal::is_done(Self) -> Bool
 pub fn QueueSignal::mark_done(Self) -> Unit
 
 type QueuedSource
+
+pub struct Reader {
+  bytes : Bytes
+}
+pub fn Reader::from_bytes(Bytes) -> Self
+pub fn Reader::from_file(StringView) -> Self raise PlayError
+pub fn Reader::into_bytes(Self) -> Bytes
 
 pub struct Repeat {
   inner : DynSource
@@ -979,6 +1116,30 @@ pub fn Spatial::sample_rate(Self) -> Int
 pub fn Spatial::set_positions(Self, Array[Double], Array[Double], Array[Double]) -> Unit
 pub impl Source for Spatial
 
+pub struct SpatialPlayer {
+  inner : SpatialSink
+}
+pub fn[S : Source] SpatialPlayer::append(Self, S) -> Unit
+pub fn SpatialPlayer::clear(Self) -> Unit
+pub fn SpatialPlayer::connect_new(Mixer, Array[Double], Array[Double], Array[Double]) -> Self
+pub fn SpatialPlayer::detach(Self) -> Unit
+pub fn SpatialPlayer::empty(Self) -> Bool
+pub fn SpatialPlayer::get_pos(Self) -> @core.Duration
+pub fn SpatialPlayer::is_paused(Self) -> Bool
+pub fn SpatialPlayer::len(Self) -> Int
+pub fn SpatialPlayer::pause(Self) -> Unit
+pub fn SpatialPlayer::play(Self) -> Unit
+pub fn SpatialPlayer::set_emitter_position(Self, Array[Double]) -> Unit
+pub fn SpatialPlayer::set_left_ear_position(Self, Array[Double]) -> Unit
+pub fn SpatialPlayer::set_right_ear_position(Self, Array[Double]) -> Unit
+pub fn SpatialPlayer::set_speed(Self, Double) -> Unit
+pub fn SpatialPlayer::set_volume(Self, Double) -> Unit
+pub fn SpatialPlayer::sleep_until_end(Self) -> Unit
+pub fn SpatialPlayer::speed(Self) -> Double
+pub fn SpatialPlayer::stop(Self) -> Unit
+pub fn SpatialPlayer::try_seek(Self, @core.Duration) -> Unit raise SeekError
+pub fn SpatialPlayer::volume(Self) -> Double
+
 pub struct SpatialSink {
   sink : Sink
   emitter_position : Ref[Array[Double]]
@@ -1024,6 +1185,27 @@ pub fn SpatialSource::next(Self) -> Double?
 pub fn SpatialSource::sample_rate(Self) -> Int
 pub fn SpatialSource::set_positions(Self, Array[Double], Array[Double], Array[Double]) -> Unit
 pub impl Source for SpatialSource
+
+pub struct SpeakersBuilder {
+  device : @spec.Device?
+  supported_configs : Array[@core.SupportedStreamConfigRange]
+  config : OutputConfig?
+  error_callback : (@core.StreamError) -> Unit
+}
+pub fn SpeakersBuilder::config(Self, OutputConfig) -> Self raise SpeakersError
+pub fn SpeakersBuilder::default_config(Self) -> Self raise SpeakersError
+pub fn SpeakersBuilder::default_device(Self) -> Self raise SpeakersError
+pub fn SpeakersBuilder::device(Self, Output) -> Self raise SpeakersError
+pub fn SpeakersBuilder::get_config(Self) -> OutputConfig raise SpeakersError
+pub fn SpeakersBuilder::new() -> Self
+pub fn SpeakersBuilder::open_mixer(Self) -> MixerDeviceSink raise SpeakersError
+pub fn SpeakersBuilder::prefer_buffer_sizes(Self, Array[Int]) -> Self
+pub fn SpeakersBuilder::prefer_channel_counts(Self, Array[Int]) -> Self
+pub fn SpeakersBuilder::prefer_sample_rates(Self, Array[Int]) -> Self
+pub fn SpeakersBuilder::try_buffer_size(Self, Int) -> Self raise SpeakersError
+pub fn SpeakersBuilder::try_channels(Self, Int) -> Self raise SpeakersError
+pub fn SpeakersBuilder::try_sample_rate(Self, Int) -> Self raise SpeakersError
+pub fn SpeakersBuilder::with_error_callback(Self, (@core.StreamError) -> Unit) -> Self
 
 pub struct Speed {
   input : DynSource

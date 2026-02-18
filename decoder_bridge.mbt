@@ -69,6 +69,31 @@ pub struct DecoderBuilder {
 }
 
 ///|
+pub struct Reader {
+  bytes : Bytes
+}
+
+///|
+pub fn Reader::from_bytes(bytes : Bytes) -> Reader {
+  { bytes, }
+}
+
+///|
+pub fn Reader::from_file(path : StringView) -> Reader raise PlayError {
+  let bytes = try @fs.read_file_to_bytes(path.to_string()) catch {
+    _ => raise PlayError::DecoderError(DecoderError::UnrecognizedFormat)
+  } noraise {
+    bs => bs
+  }
+  { bytes, }
+}
+
+///|
+pub fn Reader::into_bytes(self : Reader) -> Bytes {
+  self.bytes
+}
+
+///|
 pub fn DecoderBuilder::new() -> DecoderBuilder {
   { data: None, settings: Settings::default() }
 }
@@ -631,13 +656,30 @@ pub impl Source for Decoder with try_seek(
 }
 
 ///|
-pub fn play(mixer : Mixer, bytes : Bytes) -> Sink raise PlayError {
+pub fn play(mixer : Mixer, bytes : Bytes) -> Player raise PlayError {
   let source = try Decoder::new(bytes) catch {
     err => raise PlayError::DecoderError(err)
   } noraise {
     src => src
   }
-  let sink = Sink::connect_new(mixer)
-  sink.append(source)
-  sink
+  let player = Player::connect_new(mixer)
+  player.append(source)
+  player
+}
+
+///|
+pub fn play_file(mixer : Mixer, path : StringView) -> Player raise PlayError {
+  let source = try Decoder::try_from_file(path) catch {
+    err => raise PlayError::DecoderError(err)
+  } noraise {
+    src => src
+  }
+  let player = Player::connect_new(mixer)
+  player.append(source)
+  player
+}
+
+///|
+pub fn play_reader(mixer : Mixer, reader : Reader) -> Player raise PlayError {
+  play(mixer, reader.into_bytes())
 }

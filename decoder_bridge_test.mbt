@@ -328,6 +328,33 @@ test "rodio::decoder_api::play_decode_error_variant" {
 }
 
 ///|
+test "rodio::decoder_api::play_reader" {
+  let (tx, rx) = mixer(1, 44_100)
+  let reader = Reader::from_bytes(@decoder.flac_pop_bytes())
+  let player = play_reader(tx, reader)
+
+  assert_true(!player.empty())
+  assert_eq(rx.next(), Some(0.0))
+  assert_true(rx.next().unwrap() > 0.06)
+}
+
+///|
+#cfg(target="native")
+test "rodio::decoder_api::play_file" {
+  let path = "_build/rodio_play_file_test.wav"
+  remove_file_if_exists(path)
+  write_file_bytes(path, wav_mono([0, 16000, -16000], 16))
+
+  let (tx, rx) = mixer(1, 44_100)
+  let player = play_file(tx, path)
+  assert_true(!player.empty())
+  assert_eq(rx.next(), Some(0.0))
+  assert_true(rx.next().unwrap() > 0.45)
+
+  remove_file_if_exists(path)
+}
+
+///|
 test "rodio::decoder_api::builder_build" {
   let decoder = Decoder::builder()
     .with_data(@decoder.mp3_ill2_mono_bytes())

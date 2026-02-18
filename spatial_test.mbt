@@ -67,3 +67,25 @@ test "rodio::source::spatial_sink_seek_and_pos" {
   assert_eq(l1, l0)
   assert_eq(r1, r0)
 }
+
+///|
+test "rodio::spatial_player::compat_wrapper_controls" {
+  let (mix_tx, mix_rx) = mixer(2, 44_100)
+  let player = SpatialPlayer::connect_new(
+    mix_tx,
+    [0.0, 0.0, 0.0],
+    [-1.0, 0.0, 0.0],
+    [1.0, 0.0, 0.0],
+  )
+  player.append(SamplesBuffer::new(1, 44_100, [1.0, 1.0]))
+  assert_eq(player.len(), 1)
+  assert_true(!player.empty())
+  player.set_volume(0.5)
+  assert_eq(player.volume(), 0.5)
+  player.pause()
+  assert_true(player.is_paused())
+  player.play()
+  assert_true(!player.is_paused())
+  ignore(mix_rx.next())
+  ignore(mix_rx.next())
+}
