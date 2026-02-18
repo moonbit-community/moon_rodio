@@ -900,7 +900,7 @@ test "rodio::decoder_api::seek_remaining_playtime_reference_assets" {
 ///|
 #cfg(target="native")
 test "rodio::decoder_api::seek_channel_order_reference_assets" {
-  for path in ["RL.wav", "RL.flac"] {
+  for path in ["RL.wav", "RL.flac", "RL.mp3", "RL.ogg"] {
     assert_seek_keeps_channel_order(path)
   }
 }
