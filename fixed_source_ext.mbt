@@ -16,7 +16,7 @@
 /// Compatibility trait mirroring `rodio::fixed_source::FixedSource`.
 ///
 /// Unlike `Source`, a `FixedSource` never changes channel count and sample rate.
-pub trait FixedSource {
+pub(open) trait FixedSource {
   next(Self) -> Sample?
   channels(Self) -> ChannelCount
   sample_rate(Self) -> SampleRate

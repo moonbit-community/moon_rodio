@@ -65,6 +65,8 @@ pub fn[S : Source] high_pass(S, Int) -> BltFilter
 
 pub fn[S : Source] high_pass_with_q(S, Int, Double) -> BltFilter
 
+pub fn[S : Source] is_exhausted(S) -> Bool
+
 pub fn lerp(Double, Double, Int, Int) -> Double
 
 pub fn[S : Source] limit(S, LimitSettings) -> DynSource
@@ -108,6 +110,8 @@ pub fn play_file(Mixer, StringView) -> Player raise PlayError
 pub fn play_reader(Mixer, Reader) -> Player raise PlayError
 
 pub fn queue(Bool) -> (SourcesQueueInput, SourcesQueueOutput)
+
+pub fn[S : Source] record(S) -> SamplesBuffer
 
 pub fn[S : Source] repeat(S) -> DynSource
 
@@ -973,6 +977,7 @@ pub fn SamplesBuffer::amplify(Self, Double) -> DynSource
 pub fn SamplesBuffer::channels(Self) -> Int
 pub fn SamplesBuffer::new(Int, Int, Array[Double]) -> Self
 pub fn SamplesBuffer::next(Self) -> Double?
+pub fn[S : Source] SamplesBuffer::record_source(S) -> Self
 pub fn SamplesBuffer::repeat_infinite(Self) -> DynSource
 pub fn SamplesBuffer::sample_rate(Self) -> Int
 pub impl Source for SamplesBuffer
@@ -1397,14 +1402,14 @@ pub type Sample = Double
 pub type SampleRate = Int
 
 // Traits
-pub trait FixedSource {
+pub(open) trait FixedSource {
   next(Self) -> Double?
   channels(Self) -> Int
   sample_rate(Self) -> Int
   total_duration(Self) -> @core.Duration?
 }
 
-pub trait Source {
+pub(open) trait Source {
   next(Self) -> Double?
   channels(Self) -> Int
   sample_rate(Self) -> Int

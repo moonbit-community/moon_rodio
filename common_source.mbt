@@ -25,13 +25,18 @@ pub type SampleRate = Int
 let hz_44100 : SampleRate = 44_100
 
 ///|
-pub trait Source {
+pub(open) trait Source {
   next(Self) -> Sample?
   channels(Self) -> ChannelCount
   sample_rate(Self) -> SampleRate
   current_span_len(Self) -> Int?
   total_duration(Self) -> @moon_cpal.Duration?
   try_seek(Self, pos : @moon_cpal.Duration) -> Unit raise SeekError
+}
+
+///|
+pub fn[S : Source] is_exhausted(source : S) -> Bool {
+  source.current_span_len() == Some(0)
 }
 
 ///|
@@ -458,6 +463,26 @@ pub impl Source for SamplesBuffer with try_seek(
   } else {
     with_channel_offset
   }
+}
+
+///|
+pub fn[S : Source] record(source : S) -> SamplesBuffer {
+  let channels = source.channels()
+  let sample_rate = source.sample_rate()
+  let uniform = uniform_source(to_dyn(source), channels, sample_rate)
+  let samples : Array[Sample] = []
+  while true {
+    match uniform.next() {
+      Some(sample) => samples.push(sample)
+      None => break
+    }
+  }
+  SamplesBuffer::new(channels, sample_rate, samples)
+}
+
+///|
+pub fn[S : Source] SamplesBuffer::record_source(source : S) -> SamplesBuffer {
+  record(source)
 }
 
 ///|

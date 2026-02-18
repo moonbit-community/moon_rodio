@@ -13,6 +13,55 @@
 // limitations under the License.
 
 ///|
+struct ExternalFixedSource {
+  samples : Array[Sample]
+  cursor : Ref[Int]
+  channels : ChannelCount
+  sample_rate : SampleRate
+}
+
+///|
+fn ExternalFixedSource::new(
+  channels : ChannelCount,
+  sample_rate : SampleRate,
+  samples : Array[Sample],
+) -> ExternalFixedSource {
+  { samples, cursor: @ref.new(0), channels, sample_rate }
+}
+
+///|
+impl FixedSource for ExternalFixedSource with next(self : ExternalFixedSource) {
+  if self.cursor.val >= self.samples.length() {
+    None
+  } else {
+    let sample = self.samples[self.cursor.val]
+    self.cursor.val += 1
+    Some(sample)
+  }
+}
+
+///|
+impl FixedSource for ExternalFixedSource with channels(
+  self : ExternalFixedSource,
+) {
+  self.channels
+}
+
+///|
+impl FixedSource for ExternalFixedSource with sample_rate(
+  self : ExternalFixedSource,
+) {
+  self.sample_rate
+}
+
+///|
+impl FixedSource for ExternalFixedSource with total_duration(
+  _self : ExternalFixedSource,
+) {
+  None
+}
+
+///|
 test "rodio::fixed_source::adapter_from_samples_buffer" {
   let adapted = FixedSourceAdapter::new(
     FixedSamplesBuffer::new(1, 48_000, [1.0, 2.0, 3.0]),
@@ -47,4 +96,16 @@ test "rodio::fixed_source::adapter_seek_not_supported" {
     SeekError::NotSupported => true
   }
   assert_true(got_not_supported)
+}
+
+///|
+test "rodio::fixed_source::open_trait_impl_external_type" {
+  let adapted = FixedSourceAdapter::new(
+    ExternalFixedSource::new(1, 48_000, [7.0, 8.0]),
+  )
+  assert_eq(adapted.channels(), 1)
+  assert_eq(adapted.sample_rate(), 48_000)
+  assert_eq(adapted.next(), Some(7.0))
+  assert_eq(adapted.next(), Some(8.0))
+  assert_eq(adapted.next(), None)
 }

@@ -25,6 +25,63 @@ fn[S : Source] collect_n(source : S, n : Int) -> Array[Sample] {
 }
 
 ///|
+struct ExternalSource {
+  samples : Array[Sample]
+  cursor : Ref[Int]
+  channels : ChannelCount
+  sample_rate : SampleRate
+}
+
+///|
+fn ExternalSource::new(
+  samples : Array[Sample],
+  channels : ChannelCount,
+  sample_rate : SampleRate,
+) -> ExternalSource {
+  { samples, cursor: @ref.new(0), channels, sample_rate }
+}
+
+///|
+impl Source for ExternalSource with next(self : ExternalSource) {
+  if self.cursor.val >= self.samples.length() {
+    None
+  } else {
+    let value = self.samples[self.cursor.val]
+    self.cursor.val += 1
+    Some(value)
+  }
+}
+
+///|
+impl Source for ExternalSource with channels(self : ExternalSource) {
+  self.channels
+}
+
+///|
+impl Source for ExternalSource with sample_rate(self : ExternalSource) {
+  self.sample_rate
+}
+
+///|
+impl Source for ExternalSource with current_span_len(self : ExternalSource) {
+  let remaining = self.samples.length() - self.cursor.val
+  Some(if remaining < 0 { 0 } else { remaining })
+}
+
+///|
+impl Source for ExternalSource with total_duration(_self : ExternalSource) {
+  None
+}
+
+///|
+impl Source for ExternalSource with try_seek(
+  _self : ExternalSource,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  Empty::new(1, 1).try_seek(pos)
+}
+
+///|
 fn skip_duration_samples_left(
   channels : ChannelCount,
   sample_rate : SampleRate,
@@ -42,6 +99,33 @@ fn skip_duration_samples_left(
     @moon_cpal.Duration::from_secs(seconds_to_skip.to_uint64()),
   )
   collect_n(skipped, len + 4).length()
+}
+
+///|
+test "rodio::source::open_trait_impl_and_is_exhausted" {
+  let src = ExternalSource::new([1.0, 2.0], 1, 4)
+  assert_true(!is_exhausted(src))
+  assert_eq(src.next(), Some(1.0))
+  assert_true(!is_exhausted(src))
+  assert_eq(src.next(), Some(2.0))
+  assert_true(is_exhausted(src))
+  assert_eq(src.next(), None)
+  assert_true(is_exhausted(src))
+}
+
+///|
+test "rodio::source::record_and_record_source_alias" {
+  let src = ExternalSource::new([1.0, -2.0, 3.0], 1, 8)
+  let recorded = record(src)
+  assert_eq(recorded.channels(), 1)
+  assert_eq(recorded.sample_rate(), 8)
+  assert_eq(collect_n(recorded, 8), [1.0, -2.0, 3.0])
+
+  let src2 = ExternalSource::new([4.0, 5.0], 1, 16)
+  let recorded2 = SamplesBuffer::record_source(src2)
+  assert_eq(recorded2.channels(), 1)
+  assert_eq(recorded2.sample_rate(), 16)
+  assert_eq(collect_n(recorded2, 8), [4.0, 5.0])
 }
 
 ///|
