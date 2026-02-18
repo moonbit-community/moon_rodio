@@ -656,7 +656,12 @@ pub impl Source for Decoder with try_seek(
 }
 
 ///|
-pub fn play(mixer : Mixer, bytes : Bytes) -> Player raise PlayError {
+pub fn play(mixer : Mixer, reader : Reader) -> Player raise PlayError {
+  play_bytes(mixer, reader.into_bytes())
+}
+
+///|
+pub fn play_bytes(mixer : Mixer, bytes : Bytes) -> Player raise PlayError {
   let source = try Decoder::new(bytes) catch {
     err => raise PlayError::DecoderError(err)
   } noraise {
@@ -669,17 +674,11 @@ pub fn play(mixer : Mixer, bytes : Bytes) -> Player raise PlayError {
 
 ///|
 pub fn play_file(mixer : Mixer, path : StringView) -> Player raise PlayError {
-  let source = try Decoder::try_from_file(path) catch {
-    err => raise PlayError::DecoderError(err)
-  } noraise {
-    src => src
-  }
-  let player = Player::connect_new(mixer)
-  player.append(source)
-  player
+  let reader = Reader::from_file(path)
+  play(mixer, reader)
 }
 
 ///|
 pub fn play_reader(mixer : Mixer, reader : Reader) -> Player raise PlayError {
-  play(mixer, reader.into_bytes())
+  play(mixer, reader)
 }

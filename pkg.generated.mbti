@@ -99,7 +99,9 @@ pub fn[S : Source] periodic_with_source(S, @core.Duration, (DynSource) -> Unit) 
 
 pub fn pink(Int) -> Pink
 
-pub fn play(Mixer, Bytes) -> Player raise PlayError
+pub fn play(Mixer, Reader) -> Player raise PlayError
+
+pub fn play_bytes(Mixer, Bytes) -> Player raise PlayError
 
 pub fn play_file(Mixer, StringView) -> Player raise PlayError
 
@@ -137,7 +139,7 @@ pub fn[S : Source] uniform(S, Int, Int) -> DynSource
 
 pub fn[S : Source] wav_to_file(S, StringView) -> Unit
 
-pub fn[S : Source] wav_to_writer(S, @buffer.Buffer) -> Unit
+pub fn[S : Source, W : WavWriter] wav_to_writer(S, W) -> Unit
 
 pub fn white(Int) -> WhiteUniform
 
@@ -207,6 +209,14 @@ pub suberror SpeakersListError {
 }
 pub impl Eq for SpeakersListError
 pub impl Show for SpeakersListError
+
+pub suberror SpeakersPlayError {
+  WrongChannelCount(Int, Int)
+  WrongSampleRate(Int, Int)
+  BuilderError(SpeakersError)
+}
+pub impl Eq for SpeakersPlayError
+pub impl Show for SpeakersPlayError
 
 #alias(DeviceSinkError)
 pub suberror StreamError {
@@ -714,6 +724,7 @@ pub struct Microphone {
   _stream_handle : @spec.Stream
   queued_samples : Ref[Array[Double]]
   read_pos : Ref[Int]
+  max_buffered_samples : Int
   config : InputConfig
   error_occurred : Ref[Bool]
 }
@@ -1058,6 +1069,10 @@ pub struct SinkControls {
   position : Ref[@core.Duration]
 }
 
+pub struct SinkHandle {
+  _sink : MixerDeviceSink
+}
+
 pub struct SkipDuration {
   inner : DynSource
 }
@@ -1199,6 +1214,7 @@ pub fn SpeakersBuilder::device(Self, Output) -> Self raise SpeakersError
 pub fn SpeakersBuilder::get_config(Self) -> OutputConfig raise SpeakersError
 pub fn SpeakersBuilder::new() -> Self
 pub fn SpeakersBuilder::open_mixer(Self) -> MixerDeviceSink raise SpeakersError
+pub fn[S : FixedSource] SpeakersBuilder::play(Self, S) -> SinkHandle raise SpeakersPlayError
 pub fn SpeakersBuilder::prefer_buffer_sizes(Self, Array[Int]) -> Self
 pub fn SpeakersBuilder::prefer_channel_counts(Self, Array[Int]) -> Self
 pub fn SpeakersBuilder::prefer_sample_rates(Self, Array[Int]) -> Self
@@ -1331,6 +1347,13 @@ pub fn Violet::next(Self) -> Double?
 pub fn Violet::sample_rate(Self) -> Int
 pub impl Source for Violet
 
+pub struct WavBytesCollector {
+  out : Ref[Bytes]
+}
+pub fn WavBytesCollector::new() -> Self
+pub fn WavBytesCollector::to_bytes(Self) -> Bytes
+pub impl WavWriter for WavBytesCollector
+
 pub struct WhiteGaussian {
   sample_rate : Int
   state : Ref[UInt64]
@@ -1396,4 +1419,9 @@ pub trait Source {
   total_duration(Self) -> @core.Duration?
   try_seek(Self, @core.Duration) -> Unit raise SeekError
 }
+
+pub trait WavWriter {
+  write_all(Self, Bytes) -> Unit
+}
+pub impl WavWriter for @buffer.Buffer
 

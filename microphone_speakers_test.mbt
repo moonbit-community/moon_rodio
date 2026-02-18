@@ -61,3 +61,16 @@ test "rodio::speakers::output_config_supported_given" {
   let bad_buffer = ok.with_buffer_size(@moon_cpal.BufferSize::fixed(32))
   assert_true(!bad_buffer.supported_given(range))
 }
+
+///|
+test "rodio::speakers::play_requires_builder_config" {
+  let src = FixedSamplesBuffer::new(1, 44_100, [0.0, 0.1, -0.1, 0.0])
+  let got = try {
+    ignore(SpeakersBuilder::new().play(src))
+    false
+  } catch {
+    SpeakersPlayError::BuilderError(SpeakersError::NoConfig) => true
+    _ => false
+  }
+  assert_true(got)
+}

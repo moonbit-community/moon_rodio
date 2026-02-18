@@ -307,7 +307,7 @@ test "rodio::decoder_api::reject_unknown_format" {
 ///|
 test "rodio::decoder_api::play" {
   let (tx, rx) = mixer(1, 44_100)
-  let sink = play(tx, @decoder.flac_pop_bytes())
+  let sink = play(tx, Reader::from_bytes(@decoder.flac_pop_bytes()))
 
   assert_true(!sink.empty())
   assert_eq(rx.next(), Some(0.0))
@@ -318,13 +318,23 @@ test "rodio::decoder_api::play" {
 test "rodio::decoder_api::play_decode_error_variant" {
   let (tx, _rx) = mixer(1, 44_100)
   let got = try {
-    ignore(play(tx, b"not audio"))
+    ignore(play(tx, Reader::from_bytes(b"not audio")))
     false
   } catch {
     PlayError::DecoderError(DecoderError::UnrecognizedFormat) => true
     _ => false
   }
   assert_true(got)
+}
+
+///|
+test "rodio::decoder_api::play_bytes_compat" {
+  let (tx, rx) = mixer(1, 44_100)
+  let player = play_bytes(tx, @decoder.flac_pop_bytes())
+
+  assert_true(!player.empty())
+  assert_eq(rx.next(), Some(0.0))
+  assert_true(rx.next().unwrap() > 0.06)
 }
 
 ///|

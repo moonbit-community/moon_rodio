@@ -66,8 +66,44 @@ fn[S : Source] source_to_wav_bytes(source : S) -> Bytes {
 }
 
 ///|
-pub fn[S : Source] wav_to_writer(source : S, writer : @buffer.Buffer) -> Unit {
-  writer.write_bytes(source_to_wav_bytes(source))
+pub trait WavWriter {
+  write_all(Self, bytes : Bytes) -> Unit
+}
+
+///|
+pub impl WavWriter for @buffer.Buffer with write_all(
+  self : @buffer.Buffer,
+  bytes : Bytes,
+) {
+  self.write_bytes(bytes)
+}
+
+///|
+pub struct WavBytesCollector {
+  out : Ref[Bytes]
+}
+
+///|
+pub fn WavBytesCollector::new() -> WavBytesCollector {
+  { out: @ref.new(b"") }
+}
+
+///|
+pub fn WavBytesCollector::to_bytes(self : WavBytesCollector) -> Bytes {
+  self.out.val
+}
+
+///|
+pub impl WavWriter for WavBytesCollector with write_all(
+  self : WavBytesCollector,
+  bytes : Bytes,
+) {
+  self.out.val = bytes
+}
+
+///|
+pub fn[S : Source, W : WavWriter] wav_to_writer(source : S, writer : W) -> Unit {
+  writer.write_all(source_to_wav_bytes(source))
 }
 
 ///|

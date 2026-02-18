@@ -443,17 +443,301 @@ pub struct Microphone {
   _stream_handle : @moon_cpal.Stream
   queued_samples : Ref[Array[Sample]]
   read_pos : Ref[Int]
+  max_buffered_samples : Int
   config : InputConfig
   error_occurred : Ref[Bool]
 }
 
 ///|
-fn[A : @moon_cpal.Sample] microphone_push_samples(
+fn microphone_compact_queue(
   queue : Ref[Array[Sample]],
-  samples : Array[A],
+  read_pos : Ref[Int],
 ) -> Unit {
-  for sample in samples {
-    queue.val.push(@moon_cpal.sample_cast(sample))
+  if read_pos.val >= 4096 && read_pos.val * 2 >= queue.val.length() {
+    let remaining : Array[Sample] = []
+    for i in read_pos.val..<queue.val.length() {
+      remaining.push(queue.val[i])
+    }
+    queue.val = remaining
+    read_pos.val = 0
+  }
+}
+
+///|
+fn microphone_push_sample(
+  queue : Ref[Array[Sample]],
+  read_pos : Ref[Int],
+  max_buffered_samples : Int,
+  sample : Sample,
+) -> Unit {
+  queue.val.push(sample)
+
+  let buffered = queue.val.length() - read_pos.val
+  if buffered > max_buffered_samples {
+    read_pos.val += buffered - max_buffered_samples
+  }
+  microphone_compact_queue(queue, read_pos)
+}
+
+///|
+fn read_u16_le(bytes : FixedArray[Byte], offset : Int) -> UInt16? {
+  if offset + 2 > bytes.length() {
+    None
+  } else {
+    Some(
+      bytes[offset].to_int().to_uint16() |
+      (bytes[offset + 1].to_int().to_uint16() << 8),
+    )
+  }
+}
+
+///|
+fn read_u32_le(bytes : FixedArray[Byte], offset : Int) -> UInt? {
+  if offset + 4 > bytes.length() {
+    None
+  } else {
+    Some(
+      bytes[offset].to_int().reinterpret_as_uint() |
+      (bytes[offset + 1].to_int().reinterpret_as_uint() << 8) |
+      (bytes[offset + 2].to_int().reinterpret_as_uint() << 16) |
+      (bytes[offset + 3].to_int().reinterpret_as_uint() << 24),
+    )
+  }
+}
+
+///|
+fn read_u64_le(bytes : FixedArray[Byte], offset : Int) -> UInt64? {
+  if offset + 8 > bytes.length() {
+    None
+  } else {
+    Some(
+      bytes[offset].to_int().to_uint64() |
+      (bytes[offset + 1].to_int().to_uint64() << 8) |
+      (bytes[offset + 2].to_int().to_uint64() << 16) |
+      (bytes[offset + 3].to_int().to_uint64() << 24) |
+      (bytes[offset + 4].to_int().to_uint64() << 32) |
+      (bytes[offset + 5].to_int().to_uint64() << 40) |
+      (bytes[offset + 6].to_int().to_uint64() << 48) |
+      (bytes[offset + 7].to_int().to_uint64() << 56),
+    )
+  }
+}
+
+///|
+fn sample_from_i8(value : Int) -> Sample {
+  Double::from_int(value) / 128.0
+}
+
+///|
+fn sample_from_u8(value : Byte) -> Sample {
+  Double::from_int(value.to_int()) / 255.0 * 2.0 - 1.0
+}
+
+///|
+fn sample_from_i16(value : Int16) -> Sample {
+  Double::from_int(value.to_int()) / 32768.0
+}
+
+///|
+fn sample_from_u16(value : UInt16) -> Sample {
+  Double::from_int(value.to_int()) / 65535.0 * 2.0 - 1.0
+}
+
+///|
+fn sample_from_i24(value : Int) -> Sample {
+  Double::from_int(value) / 8_388_608.0
+}
+
+///|
+fn sample_from_u24(value : Int) -> Sample {
+  Double::from_int(value) / 16_777_215.0 * 2.0 - 1.0
+}
+
+///|
+fn sample_from_i32(value : Int) -> Sample {
+  Double::from_int(value) / 2_147_483_648.0
+}
+
+///|
+fn sample_from_u32(value : UInt) -> Sample {
+  value.to_double() / 4_294_967_295.0 * 2.0 - 1.0
+}
+
+///|
+fn sample_from_i64(value : Int64) -> Sample {
+  value.to_double() / 9_223_372_036_854_775_808.0
+}
+
+///|
+fn sample_from_u64(value : UInt64) -> Sample {
+  value.to_double() / 18_446_744_073_709_551_615.0 * 2.0 - 1.0
+}
+
+///|
+fn microphone_push_raw_samples(
+  queue : Ref[Array[Sample]],
+  read_pos : Ref[Int],
+  max_buffered_samples : Int,
+  data : @moon_cpal.Data,
+) -> Unit {
+  let format = data.sample_format()
+  let len = data.len()
+  let bytes = data.bytes()
+
+  match format {
+    @moon_cpal.SampleFormat::I8 =>
+      for i in 0..<len {
+        let raw = bytes[i].to_int()
+        let sample = sample_from_i8(if raw >= 128 { raw - 256 } else { raw })
+        microphone_push_sample(queue, read_pos, max_buffered_samples, sample)
+      }
+    @moon_cpal.SampleFormat::U8 =>
+      for i in 0..<len {
+        microphone_push_sample(
+          queue,
+          read_pos,
+          max_buffered_samples,
+          sample_from_u8(bytes[i]),
+        )
+      }
+    @moon_cpal.SampleFormat::I16 =>
+      for i in 0..<len {
+        match read_u16_le(bytes, i * 2) {
+          None => break
+          Some(bits) => {
+            let sample = sample_from_i16(Int16::reinterpret_from_uint16(bits))
+            microphone_push_sample(
+              queue, read_pos, max_buffered_samples, sample,
+            )
+          }
+        }
+      }
+    @moon_cpal.SampleFormat::U16 =>
+      for i in 0..<len {
+        match read_u16_le(bytes, i * 2) {
+          None => break
+          Some(v) =>
+            microphone_push_sample(
+              queue,
+              read_pos,
+              max_buffered_samples,
+              sample_from_u16(v),
+            )
+        }
+      }
+    @moon_cpal.SampleFormat::I24 =>
+      for i in 0..<len {
+        let offset = i * 3
+        if offset + 3 > bytes.length() {
+          break
+        }
+        let u = bytes[offset].to_int().reinterpret_as_uint() |
+          (bytes[offset + 1].to_int().reinterpret_as_uint() << 8) |
+          (bytes[offset + 2].to_int().reinterpret_as_uint() << 16)
+        let signed = if (u & (0x00800000 : UInt)) != (0 : UInt) {
+          (u | (0xff000000 : UInt)).reinterpret_as_int()
+        } else {
+          u.reinterpret_as_int()
+        }
+        microphone_push_sample(
+          queue,
+          read_pos,
+          max_buffered_samples,
+          sample_from_i24(signed),
+        )
+      }
+    @moon_cpal.SampleFormat::U24 =>
+      for i in 0..<len {
+        let offset = i * 3
+        if offset + 3 > bytes.length() {
+          break
+        }
+        let u = bytes[offset].to_int() |
+          (bytes[offset + 1].to_int() << 8) |
+          (bytes[offset + 2].to_int() << 16)
+        microphone_push_sample(
+          queue,
+          read_pos,
+          max_buffered_samples,
+          sample_from_u24(u),
+        )
+      }
+    @moon_cpal.SampleFormat::I32 =>
+      for i in 0..<len {
+        match read_u32_le(bytes, i * 4) {
+          None => break
+          Some(bits) => {
+            let sample = sample_from_i32(bits.reinterpret_as_int())
+            microphone_push_sample(
+              queue, read_pos, max_buffered_samples, sample,
+            )
+          }
+        }
+      }
+    @moon_cpal.SampleFormat::U32 =>
+      for i in 0..<len {
+        match read_u32_le(bytes, i * 4) {
+          None => break
+          Some(v) =>
+            microphone_push_sample(
+              queue,
+              read_pos,
+              max_buffered_samples,
+              sample_from_u32(v),
+            )
+        }
+      }
+    @moon_cpal.SampleFormat::F32 =>
+      for i in 0..<len {
+        match read_u32_le(bytes, i * 4) {
+          None => break
+          Some(bits) => {
+            let sample = Float::reinterpret_from_uint(bits).to_double()
+            microphone_push_sample(
+              queue, read_pos, max_buffered_samples, sample,
+            )
+          }
+        }
+      }
+    @moon_cpal.SampleFormat::I64 =>
+      for i in 0..<len {
+        match read_u64_le(bytes, i * 8) {
+          None => break
+          Some(bits) => {
+            let sample = sample_from_i64(bits.reinterpret_as_int64())
+            microphone_push_sample(
+              queue, read_pos, max_buffered_samples, sample,
+            )
+          }
+        }
+      }
+    @moon_cpal.SampleFormat::U64 =>
+      for i in 0..<len {
+        match read_u64_le(bytes, i * 8) {
+          None => break
+          Some(v) =>
+            microphone_push_sample(
+              queue,
+              read_pos,
+              max_buffered_samples,
+              sample_from_u64(v),
+            )
+        }
+      }
+    @moon_cpal.SampleFormat::F64 =>
+      for i in 0..<len {
+        match read_u64_le(bytes, i * 8) {
+          None => break
+          Some(bits) =>
+            microphone_push_sample(
+              queue,
+              read_pos,
+              max_buffered_samples,
+              bits.reinterpret_as_double(),
+            )
+        }
+      }
+    _ => ()
   }
 }
 
@@ -468,16 +752,7 @@ fn microphone_pop_next(
 
   let out = queue.val[read_pos.val]
   read_pos.val += 1
-
-  if read_pos.val >= 4096 && read_pos.val * 2 >= queue.val.length() {
-    let remaining : Array[Sample] = []
-    for i in read_pos.val..<queue.val.length() {
-      remaining.push(queue.val[i])
-    }
-    queue.val = remaining
-    read_pos.val = 0
-  }
-
+  microphone_compact_queue(queue, read_pos)
   Some(out)
 }
 
@@ -490,18 +765,44 @@ fn microphone_open(
   let queue = @ref.new([])
   let read_pos = @ref.new(0)
   let error_occurred = @ref.new(false)
+  let max_buffered_samples = Int::max(
+    1,
+    config.channel_count * config.sample_rate / 10,
+  )
   let stream_config = config.stream_config()
   let on_error = fn(err : @moon_cpal.StreamError) {
     error_occurred.val = true
     error_callback(err)
   }
 
+  let format_supported = match config.sample_format {
+    @moon_cpal.SampleFormat::I8
+    | @moon_cpal.SampleFormat::I16
+    | @moon_cpal.SampleFormat::I24
+    | @moon_cpal.SampleFormat::I32
+    | @moon_cpal.SampleFormat::I64
+    | @moon_cpal.SampleFormat::U8
+    | @moon_cpal.SampleFormat::U16
+    | @moon_cpal.SampleFormat::U24
+    | @moon_cpal.SampleFormat::U32
+    | @moon_cpal.SampleFormat::U64
+    | @moon_cpal.SampleFormat::F32
+    | @moon_cpal.SampleFormat::F64 => true
+    _ => false
+  }
+  guard format_supported else { raise MicrophoneError::UnsupportedSampleFormat }
+
   let stream = match config.sample_format {
-    @moon_cpal.SampleFormat::F32 =>
+    _ =>
       try
-        device.build_input_stream_f32(
+        device.build_input_stream_raw(
           stream_config,
-          fn(data, _) { microphone_push_samples(queue, data) },
+          config.sample_format,
+          fn(data, _) {
+            microphone_push_raw_samples(
+              queue, read_pos, max_buffered_samples, data,
+            )
+          },
           on_error,
           None,
         )
@@ -510,46 +811,6 @@ fn microphone_open(
       } noraise {
         s => s
       }
-    @moon_cpal.SampleFormat::I16 =>
-      try
-        device.build_input_stream_i16(
-          stream_config,
-          fn(data, _) { microphone_push_samples(queue, data) },
-          on_error,
-          None,
-        )
-      catch {
-        err => raise MicrophoneError::BuildStreamError(err)
-      } noraise {
-        s => s
-      }
-    @moon_cpal.SampleFormat::U16 =>
-      try
-        device.build_input_stream_u16(
-          stream_config,
-          fn(data, _) { microphone_push_samples(queue, data) },
-          on_error,
-          None,
-        )
-      catch {
-        err => raise MicrophoneError::BuildStreamError(err)
-      } noraise {
-        s => s
-      }
-    @moon_cpal.SampleFormat::U8 =>
-      try
-        device.build_input_stream_u8(
-          stream_config,
-          fn(data, _) { microphone_push_samples(queue, data) },
-          on_error,
-          None,
-        )
-      catch {
-        err => raise MicrophoneError::BuildStreamError(err)
-      } noraise {
-        s => s
-      }
-    _ => raise MicrophoneError::UnsupportedSampleFormat
   }
 
   stream.play() catch {
@@ -560,6 +821,7 @@ fn microphone_open(
     _stream_handle: stream,
     queued_samples: queue,
     read_pos,
+    max_buffered_samples,
     config,
     error_occurred,
   }
@@ -592,6 +854,7 @@ pub fn Microphone::next(self : Microphone) -> Sample? {
       Some(sample) => return Some(sample)
       None => if self.error_occurred.val { return None }
     }
+    @core.sleep_millis(1)
   }
   None
 }

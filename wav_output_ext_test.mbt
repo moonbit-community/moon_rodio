@@ -104,5 +104,12 @@ test "rodio::wav_output::wav_to_file_alias_and_writer" {
   let writer_bytes = writer.to_bytes()
   assert_eq(writer_bytes, file_bytes)
 
+  let collector = WavBytesCollector::new()
+  let source_for_collector = SamplesBuffer::new(2, 22_050, [
+    0.0, 0.25, -0.25, 1.0,
+  ])
+  wav_to_writer(source_for_collector, collector)
+  assert_eq(collector.to_bytes(), file_bytes)
+
   wav_test_remove_file_if_exists(path)
 }

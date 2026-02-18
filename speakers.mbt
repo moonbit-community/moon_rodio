@@ -28,6 +28,13 @@ pub suberror SpeakersError {
 } derive(Show, Eq)
 
 ///|
+pub suberror SpeakersPlayError {
+  WrongChannelCount(ChannelCount, ChannelCount)
+  WrongSampleRate(SampleRate, SampleRate)
+  BuilderError(SpeakersError)
+} derive(Show, Eq)
+
+///|
 pub struct Output {
   inner : @moon_cpal.Device
   default : Bool
@@ -471,4 +478,41 @@ pub fn SpeakersBuilder::open_mixer(
   } noraise {
     sink => sink
   }
+}
+
+///|
+pub struct SinkHandle {
+  _sink : MixerDeviceSink
+}
+
+///|
+pub fn[S : FixedSource] SpeakersBuilder::play(
+  self : SpeakersBuilder,
+  source : S,
+) -> SinkHandle raise SpeakersPlayError {
+  let config = match self.config {
+    None => raise SpeakersPlayError::BuilderError(SpeakersError::NoConfig)
+    Some(config) => config
+  }
+
+  if config.channel_count != source.channels() {
+    raise SpeakersPlayError::WrongChannelCount(
+      config.channel_count,
+      source.channels(),
+    )
+  }
+  if config.sample_rate != source.sample_rate() {
+    raise SpeakersPlayError::WrongSampleRate(
+      config.sample_rate,
+      source.sample_rate(),
+    )
+  }
+
+  let sink = try self.open_mixer() catch {
+    err => raise SpeakersPlayError::BuilderError(err)
+  } noraise {
+    device_sink => device_sink
+  }
+  sink.mixer().add(FixedSourceAdapter::new(source))
+  { _sink: sink }
 }
