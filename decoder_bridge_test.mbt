@@ -232,6 +232,30 @@ fn count_decoder_samples(decoder : Decoder) -> Int {
 }
 
 ///|
+fn decode_all_samples(decoder : Decoder) -> Array[Sample] {
+  let samples : Array[Sample] = []
+  while true {
+    match decoder.next() {
+      Some(v) => samples.push(v)
+      None => break
+    }
+  }
+  samples
+}
+
+///|
+fn[S : Source] collect_n_samples(source : S, n : Int) -> Array[Sample] {
+  let samples : Array[Sample] = []
+  for _ in 0..<n {
+    match source.next() {
+      Some(v) => samples.push(v)
+      None => break
+    }
+  }
+  samples
+}
+
+///|
 fn duration_from_sample_count_test(
   total_samples : Int,
   channels : ChannelCount,
@@ -251,6 +275,89 @@ fn duration_from_sample_count_test(
 ///|
 fn duration_to_nanos_test(duration : @moon_cpal.Duration) -> Int {
   duration.secs.to_int() * 1_000_000_000 + duration.nanos
+}
+
+///|
+fn next_multiple_of(value : Int, n : Int) -> Int {
+  if n <= 0 {
+    value
+  } else {
+    let rem = value % n
+    if rem == 0 {
+      value
+    } else {
+      value + n - rem
+    }
+  }
+}
+
+///|
+fn second_channel_beep_range(
+  samples : Array[Sample],
+  channels : Int,
+) -> (Int, Int) {
+  guard channels > 1 else { panic() }
+  let window = 50
+  let threshold = 0.1
+  let basically_zero = 0.0001
+
+  let mut beep_start = -1
+  let mut chunk_start = 0
+  while chunk_start + window <= samples.length() {
+    let mut sum = 0.0
+    let mut i = chunk_start + 1
+    while i < chunk_start + window {
+      sum += samples[i].abs()
+      i += channels
+    }
+    if sum > threshold {
+      beep_start = chunk_start
+      break
+    }
+    chunk_start += window
+  }
+  guard beep_start >= 0 else { panic() }
+  beep_start = next_multiple_of(beep_start, channels)
+
+  let mut beep_end = -1
+  chunk_start = beep_start / window * window
+  while chunk_start + window <= samples.length() {
+    let mut silent = true
+    let mut i = chunk_start + 1
+    while i < chunk_start + window {
+      if samples[i].abs() >= basically_zero {
+        silent = false
+        break
+      }
+      i += channels
+    }
+    if silent {
+      beep_end = chunk_start
+      break
+    }
+    chunk_start += window
+  }
+  guard beep_end >= 0 else { panic() }
+  (beep_start, next_multiple_of(beep_end, channels))
+}
+
+///|
+fn channel_is_silent(
+  samples : Array[Sample],
+  channels : ChannelCount,
+  channel : Int,
+) -> Bool {
+  guard samples.length() == 100 else { panic() }
+  let mut sum = 0.0
+  let mut i = channel
+  while i < samples.length() {
+    sum += samples[i].abs()
+    i += channels
+  }
+  let volume = sum /
+    Double::from_int(samples.length()) *
+    Double::from_int(channels)
+  volume < 0.0001
 }
 
 ///|
@@ -311,6 +418,44 @@ fn assert_seek_remaining_playtime(path : String) -> Unit {
   let tolerance = channels * sample_rate / 4
   let diff = abs_int(remaining - target_remaining)
   guard diff <= tolerance else { panic() }
+}
+
+///|
+fn assert_seek_keeps_channel_order(path : String) -> Unit {
+  let full_path = resolve_reference_asset_path(path)
+  let scan = try Decoder::try_from_file(full_path) catch {
+    _ => panic()
+  } noraise {
+    decoder => decoder
+  }
+  let channels = scan.channels()
+  guard channels == 2 else { panic() }
+  let sample_rate = scan.sample_rate()
+  let all_samples = decode_all_samples(scan)
+  let (beep_start, _beep_end) = second_channel_beep_range(all_samples, channels)
+  let mut channel_offset = 0
+
+  let source = try Decoder::try_from_file(full_path) catch {
+    _ => panic()
+  } noraise {
+    decoder => decoder
+  }
+  for offset in [1, 4, 7, 40, 41, 120, 179] {
+    ignore(source.next())
+    channel_offset = (channel_offset + 1) % 2
+
+    let target = beep_start + offset * channels
+    source.try_seek(
+      duration_from_sample_count_test(target, channels, sample_rate),
+    ) catch {
+      _ => panic()
+    }
+    let samples = collect_n_samples(source, 100)
+    let channel0 = channel_offset
+    guard channel_is_silent(samples, channels, channel0) else { panic() }
+    let channel1 = (channel_offset + 1) % 2
+    guard !channel_is_silent(samples, channels, channel1) else { panic() }
+  }
 }
 
 ///|
@@ -666,7 +811,7 @@ test "rodio::decoder_api::total_duration_for_reference_formats" {
 }
 
 ///|
-test "rodio::decoder_api::seek_resets_stereo_channel_alignment" {
+test "rodio::decoder_api::seek_preserves_stereo_channel_offset" {
   let stereo = wav_stereo_with_rate(
     [(0, 30_000), (0, 30_000), (0, 30_000), (0, 30_000)],
     16,
@@ -678,11 +823,11 @@ test "rodio::decoder_api::seek_resets_stereo_channel_alignment" {
   assert_eq(d.next(), Some(0.0))
   assert_true(d.next().unwrap() > 0.9)
 
-  // Consume a single sample to force an odd sample index before seek.
+  // Consume a single sample to force an odd channel offset before seek.
   assert_eq(d.next(), Some(0.0))
-  d.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
-  assert_eq(d.next(), Some(0.0))
+  d.try_seek(@moon_cpal.Duration::new((0 : UInt64), 100_000_000))
   assert_true(d.next().unwrap() > 0.9)
+  assert_eq(d.next(), Some(0.0))
 }
 
 ///|
@@ -749,6 +894,14 @@ test "rodio::decoder_api::total_duration_reference_assets_matrix" {
 test "rodio::decoder_api::seek_remaining_playtime_reference_assets" {
   for path in ["music.wav", "music.flac", "music.mp3", "music.ogg"] {
     assert_seek_remaining_playtime(path)
+  }
+}
+
+///|
+#cfg(target="native")
+test "rodio::decoder_api::seek_channel_order_reference_assets" {
+  for path in ["RL.wav", "RL.flac"] {
+    assert_seek_keeps_channel_order(path)
   }
 }
 

@@ -644,15 +644,50 @@ pub impl Source for Decoder with try_seek(
   if !self.seekable {
     raise SeekError::NotSupported
   }
+  let channel_count = self.channels()
+  let current_channel = if channel_count > 0 {
+    self.inner.position() % channel_count
+  } else {
+    0
+  }
+
   let target = sample_index_from_duration(
     pos,
-    self.channels(),
+    channel_count,
     self.sample_rate(),
   )
-  if !self.allow_backward_seek && target < self.inner.position() {
+  let clamped_target = if target < 0 {
+    0
+  } else if target > self.inner.len() {
+    self.inner.len()
+  } else {
+    target
+  }
+  let aligned_target = if channel_count > 0 {
+    let rem = clamped_target % channel_count
+    if rem == 0 {
+      clamped_target
+    } else {
+      clamped_target + channel_count - rem
+    }
+  } else {
+    clamped_target
+  }
+  let with_channel_offset = if aligned_target >= current_channel {
+    aligned_target - current_channel
+  } else {
+    0
+  }
+  let final_target = if with_channel_offset > self.inner.len() {
+    self.inner.len()
+  } else {
+    with_channel_offset
+  }
+
+  if !self.allow_backward_seek && final_target < self.inner.position() {
     raise SeekError::NotSupported
   }
-  self.inner.seek_to(target)
+  self.inner.seek_to(final_target)
 }
 
 ///|
