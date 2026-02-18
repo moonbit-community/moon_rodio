@@ -9,12 +9,7 @@
   "repository": "https://github.com/moonbit-community/moon_rodio",
   "license": "Apache-2.0",
   "keywords": [
-    "audio",
-    "rodio",
-    "cpal",
-    "native",
-    "decoder",
-    "moonbit"
+    "audio"
   ],
   "description": "Native-only MoonBit port of Rust rodio with playback pipeline, source effects, and WAV/MP3/FLAC/Vorbis/MP4A decoding.",
   "preferred-target": "native",
