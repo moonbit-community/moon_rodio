@@ -1387,6 +1387,7 @@ pub fn WhiteTriangular::channels(Self) -> Int
 pub fn WhiteTriangular::new(Int) -> Self
 pub fn WhiteTriangular::next(Self) -> Double?
 pub fn WhiteTriangular::sample_rate(Self) -> Int
+pub fn WhiteTriangular::std_dev(Self) -> Double
 pub impl Source for WhiteTriangular
 
 pub struct WhiteUniform {
@@ -1397,6 +1398,7 @@ pub fn WhiteUniform::channels(Self) -> Int
 pub fn WhiteUniform::new(Int) -> Self
 pub fn WhiteUniform::next(Self) -> Double?
 pub fn WhiteUniform::sample_rate(Self) -> Int
+pub fn WhiteUniform::std_dev(Self) -> Double
 pub impl Source for WhiteUniform
 
 pub struct Zero {

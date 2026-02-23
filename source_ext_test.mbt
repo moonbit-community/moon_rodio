@@ -1438,3 +1438,140 @@ test "rodio::source::integrated_noise_properties_brownian_and_red" {
   assert_true(consecutive_correlation(brown_samples) > 0.1)
   assert_true(consecutive_correlation(red_samples) > 0.1)
 }
+
+///|
+test "rodio::source::noise_bounded_generators_range" {
+  let bounded : Array[DynSource] = [
+    to_dyn(WhiteUniform::new(44_100)),
+    to_dyn(WhiteTriangular::new(44_100)),
+    to_dyn(Pink::new(44_100)),
+    to_dyn(Velvet::new(44_100)),
+  ]
+
+  for generator in bounded {
+    let samples = collect_n(generator, 1_000)
+    for sample in samples {
+      assert_true(sample >= -1.0 && sample <= 1.0)
+    }
+  }
+}
+
+///|
+test "rodio::source::noise_unbounded_generators_finite" {
+  let unbounded : Array[DynSource] = [
+    to_dyn(WhiteGaussian::new(44_100)),
+    to_dyn(Blue::new(44_100)),
+    to_dyn(Violet::new(44_100)),
+    to_dyn(Brownian::new(44_100)),
+    to_dyn(Red::new(44_100)),
+  ]
+
+  for generator in unbounded {
+    let samples = collect_n(generator, 1_000)
+    for sample in samples {
+      assert_true(sample == sample)
+      assert_true(sample.abs() < 1.0e308)
+    }
+  }
+}
+
+///|
+test "rodio::source::white_uniform_distribution" {
+  let generator = WhiteUniform::new(44_100)
+  assert_true((generator.std_dev() - @math.pow(1.0 / 3.0, 0.5)).abs() < 1.0e-12)
+
+  let samples = collect_n(generator, 1_000)
+  let mut minimum = 1.0e9
+  let mut maximum = -1.0e9
+  for sample in samples {
+    if sample < minimum {
+      minimum = sample
+    }
+    if sample > maximum {
+      maximum = sample
+    }
+  }
+
+  assert_true(minimum < -0.9)
+  assert_true(maximum > 0.9)
+}
+
+///|
+test "rodio::source::triangular_distribution" {
+  let generator = WhiteTriangular::new(44_100)
+  assert_true((generator.std_dev() - 2.0 / @math.pow(6.0, 0.5)).abs() < 1.0e-12)
+
+  let samples = collect_n(generator, 1_000)
+  let mut near_zero = 0
+  for sample in samples {
+    if sample.abs() < 0.5 {
+      near_zero += 1
+    }
+  }
+
+  assert_true(near_zero > 500)
+}
+
+///|
+test "rodio::source::pink_noise_properties" {
+  let samples = collect_n(Pink::new(44_100), 1_000)
+  assert_true(consecutive_correlation(samples) > -0.1)
+}
+
+///|
+test "rodio::source::blue_noise_properties" {
+  let samples = collect_n(Blue::new(44_100), 1_000)
+  assert_true(consecutive_correlation(samples) < 0.1)
+}
+
+///|
+test "rodio::source::violet_noise_properties" {
+  let samples = collect_n(Violet::new(44_100), 1_000)
+  let mean = mean_of(samples)
+
+  let mut diff_variance = 0.0
+  let mut signal_variance = 0.0
+  for i in 0..<(samples.length() - 1) {
+    let diff = samples[i + 1] - samples[i]
+    diff_variance += diff * diff
+    let centered = samples[i] - mean
+    signal_variance += centered * centered
+  }
+  diff_variance /= Double::from_int(samples.length() - 1)
+  signal_variance /= Double::from_int(samples.length())
+
+  assert_true(diff_variance > signal_variance * 0.1)
+}
+
+///|
+test "rodio::source::velvet_noise_properties" {
+  let samples = collect_n(Velvet::new(44_100), 44_100)
+  let mut impulse_count = 0
+  for sample in samples {
+    if sample != 0.0 {
+      impulse_count += 1
+      assert_true(sample == 1.0 || sample == -1.0)
+    }
+  }
+
+  assert_true(impulse_count > 1_500)
+  assert_true(impulse_count < 2_500)
+}
+
+///|
+test "rodio::source::velvet_custom_density" {
+  let samples = collect_n(Velvet::new_with_density(44_100, 1_000.0), 44_100)
+  let mut impulse_count = 0
+  for sample in samples {
+    if sample != 0.0 {
+      impulse_count += 1
+    }
+  }
+
+  let delta = if impulse_count > 1_000 {
+    impulse_count - 1_000
+  } else {
+    1_000 - impulse_count
+  }
+  assert_true(delta < 200)
+}

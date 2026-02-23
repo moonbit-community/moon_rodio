@@ -462,6 +462,11 @@ pub fn WhiteUniform::next(self : WhiteUniform) -> Sample? {
 }
 
 ///|
+pub fn WhiteUniform::std_dev(_self : WhiteUniform) -> Sample {
+  @math.pow(1.0 / 3.0, 0.5)
+}
+
+///|
 pub fn WhiteUniform::channels(_self : WhiteUniform) -> ChannelCount {
   1
 }
@@ -563,6 +568,11 @@ pub fn WhiteTriangular::next(self : WhiteTriangular) -> Sample? {
 }
 
 ///|
+pub fn WhiteTriangular::std_dev(_self : WhiteTriangular) -> Sample {
+  2.0 / @math.pow(6.0, 0.5)
+}
+
+///|
 pub fn WhiteTriangular::channels(_self : WhiteTriangular) -> ChannelCount {
   1
 }
@@ -616,7 +626,7 @@ pub fn WhiteGaussian::next(self : WhiteGaussian) -> Sample? {
   for _ in 0..<12 {
     sum += rand_unit(self.state)
   }
-  Some((sum - 6.0) / 3.0)
+  Some((sum - 6.0) * 0.6)
 }
 
 ///|
