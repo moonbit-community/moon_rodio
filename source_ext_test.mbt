@@ -279,6 +279,23 @@ test "rodio::source::samples_buffer_seek_preserves_channel_order" {
 }
 
 ///|
+test "rodio::source::samples_buffer_seek_channel_order_reference_regression" {
+  let samples : Array[Sample] = []
+  for i in 0..<2_000 {
+    samples.push(Double::from_int(i))
+  }
+  let src = SamplesBuffer::new(2, 100, samples)
+
+  src.try_seek(@moon_cpal.Duration::from_secs((5 : UInt64)))
+  assert_eq(src.next(), Some(1_000.0))
+  assert_true(src.next().map(fn(v) { v.to_int() % 2 == 1 }).unwrap_or(false))
+  assert_true(src.next().map(fn(v) { v.to_int() % 2 == 0 }).unwrap_or(false))
+
+  src.try_seek(@moon_cpal.Duration::from_secs((6 : UInt64)))
+  assert_true(src.next().map(fn(v) { v.to_int() % 2 == 1 }).unwrap_or(false))
+}
+
+///|
 test "rodio::source::default_try_seek_not_supported" {
   let src = Empty::new(1, 44_100)
   let got_not_supported = try {
