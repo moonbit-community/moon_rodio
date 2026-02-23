@@ -1,0 +1,24 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/source/crossfade"
+
+import {
+  "Milky2018/moon_cpal/core",
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn[A : @moon_rodio.Source, B : @moon_rodio.Source] crossfade(A, B, @core.Duration) -> @moon_rodio.DynSource
+
+pub fn[A : @moon_rodio.Source, B : @moon_rodio.Source] take_crossfade_with(A, B, @core.Duration) -> @moon_rodio.DynSource
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type Crossfade}
+
+pub using @moon_rodio {type DynSource}
+
+// Traits
+

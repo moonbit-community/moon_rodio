@@ -1,0 +1,23 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/source/dither"
+
+import {
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn[S : @moon_rodio.Source] dither(S, @moon_rodio.BitDepth, @moon_rodio.DitherAlgorithm) -> @moon_rodio.Dither
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type BitDepth}
+
+pub using @moon_rodio {type Dither}
+
+pub using @moon_rodio {type DitherAlgorithm}
+
+// Traits
+

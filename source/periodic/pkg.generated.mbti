@@ -1,0 +1,28 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/source/periodic"
+
+import {
+  "Milky2018/moon_cpal/core",
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn[S : @moon_rodio.Source] periodic(S, @core.Duration, () -> Unit) -> @moon_rodio.PeriodicAccess
+
+pub fn[S : @moon_rodio.Source] periodic_access(S, Int, () -> Unit) -> @moon_rodio.PeriodicAccess
+
+pub fn[S : @moon_rodio.Source] periodic_access_with_source(S, Int, (@moon_rodio.DynSource) -> Unit) -> @moon_rodio.PeriodicAccess
+
+pub fn[S : @moon_rodio.Source] periodic_with_source(S, @core.Duration, (@moon_rodio.DynSource) -> Unit) -> @moon_rodio.PeriodicAccess
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type DynSource}
+
+pub using @moon_rodio {type PeriodicAccess}
+
+// Traits
+

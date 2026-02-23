@@ -1,0 +1,33 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/source/signal_generator"
+
+import {
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn with_function(Int, Double, @moon_rodio.Function) -> @moon_rodio.SignalGenerator
+
+pub fn with_generator(Int, Double, @moon_rodio.GeneratorFunction) -> @moon_rodio.DynSource
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type Function}
+
+pub using @moon_rodio {type GeneratorFunction}
+
+pub using @moon_rodio {type SawtoothWave}
+
+pub using @moon_rodio {type SignalGenerator}
+
+pub using @moon_rodio {type SineWave}
+
+pub using @moon_rodio {type SquareWave}
+
+pub using @moon_rodio {type TriangleWave}
+
+// Traits
+

@@ -1,0 +1,41 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/source/noise"
+
+import {
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn pink(Int) -> @moon_rodio.Pink
+
+pub fn white(Int) -> @moon_rodio.WhiteUniform
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type Blue}
+
+pub using @moon_rodio {type Brownian}
+
+pub using @moon_rodio {type LcgNoiseRng}
+
+pub using @moon_rodio {type Pink}
+
+pub using @moon_rodio {type Red}
+
+pub using @moon_rodio {type Velvet}
+
+pub using @moon_rodio {type Violet}
+
+pub using @moon_rodio {type WhiteGaussian}
+
+pub using @moon_rodio {type WhiteTriangular}
+
+pub using @moon_rodio {type WhiteUniform}
+
+pub using @moon_rodio {trait NoiseRng}
+
+// Traits
+

@@ -1,0 +1,31 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/source/limit"
+
+import {
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn[S : @moon_rodio.Source] limit(S, @moon_rodio.LimitSettings) -> @moon_rodio.DynSource
+
+pub fn[S : @moon_rodio.Source] limit_range(S, Double, Double) -> @moon_rodio.DynSource
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type DynSource}
+
+pub using @moon_rodio {type Limit}
+
+pub using @moon_rodio {type LimitMono}
+
+pub using @moon_rodio {type LimitMulti}
+
+pub using @moon_rodio {type LimitSettings}
+
+pub using @moon_rodio {type LimitStereo}
+
+// Traits
+

@@ -1,0 +1,19 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/source/position"
+
+import {
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn[S : @moon_rodio.Source] track_position(S) -> @moon_rodio.TrackPosition
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type TrackPosition}
+
+// Traits
+
