@@ -599,6 +599,90 @@ fn Limit::reset_state(self : Limit) -> Unit {
 }
 
 ///|
+pub struct LimitMono {
+  inner : Limit
+}
+
+///|
+pub fn[S : Source] LimitMono::new(
+  source : S,
+  settings : LimitSettings,
+) -> LimitMono {
+  { inner: Limit::new(source, settings) }
+}
+
+///|
+pub fn LimitMono::inner(self : LimitMono) -> Limit {
+  self.inner
+}
+
+///|
+pub fn LimitMono::inner_mut(self : LimitMono) -> Limit {
+  self.inner
+}
+
+///|
+pub fn LimitMono::into_inner(self : LimitMono) -> Limit {
+  self.inner
+}
+
+///|
+pub struct LimitStereo {
+  inner : Limit
+}
+
+///|
+pub fn[S : Source] LimitStereo::new(
+  source : S,
+  settings : LimitSettings,
+) -> LimitStereo {
+  { inner: Limit::new(source, settings) }
+}
+
+///|
+pub fn LimitStereo::inner(self : LimitStereo) -> Limit {
+  self.inner
+}
+
+///|
+pub fn LimitStereo::inner_mut(self : LimitStereo) -> Limit {
+  self.inner
+}
+
+///|
+pub fn LimitStereo::into_inner(self : LimitStereo) -> Limit {
+  self.inner
+}
+
+///|
+pub struct LimitMulti {
+  inner : Limit
+}
+
+///|
+pub fn[S : Source] LimitMulti::new(
+  source : S,
+  settings : LimitSettings,
+) -> LimitMulti {
+  { inner: Limit::new(source, settings) }
+}
+
+///|
+pub fn LimitMulti::inner(self : LimitMulti) -> Limit {
+  self.inner
+}
+
+///|
+pub fn LimitMulti::inner_mut(self : LimitMulti) -> Limit {
+  self.inner
+}
+
+///|
+pub fn LimitMulti::into_inner(self : LimitMulti) -> Limit {
+  self.inner
+}
+
+///|
 pub struct Mix {
   inner : DynSource
 }
@@ -1187,6 +1271,51 @@ pub impl Source for Limit with sample_rate(self : Limit) {
 }
 
 ///|
+pub impl Source for LimitMono with next(self : LimitMono) {
+  self.inner.next()
+}
+
+///|
+pub impl Source for LimitMono with channels(self : LimitMono) {
+  self.inner.channels()
+}
+
+///|
+pub impl Source for LimitMono with sample_rate(self : LimitMono) {
+  self.inner.sample_rate()
+}
+
+///|
+pub impl Source for LimitStereo with next(self : LimitStereo) {
+  self.inner.next()
+}
+
+///|
+pub impl Source for LimitStereo with channels(self : LimitStereo) {
+  self.inner.channels()
+}
+
+///|
+pub impl Source for LimitStereo with sample_rate(self : LimitStereo) {
+  self.inner.sample_rate()
+}
+
+///|
+pub impl Source for LimitMulti with next(self : LimitMulti) {
+  self.inner.next()
+}
+
+///|
+pub impl Source for LimitMulti with channels(self : LimitMulti) {
+  self.inner.channels()
+}
+
+///|
+pub impl Source for LimitMulti with sample_rate(self : LimitMulti) {
+  self.inner.sample_rate()
+}
+
+///|
 pub impl Source for Mix with next(self : Mix) {
   dyn_next(self.inner)
 }
@@ -1537,6 +1666,60 @@ pub impl Source for Limit with try_seek(
 ) -> Unit raise SeekError {
   _self.input.try_seek(pos)
   _self.reset_state()
+}
+
+///|
+pub impl Source for LimitMono with current_span_len(_self : LimitMono) {
+  _self.inner.current_span_len()
+}
+
+///|
+pub impl Source for LimitMono with total_duration(_self : LimitMono) {
+  _self.inner.total_duration()
+}
+
+///|
+pub impl Source for LimitMono with try_seek(
+  _self : LimitMono,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  _self.inner.try_seek(pos)
+}
+
+///|
+pub impl Source for LimitStereo with current_span_len(_self : LimitStereo) {
+  _self.inner.current_span_len()
+}
+
+///|
+pub impl Source for LimitStereo with total_duration(_self : LimitStereo) {
+  _self.inner.total_duration()
+}
+
+///|
+pub impl Source for LimitStereo with try_seek(
+  _self : LimitStereo,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  _self.inner.try_seek(pos)
+}
+
+///|
+pub impl Source for LimitMulti with current_span_len(_self : LimitMulti) {
+  _self.inner.current_span_len()
+}
+
+///|
+pub impl Source for LimitMulti with total_duration(_self : LimitMulti) {
+  _self.inner.total_duration()
+}
+
+///|
+pub impl Source for LimitMulti with try_seek(
+  _self : LimitMulti,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
+  _self.inner.try_seek(pos)
 }
 
 ///|

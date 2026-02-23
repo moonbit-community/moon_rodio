@@ -827,6 +827,60 @@ test "rodio::source::limit_stereo_processing" {
 }
 
 ///|
+test "rodio::source::limit_specialized_wrappers_match_base_limit" {
+  let settings = LimitSettings::default().with_threshold(-3.0)
+
+  let mono_samples = [1.5, -1.2, 0.6, -0.8, 0.2]
+  let mono_base = collect_n(
+    Limit::new(SamplesBuffer::new(1, 44_100, mono_samples), settings),
+    16,
+  )
+  let mono_wrapped = collect_n(
+    LimitMono::new(SamplesBuffer::new(1, 44_100, mono_samples), settings),
+    16,
+  )
+  assert_eq(mono_base, mono_wrapped)
+
+  let stereo_samples : Array[Sample] = []
+  for i in 0..<20 {
+    let x = @math.sin(Double::from_int(i) * 0.2)
+    stereo_samples.push(x * 1.4)
+    stereo_samples.push(-x * 1.1)
+  }
+  let stereo_base = collect_n(
+    Limit::new(SamplesBuffer::new(2, 44_100, stereo_samples), settings),
+    200,
+  )
+  let stereo_wrapped = collect_n(
+    LimitStereo::new(SamplesBuffer::new(2, 44_100, stereo_samples), settings),
+    200,
+  )
+  assert_eq(stereo_base, stereo_wrapped)
+
+  let multi_samples : Array[Sample] = []
+  for i in 0..<20 {
+    let x = @math.sin(Double::from_int(i) * 0.15)
+    multi_samples.push(x * 1.3)
+    multi_samples.push(x * -0.7)
+    multi_samples.push(x * 0.4)
+  }
+  let multi_base = collect_n(
+    Limit::new(SamplesBuffer::new(3, 44_100, multi_samples), settings),
+    300,
+  )
+  let multi_wrapped = collect_n(
+    LimitMulti::new(SamplesBuffer::new(3, 44_100, multi_samples), settings),
+    300,
+  )
+  assert_eq(multi_base, multi_wrapped)
+
+  let mono_view = LimitMono::new(SamplesBuffer::new(1, 44_100, [0.0]), settings)
+  assert_eq(mono_view.inner().channels(), 1)
+  assert_eq(mono_view.inner_mut().sample_rate(), 44_100)
+  assert_eq(mono_view.into_inner().channels(), 1)
+}
+
+///|
 test "rodio::source::crossfade" {
   let a = SamplesBuffer::new(1, 1, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
   let b = zero(1, 1)

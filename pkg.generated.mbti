@@ -707,6 +707,24 @@ pub fn Limit::into_inner(Self) -> DynSource
 pub fn[S : Source] Limit::new(S, LimitSettings) -> Self
 pub impl Source for Limit
 
+pub struct LimitMono {
+  inner : Limit
+}
+pub fn LimitMono::inner(Self) -> Limit
+pub fn LimitMono::inner_mut(Self) -> Limit
+pub fn LimitMono::into_inner(Self) -> Limit
+pub fn[S : Source] LimitMono::new(S, LimitSettings) -> Self
+pub impl Source for LimitMono
+
+pub struct LimitMulti {
+  inner : Limit
+}
+pub fn LimitMulti::inner(Self) -> Limit
+pub fn LimitMulti::inner_mut(Self) -> Limit
+pub fn LimitMulti::into_inner(Self) -> Limit
+pub fn[S : Source] LimitMulti::new(S, LimitSettings) -> Self
+pub impl Source for LimitMulti
+
 pub struct LimitSettings {
   min_value : Double
   max_value : Double
@@ -730,6 +748,15 @@ pub fn LimitSettings::with_release(Self, @core.Duration) -> Self
 pub fn LimitSettings::with_threshold(Self, Double) -> Self
 pub impl Eq for LimitSettings
 pub impl Show for LimitSettings
+
+pub struct LimitStereo {
+  inner : Limit
+}
+pub fn LimitStereo::inner(Self) -> Limit
+pub fn LimitStereo::inner_mut(Self) -> Limit
+pub fn LimitStereo::into_inner(Self) -> Limit
+pub fn[S : Source] LimitStereo::new(S, LimitSettings) -> Self
+pub impl Source for LimitStereo
 
 pub struct LinearGainRamp {
   inner : DynSource
