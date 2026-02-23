@@ -30,6 +30,22 @@ test "rodio::conversions::channel_count_converter" {
   let out = ChannelCountConverter::new(src, 1, 2)
   assert_eq(out.channels(), 2)
   assert_eq(collect_n_conv_named(out, 6), [1.0, 1.0, -2.0, -2.0])
+
+  let remove_3_to_2 = ChannelCountConverter::new(
+    SamplesBuffer::new(3, 48_000, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]),
+    3,
+    2,
+  )
+  assert_eq(collect_n_conv_named(remove_3_to_2, 16), [1.0, 2.0, 4.0, 5.0])
+
+  let add_2_to_4 = ChannelCountConverter::new(
+    SamplesBuffer::new(2, 48_000, [1.0, 2.0, 3.0, 4.0]),
+    2,
+    4,
+  )
+  assert_eq(collect_n_conv_named(add_2_to_4, 16), [
+    1.0, 2.0, 0.0, 0.0, 3.0, 4.0, 0.0, 0.0,
+  ])
 }
 
 ///|
@@ -50,4 +66,27 @@ test "rodio::conversions::sample_type_converter" {
   assert_eq(out.channels(), 1)
   assert_eq(out.sample_rate(), 44_100)
   assert_eq(collect_n_conv_named(out, 10), [1.0, 2.0])
+}
+
+///|
+test "rodio::conversions::channel_count_converter_length_behavior" {
+  let len_more = collect_n_conv_named(
+    ChannelCountConverter::new(
+      SamplesBuffer::new(2, 48_000, [1.0, 2.0, 3.0, 4.0]),
+      2,
+      3,
+    ),
+    64,
+  )
+  assert_eq(len_more.length(), 6)
+
+  let len_less = collect_n_conv_named(
+    ChannelCountConverter::new(
+      SamplesBuffer::new(2, 48_000, [1.0, 2.0, 3.0, 4.0]),
+      2,
+      1,
+    ),
+    64,
+  )
+  assert_eq(len_less.length(), 2)
 }
