@@ -375,3 +375,46 @@ test "rodio::decoder::vorbis::reject_invalid_data" {
   }
   assert_true(invalid)
 }
+
+///|
+test "rodio::decoder::compat::backend_wrapper_types" {
+  let wav = WavDecoder::new(wav_mono_pcm([0, 32767, -32768], 16))
+  assert_eq(wav.channels(), 1)
+  assert_eq(wav.sample_rate(), 44_100)
+  assert_eq(wav.next(), Some(0.0))
+  assert_true(wav.next().unwrap() > 0.99)
+  assert_eq(wav.into_inner().position(), 2)
+
+  let mp3 = Mp3Decoder::new(mp3_ill2_mono_bytes())
+  assert_eq(mp3.channels(), 1)
+  assert_eq(mp3.sample_rate(), 48_000)
+  assert_true(mp3.len() > 0)
+
+  let flac = FlacDecoder::new(flac_pop_bytes())
+  assert_eq(flac.channels(), 1)
+  assert_eq(flac.sample_rate(), 44_100)
+  assert_true(flac.position() == 0)
+  flac.seek_to(10)
+  assert_eq(flac.position(), 10)
+
+  let vorbis = VorbisDecoder::new(vorbis_sine_48k_mono_bytes())
+  assert_eq(vorbis.channels(), 1)
+  assert_eq(vorbis.sample_rate(), 48_000)
+  assert_true(vorbis.next() is Some(_))
+}
+
+///|
+test "rodio::decoder::compat::read_seek_source_shape" {
+  let src = ReadSeekSource::from_bytes(b"abc")
+  assert_eq(src.byte_len(), Some(3))
+  assert_true(src.is_seekable())
+  assert_eq(src.into_inner(), b"abc")
+
+  let src2 = ReadSeekSource::from_bytes(
+    b"abcdef",
+    byte_len=Some(4),
+    is_seekable=false,
+  )
+  assert_eq(src2.byte_len(), Some(4))
+  assert_true(!src2.is_seekable())
+}

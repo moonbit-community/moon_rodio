@@ -41,6 +41,66 @@ pub fn DecodedSamples::position(Self) -> Int
 pub fn DecodedSamples::sample_rate(Self) -> Int
 pub fn DecodedSamples::seek_to(Self, Int) -> Unit
 
+pub struct FlacDecoder {
+  inner : DecodedSamples
+}
+pub fn FlacDecoder::channels(Self) -> Int
+pub fn FlacDecoder::into_inner(Self) -> DecodedSamples
+pub fn FlacDecoder::len(Self) -> Int
+pub fn FlacDecoder::new(Bytes) -> Self raise DecoderError
+pub fn FlacDecoder::next(Self) -> Double?
+pub fn FlacDecoder::position(Self) -> Int
+pub fn FlacDecoder::sample_rate(Self) -> Int
+pub fn FlacDecoder::seek_to(Self, Int) -> Unit
+
+pub struct Mp3Decoder {
+  inner : DecodedSamples
+}
+pub fn Mp3Decoder::channels(Self) -> Int
+pub fn Mp3Decoder::into_inner(Self) -> DecodedSamples
+pub fn Mp3Decoder::len(Self) -> Int
+pub fn Mp3Decoder::new(Bytes) -> Self raise DecoderError
+pub fn Mp3Decoder::next(Self) -> Double?
+pub fn Mp3Decoder::position(Self) -> Int
+pub fn Mp3Decoder::sample_rate(Self) -> Int
+pub fn Mp3Decoder::seek_to(Self, Int) -> Unit
+
+pub struct ReadSeekSource {
+  inner : Bytes
+  byte_len : Int?
+  is_seekable : Bool
+}
+pub fn ReadSeekSource::byte_len(Self) -> Int?
+pub fn ReadSeekSource::from_bytes(Bytes, byte_len? : Int?, is_seekable? : Bool) -> Self
+pub fn ReadSeekSource::into_inner(Self) -> Bytes
+pub fn ReadSeekSource::is_seekable(Self) -> Bool
+pub fn ReadSeekSource::new(Bytes, byte_len? : Int?, is_seekable? : Bool) -> Self
+
+pub struct VorbisDecoder {
+  inner : DecodedSamples
+}
+pub fn VorbisDecoder::channels(Self) -> Int
+pub fn VorbisDecoder::from_stream_reader(Bytes) -> Self raise DecoderError
+pub fn VorbisDecoder::into_inner(Self) -> DecodedSamples
+pub fn VorbisDecoder::len(Self) -> Int
+pub fn VorbisDecoder::new(Bytes) -> Self raise DecoderError
+pub fn VorbisDecoder::next(Self) -> Double?
+pub fn VorbisDecoder::position(Self) -> Int
+pub fn VorbisDecoder::sample_rate(Self) -> Int
+pub fn VorbisDecoder::seek_to(Self, Int) -> Unit
+
+pub struct WavDecoder {
+  inner : DecodedSamples
+}
+pub fn WavDecoder::channels(Self) -> Int
+pub fn WavDecoder::into_inner(Self) -> DecodedSamples
+pub fn WavDecoder::len(Self) -> Int
+pub fn WavDecoder::new(Bytes) -> Self raise DecoderError
+pub fn WavDecoder::next(Self) -> Double?
+pub fn WavDecoder::position(Self) -> Int
+pub fn WavDecoder::sample_rate(Self) -> Int
+pub fn WavDecoder::seek_to(Self, Int) -> Unit
+
 // Type aliases
 
 // Traits

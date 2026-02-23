@@ -81,3 +81,234 @@ pub fn DecodedSamples::seek_to(
     self.cursor.val = sample_index
   }
 }
+
+///|
+pub struct WavDecoder {
+  inner : DecodedSamples
+}
+
+///|
+pub fn WavDecoder::new(bytes : Bytes) -> WavDecoder raise DecoderError {
+  { inner: decode_wav_bytes(bytes) }
+}
+
+///|
+pub fn WavDecoder::into_inner(self : WavDecoder) -> DecodedSamples {
+  self.inner
+}
+
+///|
+pub fn WavDecoder::channels(self : WavDecoder) -> Int {
+  self.inner.channels()
+}
+
+///|
+pub fn WavDecoder::sample_rate(self : WavDecoder) -> Int {
+  self.inner.sample_rate()
+}
+
+///|
+pub fn WavDecoder::next(self : WavDecoder) -> Double? {
+  self.inner.next()
+}
+
+///|
+pub fn WavDecoder::len(self : WavDecoder) -> Int {
+  self.inner.len()
+}
+
+///|
+pub fn WavDecoder::position(self : WavDecoder) -> Int {
+  self.inner.position()
+}
+
+///|
+pub fn WavDecoder::seek_to(self : WavDecoder, sample_index : Int) -> Unit {
+  self.inner.seek_to(sample_index)
+}
+
+///|
+pub struct Mp3Decoder {
+  inner : DecodedSamples
+}
+
+///|
+pub fn Mp3Decoder::new(bytes : Bytes) -> Mp3Decoder raise DecoderError {
+  { inner: decode_mp3_bytes(bytes) }
+}
+
+///|
+pub fn Mp3Decoder::into_inner(self : Mp3Decoder) -> DecodedSamples {
+  self.inner
+}
+
+///|
+pub fn Mp3Decoder::channels(self : Mp3Decoder) -> Int {
+  self.inner.channels()
+}
+
+///|
+pub fn Mp3Decoder::sample_rate(self : Mp3Decoder) -> Int {
+  self.inner.sample_rate()
+}
+
+///|
+pub fn Mp3Decoder::next(self : Mp3Decoder) -> Double? {
+  self.inner.next()
+}
+
+///|
+pub fn Mp3Decoder::len(self : Mp3Decoder) -> Int {
+  self.inner.len()
+}
+
+///|
+pub fn Mp3Decoder::position(self : Mp3Decoder) -> Int {
+  self.inner.position()
+}
+
+///|
+pub fn Mp3Decoder::seek_to(self : Mp3Decoder, sample_index : Int) -> Unit {
+  self.inner.seek_to(sample_index)
+}
+
+///|
+pub struct FlacDecoder {
+  inner : DecodedSamples
+}
+
+///|
+pub fn FlacDecoder::new(bytes : Bytes) -> FlacDecoder raise DecoderError {
+  { inner: decode_flac_bytes(bytes) }
+}
+
+///|
+pub fn FlacDecoder::into_inner(self : FlacDecoder) -> DecodedSamples {
+  self.inner
+}
+
+///|
+pub fn FlacDecoder::channels(self : FlacDecoder) -> Int {
+  self.inner.channels()
+}
+
+///|
+pub fn FlacDecoder::sample_rate(self : FlacDecoder) -> Int {
+  self.inner.sample_rate()
+}
+
+///|
+pub fn FlacDecoder::next(self : FlacDecoder) -> Double? {
+  self.inner.next()
+}
+
+///|
+pub fn FlacDecoder::len(self : FlacDecoder) -> Int {
+  self.inner.len()
+}
+
+///|
+pub fn FlacDecoder::position(self : FlacDecoder) -> Int {
+  self.inner.position()
+}
+
+///|
+pub fn FlacDecoder::seek_to(self : FlacDecoder, sample_index : Int) -> Unit {
+  self.inner.seek_to(sample_index)
+}
+
+///|
+pub struct VorbisDecoder {
+  inner : DecodedSamples
+}
+
+///|
+pub fn VorbisDecoder::new(bytes : Bytes) -> VorbisDecoder raise DecoderError {
+  { inner: decode_vorbis_bytes(bytes) }
+}
+
+///|
+pub fn VorbisDecoder::from_stream_reader(
+  bytes : Bytes,
+) -> VorbisDecoder raise DecoderError {
+  VorbisDecoder::new(bytes)
+}
+
+///|
+pub fn VorbisDecoder::into_inner(self : VorbisDecoder) -> DecodedSamples {
+  self.inner
+}
+
+///|
+pub fn VorbisDecoder::channels(self : VorbisDecoder) -> Int {
+  self.inner.channels()
+}
+
+///|
+pub fn VorbisDecoder::sample_rate(self : VorbisDecoder) -> Int {
+  self.inner.sample_rate()
+}
+
+///|
+pub fn VorbisDecoder::next(self : VorbisDecoder) -> Double? {
+  self.inner.next()
+}
+
+///|
+pub fn VorbisDecoder::len(self : VorbisDecoder) -> Int {
+  self.inner.len()
+}
+
+///|
+pub fn VorbisDecoder::position(self : VorbisDecoder) -> Int {
+  self.inner.position()
+}
+
+///|
+pub fn VorbisDecoder::seek_to(self : VorbisDecoder, sample_index : Int) -> Unit {
+  self.inner.seek_to(sample_index)
+}
+
+///|
+pub struct ReadSeekSource {
+  inner : Bytes
+  byte_len : Int?
+  is_seekable : Bool
+}
+
+///|
+pub fn ReadSeekSource::new(
+  bytes : Bytes,
+  byte_len? : Int? = None,
+  is_seekable? : Bool = true,
+) -> ReadSeekSource {
+  ReadSeekSource::from_bytes(bytes, byte_len~, is_seekable~)
+}
+
+///|
+pub fn ReadSeekSource::from_bytes(
+  bytes : Bytes,
+  byte_len? : Int? = None,
+  is_seekable? : Bool = true,
+) -> ReadSeekSource {
+  let effective_len = match byte_len {
+    Some(v) => Some(v)
+    None => Some(bytes.length())
+  }
+  { inner: bytes, byte_len: effective_len, is_seekable }
+}
+
+///|
+pub fn ReadSeekSource::byte_len(self : ReadSeekSource) -> Int? {
+  self.byte_len
+}
+
+///|
+pub fn ReadSeekSource::is_seekable(self : ReadSeekSource) -> Bool {
+  self.is_seekable
+}
+
+///|
+pub fn ReadSeekSource::into_inner(self : ReadSeekSource) -> Bytes {
+  self.inner
+}
