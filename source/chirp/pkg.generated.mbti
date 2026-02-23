@@ -1,0 +1,20 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/source/chirp"
+
+import {
+  "Milky2018/moon_cpal/core",
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn chirp(Int, Double, Double, @core.Duration) -> @moon_rodio.Chirp
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type Chirp}
+
+// Traits
+

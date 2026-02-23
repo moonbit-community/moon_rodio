@@ -1,0 +1,21 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/source/empty"
+
+import {
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn empty(Int, Int) -> @moon_rodio.DynSource
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type DynSource}
+
+pub using @moon_rodio {type Empty}
+
+// Traits
+

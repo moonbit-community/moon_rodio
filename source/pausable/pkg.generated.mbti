@@ -1,0 +1,19 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/source/pausable"
+
+import {
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn[S : @moon_rodio.Source] pausable(S, Bool) -> @moon_rodio.Pausable
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type Pausable}
+
+// Traits
+

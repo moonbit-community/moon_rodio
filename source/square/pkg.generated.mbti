@@ -1,0 +1,18 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/source/square"
+
+import {
+  "Milky2018/moon_rodio",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type SquareWave}
+
+// Traits
+

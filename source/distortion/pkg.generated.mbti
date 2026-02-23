@@ -1,0 +1,25 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/source/distortion"
+
+import {
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn[S : @moon_rodio.Source] distortion(S, Double, Double) -> @moon_rodio.DynSource
+
+pub fn[S : @moon_rodio.Source] distortion_threshold(S, Double) -> @moon_rodio.DynSource
+
+pub fn[S : @moon_rodio.Source] distortion_with_gain(S, Double, Double) -> @moon_rodio.DynSource
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type Distortion}
+
+pub using @moon_rodio {type DynSource}
+
+// Traits
+

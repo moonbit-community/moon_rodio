@@ -1,0 +1,24 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/source/agc"
+
+import {
+  "Milky2018/moon_cpal/core",
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn[S : @moon_rodio.Source] automatic_gain_control(S, @moon_rodio.AutomaticGainControlSettings) -> @moon_rodio.AutomaticGainControl
+
+pub fn[S : @moon_rodio.Source] automatic_gain_control_with_params(S, Double, @core.Duration, @core.Duration, Double) -> @moon_rodio.AutomaticGainControl
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type AutomaticGainControl}
+
+pub using @moon_rodio {type AutomaticGainControlSettings}
+
+// Traits
+

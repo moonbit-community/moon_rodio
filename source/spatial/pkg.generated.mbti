@@ -1,0 +1,20 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/source/spatial"
+
+import {
+  "Milky2018/moon_rodio",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type Spatial}
+
+pub using @moon_rodio {type SpatialSource}
+
+// Traits
+

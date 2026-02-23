@@ -1,0 +1,24 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/source/linear_ramp"
+
+import {
+  "Milky2018/moon_cpal/core",
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn[S : @moon_rodio.Source] linear_gain_ramp(S, Double, Double, @core.Duration) -> @moon_rodio.DynSource
+
+pub fn[S : @moon_rodio.Source] linear_gain_ramp_with_clamp(S, Double, Double, @core.Duration, Bool) -> @moon_rodio.DynSource
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type DynSource}
+
+pub using @moon_rodio {type LinearGainRamp}
+
+// Traits
+

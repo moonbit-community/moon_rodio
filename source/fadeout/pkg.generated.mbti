@@ -1,0 +1,24 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/source/fadeout"
+
+import {
+  "Milky2018/moon_cpal/core",
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn[S : @moon_rodio.Source] fade_out(S, @core.Duration) -> @moon_rodio.DynSource
+
+pub fn[S : @moon_rodio.Source] fadeout(S, @core.Duration) -> @moon_rodio.DynSource
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type DynSource}
+
+pub using @moon_rodio {type FadeOut}
+
+// Traits
+

@@ -1,0 +1,21 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/source/mix"
+
+import {
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn[A : @moon_rodio.Source, B : @moon_rodio.Source] mix(A, B) -> @moon_rodio.DynSource
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type DynSource}
+
+pub using @moon_rodio {type Mix}
+
+// Traits
+
