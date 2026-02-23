@@ -25,6 +25,30 @@ fn[S : Source] collect_n(source : S, n : Int) -> Array[Sample] {
 }
 
 ///|
+fn mean_of(samples : Array[Sample]) -> Sample {
+  if samples.is_empty() {
+    return 0.0
+  }
+  let mut sum = 0.0
+  for x in samples {
+    sum += x
+  }
+  sum / Double::from_int(samples.length())
+}
+
+///|
+fn consecutive_correlation(samples : Array[Sample]) -> Sample {
+  if samples.length() < 2 {
+    return 0.0
+  }
+  let mut sum = 0.0
+  for i in 0..<(samples.length() - 1) {
+    sum += samples[i] * samples[i + 1]
+  }
+  sum / Double::from_int(samples.length() - 1)
+}
+
+///|
 struct ExternalSource {
   samples : Array[Sample]
   cursor : Ref[Int]
@@ -1311,6 +1335,7 @@ test "rodio::source::noise_extended" {
   let blue = Blue::new(44_100)
   let violet = Violet::new(44_100)
   let brown = Brownian::new(44_100)
+  let red = Red::new(44_100)
 
   let tri_v = collect_n(tri, 64)
   let gauss_v = collect_n(gauss, 64)
@@ -1318,6 +1343,7 @@ test "rodio::source::noise_extended" {
   let blue_v = collect_n(blue, 64)
   let violet_v = collect_n(violet, 64)
   let brown_v = collect_n(brown, 64)
+  let red_v = collect_n(red, 64)
 
   assert_eq(tri_v.length(), 64)
   assert_eq(gauss_v.length(), 64)
@@ -1325,6 +1351,7 @@ test "rodio::source::noise_extended" {
   assert_eq(blue_v.length(), 64)
   assert_eq(violet_v.length(), 64)
   assert_eq(brown_v.length(), 64)
+  assert_eq(red_v.length(), 64)
 
   for x in tri_v {
     assert_true(x >= -1.0 && x <= 1.0)
@@ -1348,9 +1375,66 @@ test "rodio::source::noise_extended" {
     assert_true(x == x)
     assert_true(x.abs() < 1.0e308)
   }
+  for x in red_v {
+    assert_true(x == x)
+    assert_true(x.abs() < 1.0e308)
+  }
 
   let old_white = white(44_100)
   let old_pink = pink(44_100)
   assert_eq(old_white.sample_rate(), 44_100)
   assert_eq(old_pink.sample_rate(), 44_100)
+}
+
+///|
+test "rodio::source::noise_generators_trait_and_seek_parity" {
+  let sources : Array[DynSource] = [
+    to_dyn(WhiteUniform::new(44_100)),
+    to_dyn(WhiteTriangular::new(44_100)),
+    to_dyn(WhiteGaussian::new(44_100)),
+    to_dyn(Pink::new(44_100)),
+    to_dyn(Blue::new(44_100)),
+    to_dyn(Violet::new(44_100)),
+    to_dyn(Brownian::new(44_100)),
+    to_dyn(Red::new(44_100)),
+    to_dyn(Velvet::new(44_100)),
+  ]
+
+  for source in sources {
+    assert_eq(source.channels(), 1)
+    assert_eq(source.sample_rate(), 44_100)
+    assert_eq(source.total_duration(), None)
+    assert_eq(source.current_span_len(), None)
+    source.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
+  }
+}
+
+///|
+test "rodio::source::gaussian_noise_properties" {
+  let generator = WhiteGaussian::new(44_100)
+  assert_eq(generator.mean(), 0.0)
+  assert_true((generator.std_dev() - 0.6).abs() < 1.0e-12)
+
+  let samples = collect_n(generator, 1_000)
+  let mut within_bounds = 0
+  for sample in samples {
+    if sample.abs() <= 1.0 {
+      within_bounds += 1
+    }
+  }
+
+  let percent = Double::from_int(within_bounds) / 1_000.0 * 100.0
+  assert_true(percent > 85.0)
+}
+
+///|
+test "rodio::source::integrated_noise_properties_brownian_and_red" {
+  let brown_samples = collect_n(Brownian::new(44_100), 44_100)
+  let red_samples = collect_n(Red::new(44_100), 44_100)
+
+  assert_true(mean_of(brown_samples).abs() < 0.5)
+  assert_true(mean_of(red_samples).abs() < 0.5)
+
+  assert_true(consecutive_correlation(brown_samples) > 0.1)
+  assert_true(consecutive_correlation(red_samples) > 0.1)
 }

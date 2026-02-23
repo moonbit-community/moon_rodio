@@ -606,7 +606,7 @@ pub fn WhiteGaussian::mean(_self : WhiteGaussian) -> Sample {
 
 ///|
 pub fn WhiteGaussian::std_dev(_self : WhiteGaussian) -> Sample {
-  1.0 / 3.0
+  0.6
 }
 
 ///|
@@ -729,7 +729,7 @@ pub impl Source for Velvet with sample_rate(self : Velvet) {
 ///|
 pub struct Blue {
   sample_rate : SampleRate
-  white_noise : WhiteGaussian
+  white_noise : WhiteUniform
   prev_white : Ref[Sample]
 }
 
@@ -738,7 +738,7 @@ pub fn Blue::new(sample_rate : SampleRate) -> Blue {
   guard sample_rate > 0 else { panic() }
   {
     sample_rate,
-    white_noise: WhiteGaussian::new(sample_rate),
+    white_noise: WhiteUniform::new(sample_rate),
     prev_white: @ref.new(0.0),
   }
 }
@@ -886,6 +886,69 @@ pub impl Source for Brownian with sample_rate(self : Brownian) {
 }
 
 ///|
+pub struct Red {
+  sample_rate : SampleRate
+  white_noise : WhiteUniform
+  accumulator : Ref[Sample]
+  leak_factor : Ref[Sample]
+  scale : Ref[Sample]
+}
+
+///|
+pub fn Red::new(sample_rate : SampleRate) -> Red {
+  guard sample_rate > 0 else { panic() }
+  let white_noise = WhiteUniform::new(sample_rate)
+  let center_freq_hz = 5.0
+  let mut leak = 1.0 -
+    2.0 * @math.PI * center_freq_hz / Double::from_int(sample_rate)
+  if leak < 0.0 {
+    leak = 0.0
+  }
+  let stddev = @math.pow(1.0 / 3.0, 0.5)
+  let variance = stddev * stddev / (1.0 - leak * leak + 1.0e-12)
+  let scale = 1.0 / @math.pow(variance, 0.5)
+  {
+    sample_rate,
+    white_noise,
+    accumulator: @ref.new(0.0),
+    leak_factor: @ref.new(leak),
+    scale: @ref.new(scale),
+  }
+}
+
+///|
+pub fn Red::next(self : Red) -> Sample? {
+  let white = self.white_noise.next().unwrap()
+  self.accumulator.val = self.accumulator.val * self.leak_factor.val + white
+  Some(self.accumulator.val * self.scale.val)
+}
+
+///|
+pub fn Red::channels(_self : Red) -> ChannelCount {
+  1
+}
+
+///|
+pub fn Red::sample_rate(self : Red) -> SampleRate {
+  self.sample_rate
+}
+
+///|
+pub impl Source for Red with next(self : Red) {
+  self.next()
+}
+
+///|
+pub impl Source for Red with channels(self : Red) {
+  self.channels()
+}
+
+///|
+pub impl Source for Red with sample_rate(self : Red) {
+  self.sample_rate()
+}
+
+///|
 pub impl Source for AutomaticGainControl with current_span_len(
   _self : AutomaticGainControl,
 ) {
@@ -938,9 +1001,9 @@ pub impl Source for WhiteUniform with total_duration(_self : WhiteUniform) {
 ///|
 pub impl Source for WhiteUniform with try_seek(
   _self : WhiteUniform,
-  pos : @moon_cpal.Duration,
+  _pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  ()
 }
 
 ///|
@@ -955,7 +1018,7 @@ pub impl Source for Pink with total_duration(_self : Pink) {
 
 ///|
 pub impl Source for Pink with try_seek(_self : Pink, pos : @moon_cpal.Duration) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  ignore(pos)
 }
 
 ///|
@@ -973,9 +1036,9 @@ pub impl Source for WhiteTriangular with total_duration(_self : WhiteTriangular)
 ///|
 pub impl Source for WhiteTriangular with try_seek(
   _self : WhiteTriangular,
-  pos : @moon_cpal.Duration,
+  _pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  ()
 }
 
 ///|
@@ -991,9 +1054,9 @@ pub impl Source for WhiteGaussian with total_duration(_self : WhiteGaussian) {
 ///|
 pub impl Source for WhiteGaussian with try_seek(
   _self : WhiteGaussian,
-  pos : @moon_cpal.Duration,
+  _pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  ()
 }
 
 ///|
@@ -1009,9 +1072,9 @@ pub impl Source for Velvet with total_duration(_self : Velvet) {
 ///|
 pub impl Source for Velvet with try_seek(
   _self : Velvet,
-  pos : @moon_cpal.Duration,
+  _pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  ()
 }
 
 ///|
@@ -1026,7 +1089,7 @@ pub impl Source for Blue with total_duration(_self : Blue) {
 
 ///|
 pub impl Source for Blue with try_seek(_self : Blue, pos : @moon_cpal.Duration) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  ignore(pos)
 }
 
 ///|
@@ -1042,9 +1105,9 @@ pub impl Source for Violet with total_duration(_self : Violet) {
 ///|
 pub impl Source for Violet with try_seek(
   _self : Violet,
-  pos : @moon_cpal.Duration,
+  _pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  ()
 }
 
 ///|
@@ -1060,7 +1123,22 @@ pub impl Source for Brownian with total_duration(_self : Brownian) {
 ///|
 pub impl Source for Brownian with try_seek(
   _self : Brownian,
-  pos : @moon_cpal.Duration,
+  _pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  source_default_try_seek(pos)
+  ()
+}
+
+///|
+pub impl Source for Red with current_span_len(_self : Red) {
+  source_default_current_span_len()
+}
+
+///|
+pub impl Source for Red with total_duration(_self : Red) {
+  source_default_total_duration()
+}
+
+///|
+pub impl Source for Red with try_seek(_self : Red, _pos : @moon_cpal.Duration) -> Unit raise SeekError {
+  ()
 }

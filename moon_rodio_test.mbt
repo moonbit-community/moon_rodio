@@ -213,3 +213,114 @@ test "rodio::queue::tests::try_seek_only_current_source" {
   assert_eq(rx.next(), Some(7.0))
   assert_eq(rx.next(), Some(8.0))
 }
+
+///|
+test "rodio::queue::tests::append_updates_metadata" {
+  for keep_alive in [false, true] {
+    let (tx, rx) = @moon_rodio.queue(keep_alive)
+    assert_eq(rx.channels(), 1)
+    assert_eq(rx.sample_rate(), 44_100)
+
+    tx.append(@moon_rodio.SamplesBuffer::new(2, 44_100, [0.1, 0.2, 0.3, 0.4]))
+    assert_eq(rx.channels(), 2)
+    assert_eq(rx.sample_rate(), 44_100)
+  }
+}
+
+///|
+struct SpanMismatchSource {
+  samples : Array[@moon_rodio.Sample]
+  cursor : Ref[Int]
+  channels : @moon_rodio.ChannelCount
+  sample_rate : @moon_rodio.SampleRate
+  total_span_len : Int?
+}
+
+///|
+fn SpanMismatchSource::new(
+  samples : Array[@moon_rodio.Sample],
+  channels : @moon_rodio.ChannelCount,
+  sample_rate : @moon_rodio.SampleRate,
+  total_span_len : Int?,
+) -> SpanMismatchSource {
+  { samples, cursor: @ref.new(0), channels, sample_rate, total_span_len }
+}
+
+///|
+impl @moon_rodio.Source for SpanMismatchSource with next(
+  self : SpanMismatchSource,
+) {
+  if self.cursor.val >= self.samples.length() {
+    None
+  } else {
+    let value = self.samples[self.cursor.val]
+    self.cursor.val += 1
+    Some(value)
+  }
+}
+
+///|
+impl @moon_rodio.Source for SpanMismatchSource with channels(
+  self : SpanMismatchSource,
+) {
+  self.channels
+}
+
+///|
+impl @moon_rodio.Source for SpanMismatchSource with sample_rate(
+  self : SpanMismatchSource,
+) {
+  self.sample_rate
+}
+
+///|
+impl @moon_rodio.Source for SpanMismatchSource with current_span_len(
+  self : SpanMismatchSource,
+) {
+  match self.total_span_len {
+    Some(total) =>
+      Some(if total > self.cursor.val { total - self.cursor.val } else { 0 })
+    None => None
+  }
+}
+
+///|
+impl @moon_rodio.Source for SpanMismatchSource with total_duration(
+  _self : SpanMismatchSource,
+) {
+  None
+}
+
+///|
+impl @moon_rodio.Source for SpanMismatchSource with try_seek(
+  _self : SpanMismatchSource,
+  pos : @moon_cpal.Duration,
+) -> Unit raise @moon_rodio.SeekError {
+  @moon_rodio.Empty::new(1, 1).try_seek(pos)
+}
+
+///|
+test "rodio::queue::tests::span_ending_mid_frame" {
+  let source1 = SpanMismatchSource::new(
+    [0.1, 0.2, 0.1, 0.2, 0.1],
+    2,
+    44_100,
+    Some(6),
+  )
+  let source2 = @moon_rodio.SamplesBuffer::new(2, 44_100, [0.3, 0.4, 0.3, 0.4])
+
+  let (controls, source) = @moon_rodio.queue(true)
+  controls.append(source1)
+  controls.append(source2)
+
+  assert_eq(source.next(), Some(0.1))
+  assert_eq(source.next(), Some(0.2))
+  assert_eq(source.next(), Some(0.1))
+  assert_eq(source.next(), Some(0.2))
+  assert_eq(source.next(), Some(0.1))
+  assert_eq(source.next(), Some(0.0))
+  assert_eq(source.next(), Some(0.3))
+  assert_eq(source.next(), Some(0.4))
+  assert_eq(source.next(), Some(0.3))
+  assert_eq(source.next(), Some(0.4))
+}

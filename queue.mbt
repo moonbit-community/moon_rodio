@@ -16,6 +16,12 @@
 let threshold : Int = 512
 
 ///|
+fn threshold_for_channels(channels : ChannelCount) -> Int {
+  let ch = if channels > 0 { channels } else { 1 }
+  (threshold + ch - 1) / ch * ch
+}
+
+///|
 pub struct QueueSignal {
   done : Ref[Bool]
 }
@@ -49,6 +55,8 @@ pub struct SourcesQueueOutput {
   prefetched : Ref[Sample?]
   has_prefetched : Ref[Bool]
   signal_after_end : Ref[QueueSignal?]
+  samples_consumed_in_span : Ref[Int]
+  padding_samples_remaining : Ref[Int]
   input : SourcesQueueInput
 }
 
@@ -66,6 +74,8 @@ pub fn queue(
     prefetched: @ref.new(None),
     has_prefetched: @ref.new(false),
     signal_after_end: @ref.new(None),
+    samples_consumed_in_span: @ref.new(0),
+    padding_samples_remaining: @ref.new(0),
     input,
   }
   (input, output)
@@ -125,12 +135,20 @@ fn SourcesQueueOutput::go_next(self : SourcesQueueOutput) -> Bool {
     self.current_is_fallback.val = false
     self.prefetched.val = None
     self.has_prefetched.val = false
+    self.samples_consumed_in_span.val = 0
     true
   } else if self.input.keep_alive_if_empty.val {
-    self.current.val = make_zero_dyn_source(1, hz_44100, threshold)
+    let channels = self.current.val.channels()
+    let sample_rate = self.current.val.sample_rate()
+    self.current.val = make_zero_dyn_source(
+      channels,
+      sample_rate,
+      threshold_for_channels(channels),
+    )
     self.current_is_fallback.val = true
     self.prefetched.val = None
     self.has_prefetched.val = false
+    self.samples_consumed_in_span.val = 0
     true
   } else {
     false
@@ -144,23 +162,48 @@ fn SourcesQueueOutput::ensure_prefetched(self : SourcesQueueOutput) -> Bool {
   }
 
   while true {
+    if self.padding_samples_remaining.val > 0 {
+      self.prefetched.val = Some(0.0)
+      self.has_prefetched.val = true
+      self.padding_samples_remaining.val -= 1
+      return true
+    }
+
     if self.current_is_fallback.val && !self.input.next_sounds.val.is_empty() {
       let next = self.input.next_sounds.val.remove(0)
       self.current.val = next.source
       self.signal_after_end.val = next.signal
       self.current_is_fallback.val = false
+      self.samples_consumed_in_span.val = 0
     }
 
     match self.current.val.next() {
       Some(v) => {
         self.prefetched.val = Some(v)
         self.has_prefetched.val = true
+        self.samples_consumed_in_span.val += 1
         return true
       }
-      None => if !self.go_next() { return false }
+      None => {
+        let channels = if self.current.val.channels() > 0 {
+          self.current.val.channels()
+        } else {
+          1
+        }
+        let incomplete_frame_samples = self.samples_consumed_in_span.val %
+          channels
+        self.samples_consumed_in_span.val = 0
+        if incomplete_frame_samples > 0 {
+          self.padding_samples_remaining.val = channels -
+            incomplete_frame_samples
+          continue
+        }
+        if !self.go_next() {
+          return false
+        }
+      }
     }
   }
-
   false
 }
 
@@ -173,6 +216,8 @@ fn SourcesQueueOutput::next_internal(self : SourcesQueueOutput) -> Sample? {
     self.current_is_fallback.val = false
     self.prefetched.val = None
     self.has_prefetched.val = false
+    self.samples_consumed_in_span.val = 0
+    self.padding_samples_remaining.val = 0
   }
 
   if !self.ensure_prefetched() {
@@ -187,7 +232,7 @@ fn SourcesQueueOutput::next_internal(self : SourcesQueueOutput) -> Sample? {
   self.prefetched.val = None
   self.has_prefetched.val = false
 
-  // Eagerly prefetch next sample so metadata and state are updated at source boundaries.
+  // Eagerly prefetch next sample so metadata/state are updated at source boundaries.
   ignore(self.ensure_prefetched())
 
   Some(value)
@@ -202,6 +247,8 @@ pub fn SourcesQueueOutput::next(self : SourcesQueueOutput) -> Sample? {
 pub fn SourcesQueueOutput::skip_one(self : SourcesQueueOutput) -> Unit {
   self.prefetched.val = None
   self.has_prefetched.val = false
+  self.samples_consumed_in_span.val = 0
+  self.padding_samples_remaining.val = 0
   if !self.go_next() {
     self.current.val = make_empty_dyn_source(1, hz_44100)
     self.current_is_fallback.val = true
@@ -210,7 +257,11 @@ pub fn SourcesQueueOutput::skip_one(self : SourcesQueueOutput) -> Unit {
 
 ///|
 pub fn SourcesQueueOutput::channels(self : SourcesQueueOutput) -> ChannelCount {
-  if self.current_is_fallback.val && !self.input.next_sounds.val.is_empty() {
+  if !self.input.next_sounds.val.is_empty() &&
+    (
+      self.current_is_fallback.val ||
+      self.current.val.current_span_len() == Some(0)
+    ) {
     return self.input.next_sounds.val[0].source.channels()
   }
   self.current.val.channels()
@@ -218,7 +269,11 @@ pub fn SourcesQueueOutput::channels(self : SourcesQueueOutput) -> ChannelCount {
 
 ///|
 pub fn SourcesQueueOutput::sample_rate(self : SourcesQueueOutput) -> SampleRate {
-  if self.current_is_fallback.val && !self.input.next_sounds.val.is_empty() {
+  if !self.input.next_sounds.val.is_empty() &&
+    (
+      self.current_is_fallback.val ||
+      self.current.val.current_span_len() == Some(0)
+    ) {
     return self.input.next_sounds.val[0].source.sample_rate()
   }
   self.current.val.sample_rate()
@@ -245,12 +300,18 @@ pub impl Source for SourcesQueueOutput with sample_rate(
 pub impl Source for SourcesQueueOutput with current_span_len(
   self : SourcesQueueOutput,
 ) {
-  if self.current_is_fallback.val && !self.input.next_sounds.val.is_empty() {
+  if !self.input.next_sounds.val.is_empty() &&
+    (
+      self.current_is_fallback.val ||
+      self.current.val.current_span_len() == Some(0)
+    ) {
     match self.input.next_sounds.val[0].source.current_span_len() {
       Some(v) => if v != 0 { return Some(v) }
       None => ()
     }
-    return Some(threshold)
+    return Some(
+      threshold_for_channels(self.input.next_sounds.val[0].source.channels()),
+    )
   }
 
   match self.current.val.current_span_len() {
@@ -259,12 +320,12 @@ pub impl Source for SourcesQueueOutput with current_span_len(
         return Some(v)
       } else if self.input.keep_alive_if_empty.val &&
         self.input.next_sounds.val.is_empty() {
-        return Some(threshold)
+        return Some(threshold_for_channels(self.current.val.channels()))
       }
     None => ()
   }
 
-  Some(threshold)
+  Some(threshold_for_channels(self.current.val.channels()))
 }
 
 ///|
@@ -281,5 +342,7 @@ pub impl Source for SourcesQueueOutput with try_seek(
 ) -> Unit raise SeekError {
   self.prefetched.val = None
   self.has_prefetched.val = false
+  self.samples_consumed_in_span.val = 0
+  self.padding_samples_remaining.val = 0
   self.current.val.try_seek(pos)
 }

@@ -314,7 +314,7 @@ pub impl Show for BltMode
 
 pub struct Blue {
   sample_rate : Int
-  white_noise : WhiteGaussian
+  white_noise : WhiteUniform
   prev_white : Ref[Double]
 }
 pub fn Blue::channels(Self) -> Int
@@ -940,6 +940,19 @@ pub fn Reader::from_bytes(Bytes) -> Self
 pub fn Reader::from_file(StringView) -> Self raise PlayError
 pub fn Reader::into_bytes(Self) -> Bytes
 
+pub struct Red {
+  sample_rate : Int
+  white_noise : WhiteUniform
+  accumulator : Ref[Double]
+  leak_factor : Ref[Double]
+  scale : Ref[Double]
+}
+pub fn Red::channels(Self) -> Int
+pub fn Red::new(Int) -> Self
+pub fn Red::next(Self) -> Double?
+pub fn Red::sample_rate(Self) -> Int
+pub impl Source for Red
+
 pub struct Repeat {
   inner : DynSource
 }
@@ -1115,6 +1128,8 @@ pub struct SourcesQueueOutput {
   prefetched : Ref[Double?]
   has_prefetched : Ref[Bool]
   signal_after_end : Ref[QueueSignal?]
+  samples_consumed_in_span : Ref[Int]
+  padding_samples_remaining : Ref[Int]
   input : SourcesQueueInput
 }
 pub fn SourcesQueueOutput::channels(Self) -> Int
