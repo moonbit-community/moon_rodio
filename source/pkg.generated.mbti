@@ -1,0 +1,110 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/source"
+
+import {
+  "Milky2018/moon_cpal/core",
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn chirp(Int, Double, Double, @core.Duration) -> @moon_rodio.Chirp
+
+pub fn[S : @moon_rodio.Source] from_factory(() -> S?) -> @moon_rodio.FromFactoryIter[S]
+
+pub fn[S : @moon_rodio.Source] from_iter(Array[S]) -> @moon_rodio.FromIter
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type Amplify}
+
+pub using @moon_rodio {type AutomaticGainControl}
+
+pub using @moon_rodio {type AutomaticGainControlSettings}
+
+pub using @moon_rodio {type BltFilter}
+
+pub using @moon_rodio {type Buffered}
+
+pub using @moon_rodio {type ChannelVolume}
+
+pub using @moon_rodio {type Chirp}
+
+pub using @moon_rodio {type Crossfade}
+
+pub using @moon_rodio {type Delay}
+
+pub using @moon_rodio {type Distortion}
+
+pub using @moon_rodio {type Dither}
+
+pub using @moon_rodio {type DitherAlgorithm}
+
+pub using @moon_rodio {type Done}
+
+pub using @moon_rodio {type Empty}
+
+pub using @moon_rodio {type EmptyCallback}
+
+pub using @moon_rodio {type FadeIn}
+
+pub using @moon_rodio {type FadeOut}
+
+pub using @moon_rodio {type FromFactoryIter}
+
+pub using @moon_rodio {type FromIter}
+
+pub using @moon_rodio {type Function}
+
+pub using @moon_rodio {type GeneratorFunction}
+
+pub using @moon_rodio {type Limit}
+
+pub using @moon_rodio {type LimitSettings}
+
+pub using @moon_rodio {type LinearGainRamp}
+
+pub using @moon_rodio {type Mix}
+
+pub using @moon_rodio {type Pausable}
+
+pub using @moon_rodio {type PeriodicAccess}
+
+pub using @moon_rodio {type Pink}
+
+pub using @moon_rodio {type Repeat}
+
+pub using @moon_rodio {type SawtoothWave}
+
+pub using @moon_rodio {type SignalGenerator}
+
+pub using @moon_rodio {type SineWave}
+
+pub using @moon_rodio {type SkipDuration}
+
+pub using @moon_rodio {type Skippable}
+
+pub using @moon_rodio {type Spatial}
+
+pub using @moon_rodio {type Speed}
+
+pub using @moon_rodio {type SquareWave}
+
+pub using @moon_rodio {type Stoppable}
+
+pub using @moon_rodio {type TakeDuration}
+
+pub using @moon_rodio {type TrackPosition}
+
+pub using @moon_rodio {type TriangleWave}
+
+pub using @moon_rodio {type UniformSourceIterator}
+
+pub using @moon_rodio {type WhiteUniform}
+
+pub using @moon_rodio {type Zero}
+
+// Traits
+
