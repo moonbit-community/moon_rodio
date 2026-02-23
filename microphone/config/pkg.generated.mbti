@@ -1,0 +1,19 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/microphone/config"
+
+import {
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn default() -> @moon_rodio.InputConfig
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type InputConfig}
+
+// Traits
+

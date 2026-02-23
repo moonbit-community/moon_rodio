@@ -1,0 +1,32 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/microphone/builder"
+
+import {
+  "Milky2018/moon_rodio",
+  "Milky2018/moon_rodio/microphone",
+}
+
+// Values
+pub fn new() -> @moon_rodio.MicrophoneBuilder
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type MicrophoneBuilder as Builder}
+
+pub using @moon_rodio {type MicrophoneError as BuilderError}
+
+pub using @microphone {type ConfigIsSet}
+
+pub using @microphone {type ConfigNotSet}
+
+pub using @microphone {type DeviceIsSet}
+
+pub using @microphone {type DeviceNotSet}
+
+pub using @moon_rodio {type MicrophoneBuilder}
+
+// Traits
+
