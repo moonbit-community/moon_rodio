@@ -507,6 +507,16 @@ test "rodio::decoder_api::mp4a_native_decode_and_builder_paths" {
   }
 
   if decode_supported {
+    let aac = Decoder::new_aac(bytes)
+    assert_true(aac.channels() > 0)
+    assert_true(aac.sample_rate() > 0)
+    assert_true(decoder_has_non_zero_sample(aac))
+
+    let mp4 = Decoder::new_mp4(bytes)
+    assert_true(mp4.channels() > 0)
+    assert_true(mp4.sample_rate() > 0)
+    assert_true(decoder_has_non_zero_sample(mp4))
+
     let hinted = Decoder::builder().with_data(bytes).with_hint("m4a").build()
     assert_true(hinted.channels() > 0)
     assert_true(hinted.sample_rate() > 0)

@@ -66,32 +66,50 @@ fn[S : Source] source_to_wav_bytes(source : S) -> Bytes {
 }
 
 ///|
+pub suberror ToWavError {
+  OpenFile
+  Creating
+  Writing
+  Finishing
+  Flushing
+} derive(Eq, Show)
+
+///|
 pub(open) trait WavWriter {
-  write_all(Self, bytes : Bytes) -> Unit
+  write_all(Self, bytes : Bytes) -> Unit raise ToWavError
 }
 
 ///|
 pub impl WavWriter for @buffer.Buffer with write_all(
   self : @buffer.Buffer,
   bytes : Bytes,
-) {
+) -> Unit raise ToWavError {
   self.write_bytes(bytes)
 }
 
 ///|
-pub fn[S : Source, W : WavWriter] wav_to_writer(source : S, writer : W) -> Unit {
+pub fn[S : Source, W : WavWriter] wav_to_writer(
+  source : S,
+  writer : W,
+) -> Unit raise ToWavError {
   writer.write_all(source_to_wav_bytes(source))
 }
 
 ///|
-pub fn[S : Source] wav_to_file(source : S, wav_file : StringView) -> Unit {
+pub fn[S : Source] wav_to_file(
+  source : S,
+  wav_file : StringView,
+) -> Unit raise ToWavError {
   let wav_bytes = source_to_wav_bytes(source)
   @fs.write_bytes_to_file(wav_file.to_string(), wav_bytes) catch {
-    _ => panic()
+    _ => raise ToWavError::Writing
   }
 }
 
 ///|
-pub fn[S : Source] output_to_wav(source : S, wav_file : StringView) -> Unit {
+pub fn[S : Source] output_to_wav(
+  source : S,
+  wav_file : StringView,
+) -> Unit raise ToWavError {
   wav_to_file(source, wav_file)
 }

@@ -588,6 +588,16 @@ pub fn Decoder::new_mp4a(bytes : Bytes) -> Decoder raise DecoderError {
 }
 
 ///|
+pub fn Decoder::new_aac(bytes : Bytes) -> Decoder raise DecoderError {
+  Decoder::new_mp4a(bytes)
+}
+
+///|
+pub fn Decoder::new_mp4(bytes : Bytes) -> Decoder raise DecoderError {
+  Decoder::new_mp4a(bytes)
+}
+
+///|
 pub fn Decoder::next(self : Decoder) -> Sample? {
   self.inner.next()
 }

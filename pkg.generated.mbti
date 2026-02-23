@@ -89,7 +89,7 @@ pub fn[A : Source, B : Source] mix(A, B) -> DynSource
 
 pub fn mixer(Int, Int) -> (Mixer, MixerSource)
 
-pub fn[S : Source] output_to_wav(S, StringView) -> Unit
+pub fn[S : Source] output_to_wav(S, StringView) -> Unit raise ToWavError
 
 pub fn[S : Source] pausable(S, Bool) -> Pausable
 
@@ -143,9 +143,9 @@ pub fn[S : Source] track_position(S) -> TrackPosition
 
 pub fn[S : Source] uniform(S, Int, Int) -> DynSource
 
-pub fn[S : Source] wav_to_file(S, StringView) -> Unit
+pub fn[S : Source] wav_to_file(S, StringView) -> Unit raise ToWavError
 
-pub fn[S : Source, W : WavWriter] wav_to_writer(S, W) -> Unit
+pub fn[S : Source, W : WavWriter] wav_to_writer(S, W) -> Unit raise ToWavError
 
 pub fn white(Int) -> WhiteUniform
 
@@ -235,6 +235,16 @@ pub suberror StreamError {
 }
 pub impl Eq for StreamError
 pub impl Show for StreamError
+
+pub suberror ToWavError {
+  OpenFile
+  Creating
+  Writing
+  Finishing
+  Flushing
+}
+pub impl Eq for ToWavError
+pub impl Show for ToWavError
 
 // Types and methods
 pub struct Amplify {
@@ -432,9 +442,11 @@ pub struct Decoder {
 pub fn Decoder::builder() -> DecoderBuilder
 pub fn Decoder::channels(Self) -> Int
 pub fn Decoder::new(Bytes) -> Self raise DecoderError
+pub fn Decoder::new_aac(Bytes) -> Self raise DecoderError
 pub fn Decoder::new_flac(Bytes) -> Self raise DecoderError
 pub fn Decoder::new_looped(Bytes) -> LoopedDecoder raise DecoderError
 pub fn Decoder::new_mp3(Bytes) -> Self raise DecoderError
+pub fn Decoder::new_mp4(Bytes) -> Self raise DecoderError
 pub fn Decoder::new_mp4a(Bytes) -> Self raise DecoderError
 pub fn Decoder::new_vorbis(Bytes) -> Self raise DecoderError
 pub fn Decoder::new_wav(Bytes) -> Self raise DecoderError
@@ -1516,7 +1528,7 @@ pub(open) trait Source {
 }
 
 pub(open) trait WavWriter {
-  write_all(Self, Bytes) -> Unit
+  write_all(Self, Bytes) -> Unit raise ToWavError
 }
 pub impl WavWriter for @buffer.Buffer
 

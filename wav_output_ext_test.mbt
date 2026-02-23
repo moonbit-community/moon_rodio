@@ -78,7 +78,7 @@ fn WavBytesCollector::to_bytes(self : WavBytesCollector) -> Bytes {
 impl WavWriter for WavBytesCollector with write_all(
   self : WavBytesCollector,
   bytes : Bytes,
-) {
+) -> Unit raise ToWavError {
   self.out.val = bytes
 }
 
@@ -89,7 +89,9 @@ test "rodio::wav_output::output_to_wav" {
   wav_test_remove_file_if_exists(path)
 
   let source = SamplesBuffer::new(1, 48_000, [0.0, 0.5, -0.5, 1.0])
-  output_to_wav(source, path)
+  output_to_wav(source, path) catch {
+    _ => panic()
+  }
 
   assert_true(@fs.path_exists(path))
   let bytes = wav_test_read_file_bytes(path)
@@ -115,7 +117,9 @@ test "rodio::wav_output::wav_to_file_alias_and_writer" {
   wav_test_remove_file_if_exists(path)
 
   let source_for_file = SamplesBuffer::new(2, 22_050, [0.0, 0.25, -0.25, 1.0])
-  wav_to_file(source_for_file, path)
+  wav_to_file(source_for_file, path) catch {
+    _ => panic()
+  }
   let file_bytes = wav_test_read_file_bytes(path)
   assert_true(bytes_eq4(file_bytes, 0, 0x52, 0x49, 0x46, 0x46))
   assert_eq(read_u16_le(file_bytes, 22), 2)
@@ -123,7 +127,9 @@ test "rodio::wav_output::wav_to_file_alias_and_writer" {
 
   let writer = @buffer.new()
   let source_for_writer = SamplesBuffer::new(2, 22_050, [0.0, 0.25, -0.25, 1.0])
-  wav_to_writer(source_for_writer, writer)
+  wav_to_writer(source_for_writer, writer) catch {
+    _ => panic()
+  }
   let writer_bytes = writer.to_bytes()
   assert_eq(writer_bytes, file_bytes)
 
@@ -131,7 +137,9 @@ test "rodio::wav_output::wav_to_file_alias_and_writer" {
   let source_for_collector = SamplesBuffer::new(2, 22_050, [
     0.0, 0.25, -0.25, 1.0,
   ])
-  wav_to_writer(source_for_collector, collector)
+  wav_to_writer(source_for_collector, collector) catch {
+    _ => panic()
+  }
   assert_eq(collector.to_bytes(), file_bytes)
 
   wav_test_remove_file_if_exists(path)
