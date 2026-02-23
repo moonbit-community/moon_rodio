@@ -1,0 +1,39 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/stream"
+
+import {
+  "Milky2018/moon_cpal/core",
+  "Milky2018/moon_cpal/spec",
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn play(@moon_rodio.Mixer, @moon_rodio.Reader) -> @moon_rodio.Player raise @moon_rodio.PlayError
+
+pub fn play_file(@moon_rodio.Mixer, StringView) -> @moon_rodio.Player raise @moon_rodio.PlayError
+
+pub fn play_reader(@moon_rodio.Mixer, @moon_rodio.Reader) -> @moon_rodio.Player raise @moon_rodio.PlayError
+
+pub fn supported_output_configs(@spec.Device) -> Array[@core.SupportedStreamConfig] raise @moon_rodio.StreamError
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type DeviceSinkBuilder}
+
+pub using @moon_rodio {type OutputStreamConfig as DeviceSinkConfig}
+
+pub using @moon_rodio {type StreamError as DeviceSinkError}
+
+pub using @moon_rodio {type MixerDeviceSink}
+
+pub using @moon_rodio {type PlayError}
+
+pub using @moon_rodio {type Player}
+
+pub using @moon_rodio {type Reader}
+
+// Traits
+

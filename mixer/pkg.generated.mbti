@@ -1,0 +1,21 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/mixer"
+
+import {
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn mixer(Int, Int) -> (@moon_rodio.Mixer, @moon_rodio.MixerSource)
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type Mixer}
+
+pub using @moon_rodio {type MixerSource}
+
+// Traits
+

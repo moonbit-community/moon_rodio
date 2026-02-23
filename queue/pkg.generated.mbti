@@ -1,0 +1,23 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/queue"
+
+import {
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn queue(Bool) -> (@moon_rodio.SourcesQueueInput, @moon_rodio.SourcesQueueOutput)
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type QueueSignal}
+
+pub using @moon_rodio {type SourcesQueueInput}
+
+pub using @moon_rodio {type SourcesQueueOutput}
+
+// Traits
+
