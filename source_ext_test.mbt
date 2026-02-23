@@ -1575,3 +1575,66 @@ test "rodio::source::velvet_custom_density" {
   }
   assert_true(delta < 200)
 }
+
+///|
+test "rodio::source::noise_seeded_generators_repeatability" {
+  let seed = (0x1234_5678_9ABC_DEF0 : UInt64)
+
+  assert_eq(
+    collect_n(WhiteUniform::new_with_seed(44_100, seed), 64),
+    collect_n(WhiteUniform::new_with_seed(44_100, seed), 64),
+  )
+  assert_eq(
+    collect_n(WhiteTriangular::new_with_seed(44_100, seed), 64),
+    collect_n(WhiteTriangular::new_with_seed(44_100, seed), 64),
+  )
+  assert_eq(
+    collect_n(WhiteGaussian::new_with_seed(44_100, seed), 64),
+    collect_n(WhiteGaussian::new_with_seed(44_100, seed), 64),
+  )
+  assert_eq(
+    collect_n(Pink::new_with_seed(44_100, seed), 64),
+    collect_n(Pink::new_with_seed(44_100, seed), 64),
+  )
+  assert_eq(
+    collect_n(Blue::new_with_seed(44_100, seed), 64),
+    collect_n(Blue::new_with_seed(44_100, seed), 64),
+  )
+  assert_eq(
+    collect_n(Violet::new_with_seed(44_100, seed), 64),
+    collect_n(Violet::new_with_seed(44_100, seed), 64),
+  )
+  assert_eq(
+    collect_n(Brownian::new_with_seed(44_100, seed), 64),
+    collect_n(Brownian::new_with_seed(44_100, seed), 64),
+  )
+  assert_eq(
+    collect_n(Red::new_with_seed(44_100, seed), 64),
+    collect_n(Red::new_with_seed(44_100, seed), 64),
+  )
+  assert_eq(
+    collect_n(Velvet::new_with_seed(44_100, seed), 64),
+    collect_n(Velvet::new_with_seed(44_100, seed), 64),
+  )
+  assert_eq(
+    collect_n(Velvet::new_with_density_and_seed(44_100, 1_000.0, seed), 64),
+    collect_n(Velvet::new_with_density_and_seed(44_100, 1_000.0, seed), 64),
+  )
+}
+
+///|
+test "rodio::source::noise_different_seeds_diverge" {
+  let a = collect_n(WhiteUniform::new_with_seed(44_100, (1 : UInt64)), 32)
+  let b = collect_n(WhiteUniform::new_with_seed(44_100, (2 : UInt64)), 32)
+  assert_true(a != b)
+
+  let va = collect_n(
+    Velvet::new_with_density_and_seed(44_100, 1_000.0, (1 : UInt64)),
+    64,
+  )
+  let vb = collect_n(
+    Velvet::new_with_density_and_seed(44_100, 1_000.0, (2 : UInt64)),
+    64,
+  )
+  assert_true(va != vb)
+}

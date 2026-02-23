@@ -319,6 +319,7 @@ pub struct Blue {
 }
 pub fn Blue::channels(Self) -> Int
 pub fn Blue::new(Int) -> Self
+pub fn Blue::new_with_seed(Int, UInt64) -> Self
 pub fn Blue::next(Self) -> Double?
 pub fn Blue::sample_rate(Self) -> Int
 pub impl Source for Blue
@@ -332,6 +333,7 @@ pub struct Brownian {
 }
 pub fn Brownian::channels(Self) -> Int
 pub fn Brownian::new(Int) -> Self
+pub fn Brownian::new_with_seed(Int, UInt64) -> Self
 pub fn Brownian::next(Self) -> Double?
 pub fn Brownian::sample_rate(Self) -> Int
 pub impl Source for Brownian
@@ -898,6 +900,7 @@ pub struct Pink {
 }
 pub fn Pink::channels(Self) -> Int
 pub fn Pink::new(Int) -> Self
+pub fn Pink::new_with_seed(Int, UInt64) -> Self
 pub fn Pink::next(Self) -> Double?
 pub fn Pink::sample_rate(Self) -> Int
 pub impl Source for Pink
@@ -949,6 +952,7 @@ pub struct Red {
 }
 pub fn Red::channels(Self) -> Int
 pub fn Red::new(Int) -> Self
+pub fn Red::new_with_seed(Int, UInt64) -> Self
 pub fn Red::next(Self) -> Double?
 pub fn Red::sample_rate(Self) -> Int
 pub impl Source for Red
@@ -1352,6 +1356,8 @@ pub struct Velvet {
 pub fn Velvet::channels(Self) -> Int
 pub fn Velvet::new(Int) -> Self
 pub fn Velvet::new_with_density(Int, Double) -> Self
+pub fn Velvet::new_with_density_and_seed(Int, Double, UInt64) -> Self
+pub fn Velvet::new_with_seed(Int, UInt64) -> Self
 pub fn Velvet::next(Self) -> Double?
 pub fn Velvet::sample_rate(Self) -> Int
 pub impl Source for Velvet
@@ -1363,6 +1369,7 @@ pub struct Violet {
 }
 pub fn Violet::channels(Self) -> Int
 pub fn Violet::new(Int) -> Self
+pub fn Violet::new_with_seed(Int, UInt64) -> Self
 pub fn Violet::next(Self) -> Double?
 pub fn Violet::sample_rate(Self) -> Int
 pub impl Source for Violet
@@ -1374,6 +1381,7 @@ pub struct WhiteGaussian {
 pub fn WhiteGaussian::channels(Self) -> Int
 pub fn WhiteGaussian::mean(Self) -> Double
 pub fn WhiteGaussian::new(Int) -> Self
+pub fn WhiteGaussian::new_with_seed(Int, UInt64) -> Self
 pub fn WhiteGaussian::next(Self) -> Double?
 pub fn WhiteGaussian::sample_rate(Self) -> Int
 pub fn WhiteGaussian::std_dev(Self) -> Double
@@ -1385,6 +1393,7 @@ pub struct WhiteTriangular {
 }
 pub fn WhiteTriangular::channels(Self) -> Int
 pub fn WhiteTriangular::new(Int) -> Self
+pub fn WhiteTriangular::new_with_seed(Int, UInt64) -> Self
 pub fn WhiteTriangular::next(Self) -> Double?
 pub fn WhiteTriangular::sample_rate(Self) -> Int
 pub fn WhiteTriangular::std_dev(Self) -> Double
@@ -1396,6 +1405,7 @@ pub struct WhiteUniform {
 }
 pub fn WhiteUniform::channels(Self) -> Int
 pub fn WhiteUniform::new(Int) -> Self
+pub fn WhiteUniform::new_with_seed(Int, UInt64) -> Self
 pub fn WhiteUniform::next(Self) -> Double?
 pub fn WhiteUniform::sample_rate(Self) -> Int
 pub fn WhiteUniform::std_dev(Self) -> Double

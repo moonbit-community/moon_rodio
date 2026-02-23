@@ -452,8 +452,16 @@ pub struct WhiteUniform {
 
 ///|
 pub fn WhiteUniform::new(sample_rate : SampleRate) -> WhiteUniform {
+  WhiteUniform::new_with_seed(sample_rate, (0x9E3779B97F4A7C15 : UInt64))
+}
+
+///|
+pub fn WhiteUniform::new_with_seed(
+  sample_rate : SampleRate,
+  seed : UInt64,
+) -> WhiteUniform {
   guard sample_rate > 0 else { panic() }
-  { sample_rate, state: @ref.new((0x9E3779B97F4A7C15 : UInt64)) }
+  { sample_rate, state: @ref.new(seed) }
 }
 
 ///|
@@ -505,12 +513,13 @@ pub struct Pink {
 
 ///|
 pub fn Pink::new(sample_rate : SampleRate) -> Pink {
+  Pink::new_with_seed(sample_rate, (0xD1B54A32D192ED03 : UInt64))
+}
+
+///|
+pub fn Pink::new_with_seed(sample_rate : SampleRate, seed : UInt64) -> Pink {
   guard sample_rate > 0 else { panic() }
-  {
-    sample_rate,
-    state: @ref.new((0xD1B54A32D192ED03 : UInt64)),
-    prev: @ref.new(0.0),
-  }
+  { sample_rate, state: @ref.new(seed), prev: @ref.new(0.0) }
 }
 
 ///|
@@ -558,8 +567,16 @@ pub struct WhiteTriangular {
 
 ///|
 pub fn WhiteTriangular::new(sample_rate : SampleRate) -> WhiteTriangular {
+  WhiteTriangular::new_with_seed(sample_rate, (0x94D049BB133111EB : UInt64))
+}
+
+///|
+pub fn WhiteTriangular::new_with_seed(
+  sample_rate : SampleRate,
+  seed : UInt64,
+) -> WhiteTriangular {
   guard sample_rate > 0 else { panic() }
-  { sample_rate, state: @ref.new((0x94D049BB133111EB : UInt64)) }
+  { sample_rate, state: @ref.new(seed) }
 }
 
 ///|
@@ -605,8 +622,16 @@ pub struct WhiteGaussian {
 
 ///|
 pub fn WhiteGaussian::new(sample_rate : SampleRate) -> WhiteGaussian {
+  WhiteGaussian::new_with_seed(sample_rate, (0x369DEA0F31A53F85 : UInt64))
+}
+
+///|
+pub fn WhiteGaussian::new_with_seed(
+  sample_rate : SampleRate,
+  seed : UInt64,
+) -> WhiteGaussian {
   guard sample_rate > 0 else { panic() }
-  { sample_rate, state: @ref.new((0x369DEA0F31A53F85 : UInt64)) }
+  { sample_rate, state: @ref.new(seed) }
 }
 
 ///|
@@ -668,7 +693,12 @@ pub struct Velvet {
 
 ///|
 pub fn Velvet::new(sample_rate : SampleRate) -> Velvet {
-  Velvet::new_with_density(sample_rate, velvet_default_density)
+  Velvet::new_with_seed(sample_rate, (0x2545F4914F6CDD1D : UInt64))
+}
+
+///|
+pub fn Velvet::new_with_seed(sample_rate : SampleRate, seed : UInt64) -> Velvet {
+  Velvet::new_with_density_and_seed(sample_rate, velvet_default_density, seed)
 }
 
 ///|
@@ -676,10 +706,23 @@ pub fn Velvet::new_with_density(
   sample_rate : SampleRate,
   density : Sample,
 ) -> Velvet {
+  Velvet::new_with_density_and_seed(
+    sample_rate,
+    density,
+    (0x2545F4914F6CDD1D : UInt64),
+  )
+}
+
+///|
+pub fn Velvet::new_with_density_and_seed(
+  sample_rate : SampleRate,
+  density : Sample,
+  seed : UInt64,
+) -> Velvet {
   guard sample_rate > 0 else { panic() }
   let density = if density <= 1.0e-9 { velvet_default_density } else { density }
   let grid_size = Double::from_int(sample_rate) / density
-  let state = @ref.new((0x2545F4914F6CDD1D : UInt64))
+  let state = @ref.new(seed)
   let impulse_pos = rand_unit(state) * grid_size
   {
     sample_rate,
@@ -745,10 +788,15 @@ pub struct Blue {
 
 ///|
 pub fn Blue::new(sample_rate : SampleRate) -> Blue {
+  Blue::new_with_seed(sample_rate, (0x9E3779B97F4A7C15 : UInt64))
+}
+
+///|
+pub fn Blue::new_with_seed(sample_rate : SampleRate, seed : UInt64) -> Blue {
   guard sample_rate > 0 else { panic() }
   {
     sample_rate,
-    white_noise: WhiteUniform::new(sample_rate),
+    white_noise: WhiteUniform::new_with_seed(sample_rate, seed),
     prev_white: @ref.new(0.0),
   }
 }
@@ -795,8 +843,17 @@ pub struct Violet {
 
 ///|
 pub fn Violet::new(sample_rate : SampleRate) -> Violet {
+  Violet::new_with_seed(sample_rate, (0x9E3779B97F4A7C15 : UInt64))
+}
+
+///|
+pub fn Violet::new_with_seed(sample_rate : SampleRate, seed : UInt64) -> Violet {
   guard sample_rate > 0 else { panic() }
-  { sample_rate, blue_noise: Blue::new(sample_rate), prev: @ref.new(0.0) }
+  {
+    sample_rate,
+    blue_noise: Blue::new_with_seed(sample_rate, seed),
+    prev: @ref.new(0.0),
+  }
 }
 
 ///|
@@ -843,8 +900,16 @@ pub struct Brownian {
 
 ///|
 pub fn Brownian::new(sample_rate : SampleRate) -> Brownian {
+  Brownian::new_with_seed(sample_rate, (0x369DEA0F31A53F85 : UInt64))
+}
+
+///|
+pub fn Brownian::new_with_seed(
+  sample_rate : SampleRate,
+  seed : UInt64,
+) -> Brownian {
   guard sample_rate > 0 else { panic() }
-  let white_noise = WhiteGaussian::new(sample_rate)
+  let white_noise = WhiteGaussian::new_with_seed(sample_rate, seed)
   let center_freq_hz = 5.0
   let mut leak = 1.0 -
     2.0 * @math.PI * center_freq_hz / Double::from_int(sample_rate)
@@ -906,8 +971,13 @@ pub struct Red {
 
 ///|
 pub fn Red::new(sample_rate : SampleRate) -> Red {
+  Red::new_with_seed(sample_rate, (0x9E3779B97F4A7C15 : UInt64))
+}
+
+///|
+pub fn Red::new_with_seed(sample_rate : SampleRate, seed : UInt64) -> Red {
   guard sample_rate > 0 else { panic() }
-  let white_noise = WhiteUniform::new(sample_rate)
+  let white_noise = WhiteUniform::new_with_seed(sample_rate, seed)
   let center_freq_hz = 5.0
   let mut leak = 1.0 -
     2.0 * @math.PI * center_freq_hz / Double::from_int(sample_rate)
