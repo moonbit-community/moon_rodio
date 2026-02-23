@@ -1,0 +1,46 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/speakers"
+
+import {
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn available_outputs() -> Array[@moon_rodio.Output] raise @moon_rodio.SpeakersListError
+
+pub fn default_output_config() -> @moon_rodio.OutputConfig
+
+pub fn new_builder() -> @moon_rodio.SpeakersBuilder
+
+// Errors
+
+// Types and methods
+pub struct ConfigIsSet {
+}
+
+pub struct ConfigNotSet {
+}
+
+pub struct DeviceIsSet {
+}
+
+pub struct DeviceNotSet {
+}
+
+// Type aliases
+pub using @moon_rodio {type SpeakersBuilder as Builder}
+
+pub using @moon_rodio {type SpeakersListError as ListError}
+
+pub using @moon_rodio {type SpeakersError as OpenError}
+
+pub using @moon_rodio {type Output}
+
+pub using @moon_rodio {type OutputConfig}
+
+pub using @moon_rodio {type SpeakersPlayError as PlayError}
+
+pub using @moon_rodio {type SinkHandle}
+
+// Traits
+

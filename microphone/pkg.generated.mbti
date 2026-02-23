@@ -1,0 +1,44 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/microphone"
+
+import {
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn available_inputs() -> Array[@moon_rodio.Input] raise @moon_rodio.MicrophoneListError
+
+pub fn default_input_config() -> @moon_rodio.InputConfig
+
+pub fn new_builder() -> @moon_rodio.MicrophoneBuilder
+
+// Errors
+
+// Types and methods
+pub struct ConfigIsSet {
+}
+
+pub struct ConfigNotSet {
+}
+
+pub struct DeviceIsSet {
+}
+
+pub struct DeviceNotSet {
+}
+
+// Type aliases
+pub using @moon_rodio {type MicrophoneBuilder as Builder}
+
+pub using @moon_rodio {type Input}
+
+pub using @moon_rodio {type InputConfig}
+
+pub using @moon_rodio {type MicrophoneListError as ListError}
+
+pub using @moon_rodio {type MicrophoneError as OpenError}
+
+pub using @moon_rodio {type Microphone as Stream}
+
+// Traits
+

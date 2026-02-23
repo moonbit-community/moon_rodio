@@ -144,3 +144,19 @@ test "rodio::wav_output::wav_to_file_alias_and_writer" {
 
   wav_test_remove_file_if_exists(path)
 }
+
+///|
+test "rodio::wav_output::writer_drops_partial_tail_frame" {
+  let writer = @buffer.new()
+  let source = SamplesBuffer::new(2, 48_000, [0.0, 0.5, -0.5])
+  wav_to_writer(source, writer) catch {
+    _ => panic()
+  }
+  let bytes = writer.to_bytes()
+
+  assert_eq(read_u16_le(bytes, 22), 2)
+  assert_eq(read_u32_le(bytes, 40), 8)
+  assert_eq(bytes.length(), 52)
+  assert_true(bytes_eq4(bytes, 44, 0, 0, 0, 0))
+  assert_true(bytes_eq4(bytes, 48, 0, 0, 0, 63))
+}

@@ -38,7 +38,8 @@ fn[S : Source] source_to_wav_bytes(source : S) -> Bytes {
     }
   }
 
-  let data_size = samples.length() * 4
+  let whole_samples = samples.length() / channels * channels
+  let data_size = whole_samples * 4
   let riff_size = 36 + data_size
   let byte_rate = sample_rate * channels * 4
   let block_align = channels * 4
@@ -58,8 +59,8 @@ fn[S : Source] source_to_wav_bytes(source : S) -> Bytes {
   buf.write_bytes(b"data")
   buf.write_uint_le(data_size.reinterpret_as_uint())
 
-  for sample in samples {
-    buf.write_float_le(Float::from_double(sample))
+  for i in 0..<whole_samples {
+    buf.write_float_le(Float::from_double(samples[i]))
   }
 
   buf.to_bytes()
