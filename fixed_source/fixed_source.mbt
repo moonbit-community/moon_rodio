@@ -13,6 +13,9 @@
 // limitations under the License.
 
 ///|
+pub using @Milky2018/moon_rodio {trait FixedSource}
+
+///|
 pub type FixedSourceAdapter = @Milky2018/moon_rodio.FixedSourceAdapter
 
 ///|

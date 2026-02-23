@@ -13,6 +13,9 @@
 // limitations under the License.
 
 ///|
+pub using @Milky2018/moon_rodio {trait Source}
+
+///|
 pub type AutomaticGainControl = @Milky2018/moon_rodio.AutomaticGainControl
 
 ///|

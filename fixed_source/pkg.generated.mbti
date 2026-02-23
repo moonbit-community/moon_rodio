@@ -19,5 +19,7 @@ pub using @moon_rodio {type FixedSamplesBuffer}
 
 pub using @moon_rodio {type FixedSourceAdapter}
 
+pub using @moon_rodio {trait FixedSource}
+
 // Traits
 
