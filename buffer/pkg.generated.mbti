@@ -1,0 +1,21 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/buffer"
+
+import {
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn new(Int, Int, Array[Double]) -> @moon_rodio.SamplesBuffer
+
+pub fn[S : @moon_rodio.Source] record_source(S) -> @moon_rodio.SamplesBuffer
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type SamplesBuffer}
+
+// Traits
+

@@ -1,0 +1,23 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/fixed_source"
+
+import {
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn[S : @moon_rodio.FixedSource] adapt(S) -> @moon_rodio.FixedSourceAdapter
+
+pub fn new_samples_buffer(Int, Int, Array[Double]) -> @moon_rodio.FixedSamplesBuffer
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type FixedSamplesBuffer}
+
+pub using @moon_rodio {type FixedSourceAdapter}
+
+// Traits
+

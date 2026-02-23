@@ -1,0 +1,23 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/static_buffer"
+
+import {
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn buffer_from_iter(Int, Int, Array[Double]) -> @moon_rodio.SamplesBuffer
+
+pub fn new(Int, Int, Array[Double]) -> @moon_rodio.StaticSamplesBuffer
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type SamplesBuffer}
+
+pub using @moon_rodio {type StaticSamplesBuffer}
+
+// Traits
+

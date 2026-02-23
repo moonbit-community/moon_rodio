@@ -1,0 +1,35 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/conversions"
+
+import {
+  "Milky2018/moon_rodio",
+}
+
+// Values
+pub fn[S : @moon_rodio.Source] convert_channels(S, Int) -> @moon_rodio.DynSource
+
+pub fn[S : @moon_rodio.Source] convert_sample_rate(S, Int) -> @moon_rodio.DynSource
+
+pub fn[S : @moon_rodio.Source] new_channel_count_converter(S, Int, Int) -> @moon_rodio.ChannelCountConverter
+
+pub fn[S : @moon_rodio.Source] new_sample_rate_converter(S, Int, Int, Int) -> @moon_rodio.SampleRateConverter
+
+pub fn[S : @moon_rodio.Source] new_sample_type_converter(S) -> @moon_rodio.SampleTypeConverter
+
+pub fn[S : @moon_rodio.Source] uniform(S, Int, Int) -> @moon_rodio.DynSource
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+pub using @moon_rodio {type ChannelCountConverter}
+
+pub using @moon_rodio {type DynSource}
+
+pub using @moon_rodio {type SampleRateConverter}
+
+pub using @moon_rodio {type SampleTypeConverter}
+
+// Traits
+

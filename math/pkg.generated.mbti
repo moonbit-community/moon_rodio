@@ -1,0 +1,18 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/moon_rodio/math"
+
+// Values
+pub fn db_to_linear(Double) -> Double
+
+pub fn lerp(Double, Double, Int, Int) -> Double
+
+pub fn linear_to_db(Double) -> Double
+
+// Errors
+
+// Types and methods
+
+// Type aliases
+
+// Traits
+
