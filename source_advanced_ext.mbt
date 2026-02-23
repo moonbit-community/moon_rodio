@@ -32,11 +32,67 @@ fn agc_coeff(
 }
 
 ///|
+pub struct AutomaticGainControlSettings {
+  target_level : Sample
+  attack_time : @moon_cpal.Duration
+  release_time : @moon_cpal.Duration
+  absolute_max_gain : Sample
+}
+
+///|
+pub fn AutomaticGainControlSettings::default() -> AutomaticGainControlSettings {
+  {
+    target_level: 1.0,
+    attack_time: @moon_cpal.Duration::from_secs((4 : UInt64)),
+    release_time: @moon_cpal.Duration::from_secs((0 : UInt64)),
+    absolute_max_gain: 7.0,
+  }
+}
+
+///|
+pub fn AutomaticGainControlSettings::new() -> AutomaticGainControlSettings {
+  AutomaticGainControlSettings::default()
+}
+
+///|
+pub fn AutomaticGainControlSettings::with_target_level(
+  self : AutomaticGainControlSettings,
+  target_level : Sample,
+) -> AutomaticGainControlSettings {
+  { ..self, target_level, }
+}
+
+///|
+pub fn AutomaticGainControlSettings::with_attack(
+  self : AutomaticGainControlSettings,
+  attack_time : @moon_cpal.Duration,
+) -> AutomaticGainControlSettings {
+  { ..self, attack_time, }
+}
+
+///|
+pub fn AutomaticGainControlSettings::with_release(
+  self : AutomaticGainControlSettings,
+  release_time : @moon_cpal.Duration,
+) -> AutomaticGainControlSettings {
+  { ..self, release_time, }
+}
+
+///|
+pub fn AutomaticGainControlSettings::with_absolute_max_gain(
+  self : AutomaticGainControlSettings,
+  absolute_max_gain : Sample,
+) -> AutomaticGainControlSettings {
+  { ..self, absolute_max_gain, }
+}
+
+///|
 pub struct AutomaticGainControl {
   input : DynSource
   target_level : Ref[Sample]
   absolute_max_gain : Ref[Sample]
   current_gain : Ref[Sample]
+  floor : Ref[Sample]
   attack_coeff : Ref[Sample]
   release_coeff : Ref[Sample]
   agc_control : Ref[Bool]
@@ -45,25 +101,23 @@ pub struct AutomaticGainControl {
 ///|
 pub fn[S : Source] automatic_gain_control(
   source : S,
-  target_level : Sample,
-  attack_time : @moon_cpal.Duration,
-  release_time : @moon_cpal.Duration,
-  absolute_max_gain : Sample,
+  settings : AutomaticGainControlSettings,
 ) -> AutomaticGainControl {
   let src = to_dyn(source)
   {
     input: src,
-    target_level: @ref.new(target_level),
-    absolute_max_gain: @ref.new(absolute_max_gain),
+    target_level: @ref.new(settings.target_level),
+    absolute_max_gain: @ref.new(settings.absolute_max_gain),
     current_gain: @ref.new(1.0),
-    attack_coeff: @ref.new(agc_coeff(attack_time, src.sample_rate())),
-    release_coeff: @ref.new(agc_coeff(release_time, src.sample_rate())),
+    floor: @ref.new(0.0),
+    attack_coeff: @ref.new(agc_coeff(settings.attack_time, src.sample_rate())),
+    release_coeff: @ref.new(agc_coeff(settings.release_time, src.sample_rate())),
     agc_control: @ref.new(true),
   }
 }
 
 ///|
-pub fn[S : Source] AutomaticGainControl::new(
+pub fn[S : Source] automatic_gain_control_with_params(
   source : S,
   target_level : Sample,
   attack_time : @moon_cpal.Duration,
@@ -71,6 +125,32 @@ pub fn[S : Source] AutomaticGainControl::new(
   absolute_max_gain : Sample,
 ) -> AutomaticGainControl {
   automatic_gain_control(
+    source,
+    AutomaticGainControlSettings::new()
+    .with_target_level(target_level)
+    .with_attack(attack_time)
+    .with_release(release_time)
+    .with_absolute_max_gain(absolute_max_gain),
+  )
+}
+
+///|
+pub fn[S : Source] AutomaticGainControl::new(
+  source : S,
+  settings : AutomaticGainControlSettings,
+) -> AutomaticGainControl {
+  automatic_gain_control(source, settings)
+}
+
+///|
+pub fn[S : Source] AutomaticGainControl::new_with_params(
+  source : S,
+  target_level : Sample,
+  attack_time : @moon_cpal.Duration,
+  release_time : @moon_cpal.Duration,
+  absolute_max_gain : Sample,
+) -> AutomaticGainControl {
+  automatic_gain_control_with_params(
     source, target_level, attack_time, release_time, absolute_max_gain,
   )
 }
@@ -116,7 +196,12 @@ pub fn AutomaticGainControl::next(self : AutomaticGainControl) -> Sample? {
       } else {
         self.release_coeff.val
       }
-      self.current_gain.val = coeff * current + (1.0 - coeff) * target_gain
+      let gain = coeff * current + (1.0 - coeff) * target_gain
+      self.current_gain.val = if gain < self.floor.val {
+        self.floor.val
+      } else {
+        gain
+      }
       Some(v * self.current_gain.val)
     }
   }
@@ -163,6 +248,17 @@ pub fn AutomaticGainControl::set_enabled(
   enabled : Bool,
 ) -> Unit {
   self.agc_control.val = enabled
+}
+
+///|
+pub fn AutomaticGainControl::set_floor(
+  self : AutomaticGainControl,
+  floor : Sample?,
+) -> Unit {
+  match floor {
+    None => self.floor.val = 0.0
+    Some(v) => self.floor.val = if v < 0.0 { 0.0 } else { v }
+  }
 }
 
 ///|
@@ -434,20 +530,75 @@ fn lcg_next(state : Ref[UInt64]) -> UInt64 {
 }
 
 ///|
-fn rand_unit(state : Ref[UInt64]) -> Sample {
-  let x = lcg_next(state)
+fn seed_or_default(seed : UInt64) -> UInt64 {
+  if seed == (0 : UInt64) {
+    (0x9E3779B97F4A7C15 : UInt64)
+  } else {
+    seed
+  }
+}
+
+///|
+pub(open) trait NoiseRng {
+  next_u64(Self) -> UInt64
+}
+
+///|
+pub struct LcgNoiseRng {
+  state : Ref[UInt64]
+}
+
+///|
+pub fn LcgNoiseRng::new(seed : UInt64) -> LcgNoiseRng {
+  { state: @ref.new(seed_or_default(seed)) }
+}
+
+///|
+pub fn LcgNoiseRng::next_u64(self : LcgNoiseRng) -> UInt64 {
+  lcg_next(self.state)
+}
+
+///|
+pub impl NoiseRng for LcgNoiseRng with next_u64(self : LcgNoiseRng) {
+  self.next_u64()
+}
+
+///|
+pub struct NoiseRngState {
+  next_fn : () -> UInt64
+}
+
+///|
+fn seeded_rng_state(seed : UInt64) -> NoiseRngState {
+  let rng = LcgNoiseRng::new(seed)
+  { next_fn: fn() { rng.next_u64() } }
+}
+
+///|
+fn[R : NoiseRng] custom_rng_state(rng : R) -> NoiseRngState {
+  { next_fn: fn() { rng.next_u64() } }
+}
+
+///|
+fn NoiseRngState::next_u64(self : NoiseRngState) -> UInt64 {
+  (self.next_fn)()
+}
+
+///|
+fn rand_unit(rng : NoiseRngState) -> Sample {
+  let x = rng.next_u64()
   Double::from_int((x & (0x7fff_ffff : UInt64)).to_int()) / 2147483647.0
 }
 
 ///|
-fn rand_signed(state : Ref[UInt64]) -> Sample {
-  rand_unit(state) * 2.0 - 1.0
+fn rand_signed(rng : NoiseRngState) -> Sample {
+  rand_unit(rng) * 2.0 - 1.0
 }
 
 ///|
 pub struct WhiteUniform {
   sample_rate : SampleRate
-  state : Ref[UInt64]
+  rng : NoiseRngState
 }
 
 ///|
@@ -461,12 +612,21 @@ pub fn WhiteUniform::new_with_seed(
   seed : UInt64,
 ) -> WhiteUniform {
   guard sample_rate > 0 else { panic() }
-  { sample_rate, state: @ref.new(seed) }
+  { sample_rate, rng: seeded_rng_state(seed) }
+}
+
+///|
+pub fn[R : NoiseRng] WhiteUniform::new_with_rng(
+  sample_rate : SampleRate,
+  rng : R,
+) -> WhiteUniform {
+  guard sample_rate > 0 else { panic() }
+  { sample_rate, rng: custom_rng_state(rng) }
 }
 
 ///|
 pub fn WhiteUniform::next(self : WhiteUniform) -> Sample? {
-  Some(rand_signed(self.state))
+  Some(rand_signed(self.rng))
 }
 
 ///|
@@ -507,7 +667,7 @@ pub fn white(sample_rate : SampleRate) -> WhiteUniform {
 ///|
 pub struct Pink {
   sample_rate : SampleRate
-  state : Ref[UInt64]
+  rng : NoiseRngState
   prev : Ref[Sample]
 }
 
@@ -519,12 +679,21 @@ pub fn Pink::new(sample_rate : SampleRate) -> Pink {
 ///|
 pub fn Pink::new_with_seed(sample_rate : SampleRate, seed : UInt64) -> Pink {
   guard sample_rate > 0 else { panic() }
-  { sample_rate, state: @ref.new(seed), prev: @ref.new(0.0) }
+  { sample_rate, rng: seeded_rng_state(seed), prev: @ref.new(0.0) }
+}
+
+///|
+pub fn[R : NoiseRng] Pink::new_with_rng(
+  sample_rate : SampleRate,
+  rng : R,
+) -> Pink {
+  guard sample_rate > 0 else { panic() }
+  { sample_rate, rng: custom_rng_state(rng), prev: @ref.new(0.0) }
 }
 
 ///|
 pub fn Pink::next(self : Pink) -> Sample? {
-  let white = rand_signed(self.state)
+  let white = rand_signed(self.rng)
   self.prev.val = 0.98 * self.prev.val + 0.02 * white
   Some(self.prev.val * 5.0)
 }
@@ -562,7 +731,7 @@ pub fn pink(sample_rate : SampleRate) -> Pink {
 ///|
 pub struct WhiteTriangular {
   sample_rate : SampleRate
-  state : Ref[UInt64]
+  rng : NoiseRngState
 }
 
 ///|
@@ -576,12 +745,21 @@ pub fn WhiteTriangular::new_with_seed(
   seed : UInt64,
 ) -> WhiteTriangular {
   guard sample_rate > 0 else { panic() }
-  { sample_rate, state: @ref.new(seed) }
+  { sample_rate, rng: seeded_rng_state(seed) }
+}
+
+///|
+pub fn[R : NoiseRng] WhiteTriangular::new_with_rng(
+  sample_rate : SampleRate,
+  rng : R,
+) -> WhiteTriangular {
+  guard sample_rate > 0 else { panic() }
+  { sample_rate, rng: custom_rng_state(rng) }
 }
 
 ///|
 pub fn WhiteTriangular::next(self : WhiteTriangular) -> Sample? {
-  Some((rand_signed(self.state) + rand_signed(self.state)) / 2.0)
+  Some((rand_signed(self.rng) + rand_signed(self.rng)) / 2.0)
 }
 
 ///|
@@ -617,7 +795,7 @@ pub impl Source for WhiteTriangular with sample_rate(self : WhiteTriangular) {
 ///|
 pub struct WhiteGaussian {
   sample_rate : SampleRate
-  state : Ref[UInt64]
+  rng : NoiseRngState
 }
 
 ///|
@@ -631,7 +809,16 @@ pub fn WhiteGaussian::new_with_seed(
   seed : UInt64,
 ) -> WhiteGaussian {
   guard sample_rate > 0 else { panic() }
-  { sample_rate, state: @ref.new(seed) }
+  { sample_rate, rng: seeded_rng_state(seed) }
+}
+
+///|
+pub fn[R : NoiseRng] WhiteGaussian::new_with_rng(
+  sample_rate : SampleRate,
+  rng : R,
+) -> WhiteGaussian {
+  guard sample_rate > 0 else { panic() }
+  { sample_rate, rng: custom_rng_state(rng) }
 }
 
 ///|
@@ -649,7 +836,7 @@ pub fn WhiteGaussian::next(self : WhiteGaussian) -> Sample? {
   // Irwin-Hall approximation of a normal distribution.
   let mut sum = 0.0
   for _ in 0..<12 {
-    sum += rand_unit(self.state)
+    sum += rand_unit(self.rng)
   }
   Some((sum - 6.0) * 0.6)
 }
@@ -685,7 +872,7 @@ let velvet_default_density : Sample = 2_000.0
 ///|
 pub struct Velvet {
   sample_rate : SampleRate
-  state : Ref[UInt64]
+  rng : NoiseRngState
   grid_size : Ref[Sample]
   grid_pos : Ref[Sample]
   impulse_pos : Ref[Sample]
@@ -702,6 +889,14 @@ pub fn Velvet::new_with_seed(sample_rate : SampleRate, seed : UInt64) -> Velvet 
 }
 
 ///|
+pub fn[R : NoiseRng] Velvet::new_with_rng(
+  sample_rate : SampleRate,
+  rng : R,
+) -> Velvet {
+  Velvet::new_with_density_and_rng(sample_rate, velvet_default_density, rng)
+}
+
+///|
 pub fn Velvet::new_with_density(
   sample_rate : SampleRate,
   density : Sample,
@@ -714,6 +909,26 @@ pub fn Velvet::new_with_density(
 }
 
 ///|
+pub fn[R : NoiseRng] Velvet::new_with_density_and_rng(
+  sample_rate : SampleRate,
+  density : Sample,
+  rng : R,
+) -> Velvet {
+  guard sample_rate > 0 else { panic() }
+  let density = if density <= 1.0e-9 { velvet_default_density } else { density }
+  let grid_size = Double::from_int(sample_rate) / density
+  let state = custom_rng_state(rng)
+  let impulse_pos = rand_unit(state) * grid_size
+  {
+    sample_rate,
+    rng: state,
+    grid_size: @ref.new(grid_size),
+    grid_pos: @ref.new(0.0),
+    impulse_pos: @ref.new(impulse_pos),
+  }
+}
+
+///|
 pub fn Velvet::new_with_density_and_seed(
   sample_rate : SampleRate,
   density : Sample,
@@ -722,11 +937,11 @@ pub fn Velvet::new_with_density_and_seed(
   guard sample_rate > 0 else { panic() }
   let density = if density <= 1.0e-9 { velvet_default_density } else { density }
   let grid_size = Double::from_int(sample_rate) / density
-  let state = @ref.new(seed)
+  let state = seeded_rng_state(seed)
   let impulse_pos = rand_unit(state) * grid_size
   {
     sample_rate,
-    state,
+    rng: state,
     grid_size: @ref.new(grid_size),
     grid_pos: @ref.new(0.0),
     impulse_pos: @ref.new(impulse_pos),
@@ -736,7 +951,7 @@ pub fn Velvet::new_with_density_and_seed(
 ///|
 pub fn Velvet::next(self : Velvet) -> Sample? {
   let out = if self.grid_pos.val.to_int() == self.impulse_pos.val.to_int() {
-    if rand_unit(self.state) > 0.5 {
+    if rand_unit(self.rng) > 0.5 {
       1.0
     } else {
       -1.0
@@ -748,7 +963,7 @@ pub fn Velvet::next(self : Velvet) -> Sample? {
   self.grid_pos.val += 1.0
   if self.grid_pos.val >= self.grid_size.val {
     self.grid_pos.val = 0.0
-    self.impulse_pos.val = rand_unit(self.state) * self.grid_size.val
+    self.impulse_pos.val = rand_unit(self.rng) * self.grid_size.val
   }
 
   Some(out)
@@ -797,6 +1012,19 @@ pub fn Blue::new_with_seed(sample_rate : SampleRate, seed : UInt64) -> Blue {
   {
     sample_rate,
     white_noise: WhiteUniform::new_with_seed(sample_rate, seed),
+    prev_white: @ref.new(0.0),
+  }
+}
+
+///|
+pub fn[R : NoiseRng] Blue::new_with_rng(
+  sample_rate : SampleRate,
+  rng : R,
+) -> Blue {
+  guard sample_rate > 0 else { panic() }
+  {
+    sample_rate,
+    white_noise: WhiteUniform::new_with_rng(sample_rate, rng),
     prev_white: @ref.new(0.0),
   }
 }
@@ -852,6 +1080,19 @@ pub fn Violet::new_with_seed(sample_rate : SampleRate, seed : UInt64) -> Violet 
   {
     sample_rate,
     blue_noise: Blue::new_with_seed(sample_rate, seed),
+    prev: @ref.new(0.0),
+  }
+}
+
+///|
+pub fn[R : NoiseRng] Violet::new_with_rng(
+  sample_rate : SampleRate,
+  rng : R,
+) -> Violet {
+  guard sample_rate > 0 else { panic() }
+  {
+    sample_rate,
+    blue_noise: Blue::new_with_rng(sample_rate, rng),
     prev: @ref.new(0.0),
   }
 }
@@ -929,6 +1170,31 @@ pub fn Brownian::new_with_seed(
 }
 
 ///|
+pub fn[R : NoiseRng] Brownian::new_with_rng(
+  sample_rate : SampleRate,
+  rng : R,
+) -> Brownian {
+  guard sample_rate > 0 else { panic() }
+  let white_noise = WhiteGaussian::new_with_rng(sample_rate, rng)
+  let center_freq_hz = 5.0
+  let mut leak = 1.0 -
+    2.0 * @math.PI * center_freq_hz / Double::from_int(sample_rate)
+  if leak < 0.0 {
+    leak = 0.0
+  }
+  let stddev = white_noise.std_dev()
+  let variance = stddev * stddev / (1.0 - leak * leak + 1.0e-12)
+  let scale = 1.0 / @math.pow(variance, 0.5)
+  {
+    sample_rate,
+    white_noise,
+    accumulator: @ref.new(0.0),
+    leak_factor: @ref.new(leak),
+    scale: @ref.new(scale),
+  }
+}
+
+///|
 pub fn Brownian::next(self : Brownian) -> Sample? {
   let white = self.white_noise.next().unwrap()
   self.accumulator.val = self.accumulator.val * self.leak_factor.val + white
@@ -978,6 +1244,31 @@ pub fn Red::new(sample_rate : SampleRate) -> Red {
 pub fn Red::new_with_seed(sample_rate : SampleRate, seed : UInt64) -> Red {
   guard sample_rate > 0 else { panic() }
   let white_noise = WhiteUniform::new_with_seed(sample_rate, seed)
+  let center_freq_hz = 5.0
+  let mut leak = 1.0 -
+    2.0 * @math.PI * center_freq_hz / Double::from_int(sample_rate)
+  if leak < 0.0 {
+    leak = 0.0
+  }
+  let stddev = @math.pow(1.0 / 3.0, 0.5)
+  let variance = stddev * stddev / (1.0 - leak * leak + 1.0e-12)
+  let scale = 1.0 / @math.pow(variance, 0.5)
+  {
+    sample_rate,
+    white_noise,
+    accumulator: @ref.new(0.0),
+    leak_factor: @ref.new(leak),
+    scale: @ref.new(scale),
+  }
+}
+
+///|
+pub fn[R : NoiseRng] Red::new_with_rng(
+  sample_rate : SampleRate,
+  rng : R,
+) -> Red {
+  guard sample_rate > 0 else { panic() }
+  let white_noise = WhiteUniform::new_with_rng(sample_rate, rng)
   let center_freq_hz = 5.0
   let mut leak = 1.0 -
     2.0 * @math.PI * center_freq_hz / Double::from_int(sample_rate)

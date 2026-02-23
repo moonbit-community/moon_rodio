@@ -15,7 +15,9 @@ pub fn[S : Source] amplify_decibel(S, Double) -> DynSource
 
 pub fn[S : Source] amplify_normalized(S, Double) -> DynSource
 
-pub fn[S : Source] automatic_gain_control(S, Double, @core.Duration, @core.Duration, Double) -> AutomaticGainControl
+pub fn[S : Source] automatic_gain_control(S, AutomaticGainControlSettings) -> AutomaticGainControl
+
+pub fn[S : Source] automatic_gain_control_with_params(S, Double, @core.Duration, @core.Duration, Double) -> AutomaticGainControl
 
 pub fn available_inputs() -> Array[Input] raise MicrophoneListError
 
@@ -252,6 +254,7 @@ pub struct AutomaticGainControl {
   target_level : Ref[Double]
   absolute_max_gain : Ref[Double]
   current_gain : Ref[Double]
+  floor : Ref[Double]
   attack_coeff : Ref[Double]
   release_coeff : Ref[Double]
   agc_control : Ref[Bool]
@@ -264,11 +267,26 @@ pub fn AutomaticGainControl::get_release_coeff(Self) -> Ref[Double]
 pub fn AutomaticGainControl::get_target_level(Self) -> Ref[Double]
 pub fn AutomaticGainControl::inner(Self) -> DynSource
 pub fn AutomaticGainControl::inner_mut(Self) -> DynSource
-pub fn[S : Source] AutomaticGainControl::new(S, Double, @core.Duration, @core.Duration, Double) -> Self
+pub fn[S : Source] AutomaticGainControl::new(S, AutomaticGainControlSettings) -> Self
+pub fn[S : Source] AutomaticGainControl::new_with_params(S, Double, @core.Duration, @core.Duration, Double) -> Self
 pub fn AutomaticGainControl::next(Self) -> Double?
 pub fn AutomaticGainControl::sample_rate(Self) -> Int
 pub fn AutomaticGainControl::set_enabled(Self, Bool) -> Unit
+pub fn AutomaticGainControl::set_floor(Self, Double?) -> Unit
 pub impl Source for AutomaticGainControl
+
+pub struct AutomaticGainControlSettings {
+  target_level : Double
+  attack_time : @core.Duration
+  release_time : @core.Duration
+  absolute_max_gain : Double
+}
+pub fn AutomaticGainControlSettings::default() -> Self
+pub fn AutomaticGainControlSettings::new() -> Self
+pub fn AutomaticGainControlSettings::with_absolute_max_gain(Self, Double) -> Self
+pub fn AutomaticGainControlSettings::with_attack(Self, @core.Duration) -> Self
+pub fn AutomaticGainControlSettings::with_release(Self, @core.Duration) -> Self
+pub fn AutomaticGainControlSettings::with_target_level(Self, Double) -> Self
 
 pub struct BitDepth {
   bits : Int
@@ -319,6 +337,7 @@ pub struct Blue {
 }
 pub fn Blue::channels(Self) -> Int
 pub fn Blue::new(Int) -> Self
+pub fn[R : NoiseRng] Blue::new_with_rng(Int, R) -> Self
 pub fn Blue::new_with_seed(Int, UInt64) -> Self
 pub fn Blue::next(Self) -> Double?
 pub fn Blue::sample_rate(Self) -> Int
@@ -333,6 +352,7 @@ pub struct Brownian {
 }
 pub fn Brownian::channels(Self) -> Int
 pub fn Brownian::new(Int) -> Self
+pub fn[R : NoiseRng] Brownian::new_with_rng(Int, R) -> Self
 pub fn Brownian::new_with_seed(Int, UInt64) -> Self
 pub fn Brownian::next(Self) -> Double?
 pub fn Brownian::sample_rate(Self) -> Int
@@ -665,6 +685,13 @@ pub fn InputConfig::with_sample_rate(Self, Int) -> Self
 pub impl Eq for InputConfig
 pub impl Show for InputConfig
 
+pub struct LcgNoiseRng {
+  state : Ref[UInt64]
+}
+pub fn LcgNoiseRng::new(UInt64) -> Self
+pub fn LcgNoiseRng::next_u64(Self) -> UInt64
+pub impl NoiseRng for LcgNoiseRng
+
 pub struct Limit {
   input : DynSource
   settings : LimitSettings
@@ -793,6 +820,10 @@ pub fn MixerSource::next(Self) -> Double?
 pub fn MixerSource::sample_rate(Self) -> Int
 pub impl Source for MixerSource
 
+pub struct NoiseRngState {
+  next_fn : () -> UInt64
+}
+
 pub struct Output {
   inner : @spec.Device
   default : Bool
@@ -895,11 +926,12 @@ pub impl Source for PeriodicAccess
 
 pub struct Pink {
   sample_rate : Int
-  state : Ref[UInt64]
+  rng : NoiseRngState
   prev : Ref[Double]
 }
 pub fn Pink::channels(Self) -> Int
 pub fn Pink::new(Int) -> Self
+pub fn[R : NoiseRng] Pink::new_with_rng(Int, R) -> Self
 pub fn Pink::new_with_seed(Int, UInt64) -> Self
 pub fn Pink::next(Self) -> Double?
 pub fn Pink::sample_rate(Self) -> Int
@@ -952,6 +984,7 @@ pub struct Red {
 }
 pub fn Red::channels(Self) -> Int
 pub fn Red::new(Int) -> Self
+pub fn[R : NoiseRng] Red::new_with_rng(Int, R) -> Self
 pub fn Red::new_with_seed(Int, UInt64) -> Self
 pub fn Red::next(Self) -> Double?
 pub fn Red::sample_rate(Self) -> Int
@@ -1348,7 +1381,7 @@ pub impl Source for UniformSourceIterator
 
 pub struct Velvet {
   sample_rate : Int
-  state : Ref[UInt64]
+  rng : NoiseRngState
   grid_size : Ref[Double]
   grid_pos : Ref[Double]
   impulse_pos : Ref[Double]
@@ -1356,7 +1389,9 @@ pub struct Velvet {
 pub fn Velvet::channels(Self) -> Int
 pub fn Velvet::new(Int) -> Self
 pub fn Velvet::new_with_density(Int, Double) -> Self
+pub fn[R : NoiseRng] Velvet::new_with_density_and_rng(Int, Double, R) -> Self
 pub fn Velvet::new_with_density_and_seed(Int, Double, UInt64) -> Self
+pub fn[R : NoiseRng] Velvet::new_with_rng(Int, R) -> Self
 pub fn Velvet::new_with_seed(Int, UInt64) -> Self
 pub fn Velvet::next(Self) -> Double?
 pub fn Velvet::sample_rate(Self) -> Int
@@ -1369,6 +1404,7 @@ pub struct Violet {
 }
 pub fn Violet::channels(Self) -> Int
 pub fn Violet::new(Int) -> Self
+pub fn[R : NoiseRng] Violet::new_with_rng(Int, R) -> Self
 pub fn Violet::new_with_seed(Int, UInt64) -> Self
 pub fn Violet::next(Self) -> Double?
 pub fn Violet::sample_rate(Self) -> Int
@@ -1376,11 +1412,12 @@ pub impl Source for Violet
 
 pub struct WhiteGaussian {
   sample_rate : Int
-  state : Ref[UInt64]
+  rng : NoiseRngState
 }
 pub fn WhiteGaussian::channels(Self) -> Int
 pub fn WhiteGaussian::mean(Self) -> Double
 pub fn WhiteGaussian::new(Int) -> Self
+pub fn[R : NoiseRng] WhiteGaussian::new_with_rng(Int, R) -> Self
 pub fn WhiteGaussian::new_with_seed(Int, UInt64) -> Self
 pub fn WhiteGaussian::next(Self) -> Double?
 pub fn WhiteGaussian::sample_rate(Self) -> Int
@@ -1389,10 +1426,11 @@ pub impl Source for WhiteGaussian
 
 pub struct WhiteTriangular {
   sample_rate : Int
-  state : Ref[UInt64]
+  rng : NoiseRngState
 }
 pub fn WhiteTriangular::channels(Self) -> Int
 pub fn WhiteTriangular::new(Int) -> Self
+pub fn[R : NoiseRng] WhiteTriangular::new_with_rng(Int, R) -> Self
 pub fn WhiteTriangular::new_with_seed(Int, UInt64) -> Self
 pub fn WhiteTriangular::next(Self) -> Double?
 pub fn WhiteTriangular::sample_rate(Self) -> Int
@@ -1401,10 +1439,11 @@ pub impl Source for WhiteTriangular
 
 pub struct WhiteUniform {
   sample_rate : Int
-  state : Ref[UInt64]
+  rng : NoiseRngState
 }
 pub fn WhiteUniform::channels(Self) -> Int
 pub fn WhiteUniform::new(Int) -> Self
+pub fn[R : NoiseRng] WhiteUniform::new_with_rng(Int, R) -> Self
 pub fn WhiteUniform::new_with_seed(Int, UInt64) -> Self
 pub fn WhiteUniform::next(Self) -> Double?
 pub fn WhiteUniform::sample_rate(Self) -> Int
@@ -1434,6 +1473,10 @@ pub(open) trait FixedSource {
   channels(Self) -> Int
   sample_rate(Self) -> Int
   total_duration(Self) -> @core.Duration?
+}
+
+pub(open) trait NoiseRng {
+  next_u64(Self) -> UInt64
 }
 
 pub(open) trait Source {

@@ -49,6 +49,21 @@ fn consecutive_correlation(samples : Array[Sample]) -> Sample {
 }
 
 ///|
+struct TestNoiseRng {
+  inner : LcgNoiseRng
+}
+
+///|
+fn TestNoiseRng::new(seed : UInt64) -> TestNoiseRng {
+  { inner: LcgNoiseRng::new(seed) }
+}
+
+///|
+impl NoiseRng for TestNoiseRng with next_u64(self : TestNoiseRng) {
+  self.inner.next_u64()
+}
+
+///|
 struct ExternalSource {
   samples : Array[Sample]
   cursor : Ref[Int]
@@ -1239,13 +1254,12 @@ test "rodio::source::named_takeduration_filter_and_seek" {
 ///|
 test "rodio::source::agc" {
   let src = SamplesBuffer::new(1, 10, [0.1, 0.1, 0.1, 0.1])
-  let agc = AutomaticGainControl::new(
-    src,
-    1.0,
-    @moon_cpal.Duration::from_secs((1 : UInt64)),
-    @moon_cpal.Duration::from_secs((1 : UInt64)),
-    10.0,
-  )
+  let settings = AutomaticGainControlSettings::new()
+    .with_target_level(1.0)
+    .with_attack(@moon_cpal.Duration::from_secs((1 : UInt64)))
+    .with_release(@moon_cpal.Duration::from_secs((1 : UInt64)))
+    .with_absolute_max_gain(10.0)
+  let agc = AutomaticGainControl::new(src, settings)
   let v = collect_n(agc, 4)
   assert_true(v[0] > 0.1)
   assert_true(v[3] > v[0])
@@ -1254,13 +1268,12 @@ test "rodio::source::agc" {
 ///|
 test "rodio::source::agc_controls" {
   let src = SamplesBuffer::new(1, 10, [0.1, 0.1, 0.1, 0.1])
-  let agc = automatic_gain_control(
-    src,
-    1.0,
-    @moon_cpal.Duration::from_secs((1 : UInt64)),
-    @moon_cpal.Duration::from_secs((1 : UInt64)),
-    10.0,
-  )
+  let settings = AutomaticGainControlSettings::new()
+    .with_target_level(1.0)
+    .with_attack(@moon_cpal.Duration::from_secs((1 : UInt64)))
+    .with_release(@moon_cpal.Duration::from_secs((1 : UInt64)))
+    .with_absolute_max_gain(10.0)
+  let agc = automatic_gain_control(src, settings)
   let ctrl = agc.get_agc_control()
   assert_true(ctrl.val)
   agc.set_enabled(false)
@@ -1272,6 +1285,40 @@ test "rodio::source::agc_controls" {
   assert_true(agc.get_absolute_max_gain().val > 9.9)
   assert_eq(agc.inner().channels(), 1)
   assert_eq(agc.inner_mut().sample_rate(), 10)
+}
+
+///|
+test "rodio::source::agc_settings_and_floor" {
+  let defaults = AutomaticGainControlSettings::default()
+  assert_eq(defaults.target_level, 1.0)
+  assert_eq(defaults.attack_time.secs, (4 : UInt64))
+  assert_eq(defaults.attack_time.nanos, 0)
+  assert_eq(defaults.release_time.secs, (0 : UInt64))
+  assert_eq(defaults.release_time.nanos, 0)
+  assert_eq(defaults.absolute_max_gain, 7.0)
+
+  let settings = AutomaticGainControlSettings::new()
+    .with_target_level(0.0)
+    .with_attack(@moon_cpal.Duration::from_secs((0 : UInt64)))
+    .with_release(@moon_cpal.Duration::from_secs((0 : UInt64)))
+    .with_absolute_max_gain(2.0)
+  let agc = automatic_gain_control(
+    SamplesBuffer::new(1, 10, [1.0, 1.0, 1.0]),
+    settings,
+  )
+  let agc_compat = automatic_gain_control_with_params(
+    SamplesBuffer::new(1, 10, [1.0, 1.0, 1.0]),
+    0.0,
+    @moon_cpal.Duration::from_secs((0 : UInt64)),
+    @moon_cpal.Duration::from_secs((0 : UInt64)),
+    2.0,
+  )
+
+  agc.set_floor(Some(0.5))
+  assert_true(agc.next().unwrap() > 0.49)
+  agc.set_floor(None)
+  assert_true(agc.next().unwrap().abs() < 1.0e-9)
+  assert_true(agc_compat.next().unwrap().abs() < 1.0e-9)
 }
 
 ///|
@@ -1636,6 +1683,63 @@ test "rodio::source::noise_seeded_generators_repeatability" {
   assert_eq(
     collect_n(Velvet::new_with_density_and_seed(44_100, 1_000.0, seed), 64),
     collect_n(Velvet::new_with_density_and_seed(44_100, 1_000.0, seed), 64),
+  )
+}
+
+///|
+test "rodio::source::noise_rng_generators_repeatability" {
+  let seed = (0xCAFE_BABE_1234_5678 : UInt64)
+  assert_eq(
+    collect_n(WhiteUniform::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
+    collect_n(WhiteUniform::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
+  )
+  assert_eq(
+    collect_n(
+      WhiteTriangular::new_with_rng(44_100, TestNoiseRng::new(seed)),
+      64,
+    ),
+    collect_n(
+      WhiteTriangular::new_with_rng(44_100, TestNoiseRng::new(seed)),
+      64,
+    ),
+  )
+  assert_eq(
+    collect_n(WhiteGaussian::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
+    collect_n(WhiteGaussian::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
+  )
+  assert_eq(
+    collect_n(Pink::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
+    collect_n(Pink::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
+  )
+  assert_eq(
+    collect_n(Velvet::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
+    collect_n(Velvet::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
+  )
+  assert_eq(
+    collect_n(
+      Velvet::new_with_density_and_rng(44_100, 1_000.0, TestNoiseRng::new(seed)),
+      64,
+    ),
+    collect_n(
+      Velvet::new_with_density_and_rng(44_100, 1_000.0, TestNoiseRng::new(seed)),
+      64,
+    ),
+  )
+  assert_eq(
+    collect_n(Blue::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
+    collect_n(Blue::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
+  )
+  assert_eq(
+    collect_n(Violet::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
+    collect_n(Violet::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
+  )
+  assert_eq(
+    collect_n(Brownian::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
+    collect_n(Brownian::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
+  )
+  assert_eq(
+    collect_n(Red::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
+    collect_n(Red::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
   )
 }
 
