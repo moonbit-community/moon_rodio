@@ -75,15 +75,18 @@ pub struct Dither {
 
 ///|
 fn dither_rand_next(state : Ref[UInt64]) -> UInt64 {
-  state.val = state.val * (6364136223846793005 : UInt64) + (1 : UInt64)
-  state.val
+  let mut x = state.val
+  x = x ^ (x >> 12)
+  x = x ^ (x << 25)
+  x = x ^ (x >> 27)
+  state.val = x
+  x * (2685821657736338717 : UInt64)
 }
 
 ///|
 fn dither_rand_unit(state : Ref[UInt64]) -> Sample {
   let x = dither_rand_next(state)
-  let top53 = x >> 11
-  Double::from_int(top53.to_int()) / 9_007_199_254_740_992.0
+  Double::from_int((x & (0x7fff_ffff : UInt64)).to_int()) / 2147483647.0
 }
 
 ///|

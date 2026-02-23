@@ -78,3 +78,40 @@ test "rodio::source::dither::seek_forwarding" {
   d.try_seek(@moon_cpal.Duration::new((3 : UInt64), 0))
   assert_eq(d.next(), None)
 }
+
+///|
+test "rodio::source::dither::high_pass_multichannel_independence" {
+  let bits = BitDepth::new(16)
+  let d = dither(zero(2, 44_100), bits, DitherAlgorithm::high_pass())
+
+  let samples : Array[Sample] = []
+  for _ in 0..<1_000 {
+    samples.push(d.next().unwrap())
+  }
+
+  let left : Array[Sample] = []
+  let right : Array[Sample] = []
+  for i in 0..<500 {
+    left.push(samples[i * 2])
+    right.push(samples[i * 2 + 1])
+  }
+
+  let mut left_autocorr = 0.0
+  let mut right_autocorr = 0.0
+  for i in 0..<(left.length() - 1) {
+    left_autocorr += left[i] * left[i + 1]
+    right_autocorr += right[i] * right[i + 1]
+  }
+  left_autocorr /= Double::from_int(left.length() - 1)
+  right_autocorr /= Double::from_int(right.length() - 1)
+
+  let mut cross_corr = 0.0
+  for i in 0..<left.length() {
+    cross_corr += left[i] * right[i]
+  }
+  cross_corr /= Double::from_int(left.length())
+
+  assert_true(left_autocorr < 0.0)
+  assert_true(right_autocorr < 0.0)
+  assert_true(cross_corr.abs() < 0.1)
+}
