@@ -22,16 +22,16 @@ pub type OpenError = @Milky2018/moon_rodio.SpeakersError
 pub type PlayError = @Milky2018/moon_rodio.SpeakersPlayError
 
 ///|
-pub struct DeviceIsSet {}
+pub type DeviceIsSet = Unit
 
 ///|
-pub struct DeviceNotSet {}
+pub type DeviceNotSet = Unit
 
 ///|
-pub struct ConfigIsSet {}
+pub type ConfigIsSet = Unit
 
 ///|
-pub struct ConfigNotSet {}
+pub type ConfigNotSet = Unit
 
 ///|
 pub type Output = @Milky2018/moon_rodio.Output

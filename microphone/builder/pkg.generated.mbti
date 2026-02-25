@@ -3,7 +3,6 @@ package "Milky2018/moon_rodio/microphone/builder"
 
 import {
   "Milky2018/moon_rodio",
-  "Milky2018/moon_rodio/microphone",
 }
 
 // Values
@@ -18,13 +17,13 @@ pub using @moon_rodio {type MicrophoneBuilder as Builder}
 
 pub using @moon_rodio {type MicrophoneError as BuilderError}
 
-pub using @microphone {type ConfigIsSet}
+pub type ConfigIsSet = Unit
 
-pub using @microphone {type ConfigNotSet}
+pub type ConfigNotSet = Unit
 
-pub using @microphone {type DeviceIsSet}
+pub type DeviceIsSet = Unit
 
-pub using @microphone {type DeviceNotSet}
+pub type DeviceNotSet = Unit
 
 pub using @moon_rodio {type MicrophoneBuilder}
 

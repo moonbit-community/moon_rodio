@@ -15,20 +15,17 @@ pub fn new_builder() -> @moon_rodio.SpeakersBuilder
 // Errors
 
 // Types and methods
-pub struct ConfigIsSet {
-}
-
-pub struct ConfigNotSet {
-}
-
-pub struct DeviceIsSet {
-}
-
-pub struct DeviceNotSet {
-}
 
 // Type aliases
 pub using @moon_rodio {type SpeakersBuilder as Builder}
+
+pub type ConfigIsSet = Unit
+
+pub type ConfigNotSet = Unit
+
+pub type DeviceIsSet = Unit
+
+pub type DeviceNotSet = Unit
 
 pub using @moon_rodio {type SpeakersListError as ListError}
 

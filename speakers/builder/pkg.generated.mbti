@@ -3,7 +3,6 @@ package "Milky2018/moon_rodio/speakers/builder"
 
 import {
   "Milky2018/moon_rodio",
-  "Milky2018/moon_rodio/speakers",
 }
 
 // Values
@@ -18,13 +17,13 @@ pub using @moon_rodio {type SpeakersBuilder as Builder}
 
 pub using @moon_rodio {type SpeakersError as BuilderError}
 
-pub using @speakers {type ConfigIsSet}
+pub type ConfigIsSet = Unit
 
-pub using @speakers {type ConfigNotSet}
+pub type ConfigNotSet = Unit
 
-pub using @speakers {type DeviceIsSet}
+pub type DeviceIsSet = Unit
 
-pub using @speakers {type DeviceNotSet}
+pub type DeviceNotSet = Unit
 
 pub using @moon_rodio {type SpeakersPlayError as PlayError}
 

@@ -19,16 +19,16 @@ pub type ListError = @Milky2018/moon_rodio.MicrophoneListError
 pub type OpenError = @Milky2018/moon_rodio.MicrophoneError
 
 ///|
-pub struct DeviceIsSet {}
+pub type DeviceIsSet = Unit
 
 ///|
-pub struct DeviceNotSet {}
+pub type DeviceNotSet = Unit
 
 ///|
-pub struct ConfigIsSet {}
+pub type ConfigIsSet = Unit
 
 ///|
-pub struct ConfigNotSet {}
+pub type ConfigNotSet = Unit
 
 ///|
 pub type Input = @Milky2018/moon_rodio.Input
