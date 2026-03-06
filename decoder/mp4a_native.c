@@ -37,11 +37,105 @@ static int moon_rodio_append_pcm_i16(int16_t **buf,
 
 #if defined(__APPLE__)
 #include <AudioToolbox/AudioToolbox.h>
+#include <dlfcn.h>
 
 typedef struct {
   const uint8_t *data;
   int64_t len;
 } moon_rodio_memory_file_t;
+
+typedef struct {
+  void *handle;
+  OSStatus (*audio_file_open_with_callbacks)(void *,
+                                             AudioFile_ReadProc,
+                                             AudioFile_WriteProc,
+                                             AudioFile_GetSizeProc,
+                                             AudioFile_SetSizeProc,
+                                             AudioFileTypeID,
+                                             AudioFileID *);
+  OSStatus (*audio_file_close)(AudioFileID);
+  OSStatus (*ext_audio_file_wrap_audio_file_id)(AudioFileID, Boolean, ExtAudioFileRef *);
+  OSStatus (*ext_audio_file_dispose)(ExtAudioFileRef);
+  OSStatus (*ext_audio_file_get_property)(ExtAudioFileRef, ExtAudioFilePropertyID, UInt32 *, void *);
+  OSStatus (*ext_audio_file_set_property)(ExtAudioFileRef, ExtAudioFilePropertyID, UInt32, const void *);
+  OSStatus (*ext_audio_file_read)(ExtAudioFileRef, UInt32 *, AudioBufferList *);
+} moon_rodio_audio_toolbox_api_t;
+
+static int moon_rodio_load_audio_toolbox_symbol(void *handle, const char *name, void **slot) {
+  if (handle == NULL || name == NULL || slot == NULL) {
+    return 0;
+  }
+  *slot = dlsym(handle, name);
+  return *slot != NULL;
+}
+
+static const moon_rodio_audio_toolbox_api_t *moon_rodio_audio_toolbox_api(void) {
+  static int initialized = 0;
+  static int available = 0;
+  static moon_rodio_audio_toolbox_api_t api;
+
+  if (initialized) {
+    return available ? &api : NULL;
+  }
+
+  initialized = 1;
+
+  const char *paths[] = {
+      "/System/Library/Frameworks/AudioToolbox.framework/AudioToolbox",
+      "/System/Library/Frameworks/AudioToolbox.framework/Versions/A/AudioToolbox",
+      NULL,
+  };
+
+  void *handle = NULL;
+  for (size_t i = 0; paths[i] != NULL; i++) {
+    handle = dlopen(paths[i], RTLD_LAZY | RTLD_LOCAL);
+    if (handle != NULL) {
+      break;
+    }
+  }
+  if (handle == NULL) {
+    return NULL;
+  }
+
+  moon_rodio_audio_toolbox_api_t loaded;
+  memset(&loaded, 0, sizeof(loaded));
+  loaded.handle = handle;
+  if (!moon_rodio_load_audio_toolbox_symbol(
+          handle,
+          "AudioFileOpenWithCallbacks",
+          (void **)&loaded.audio_file_open_with_callbacks) ||
+      !moon_rodio_load_audio_toolbox_symbol(
+          handle,
+          "AudioFileClose",
+          (void **)&loaded.audio_file_close) ||
+      !moon_rodio_load_audio_toolbox_symbol(
+          handle,
+          "ExtAudioFileWrapAudioFileID",
+          (void **)&loaded.ext_audio_file_wrap_audio_file_id) ||
+      !moon_rodio_load_audio_toolbox_symbol(
+          handle,
+          "ExtAudioFileDispose",
+          (void **)&loaded.ext_audio_file_dispose) ||
+      !moon_rodio_load_audio_toolbox_symbol(
+          handle,
+          "ExtAudioFileGetProperty",
+          (void **)&loaded.ext_audio_file_get_property) ||
+      !moon_rodio_load_audio_toolbox_symbol(
+          handle,
+          "ExtAudioFileSetProperty",
+          (void **)&loaded.ext_audio_file_set_property) ||
+      !moon_rodio_load_audio_toolbox_symbol(
+          handle,
+          "ExtAudioFileRead",
+          (void **)&loaded.ext_audio_file_read)) {
+    dlclose(handle);
+    return NULL;
+  }
+
+  api = loaded;
+  available = 1;
+  return &api;
+}
 
 static OSStatus moon_rodio_read_proc(void *inClientData,
                                      SInt64 inPosition,
@@ -495,27 +589,35 @@ moonbit_bytes_t moon_rodio_mp4a_decode_all_i16le(uint8_t *input,
   }
 
 #if defined(__APPLE__)
+  const moon_rodio_audio_toolbox_api_t *audio_toolbox = moon_rodio_audio_toolbox_api();
+  if (audio_toolbox == NULL) {
+    if (out_meta != NULL && out_meta_len >= 1) {
+      out_meta[0] = 100;
+    }
+    return moonbit_make_bytes_raw(0);
+  }
+
   moon_rodio_memory_file_t file = {
       .data = input,
       .len = (int64_t)input_len,
   };
 
   AudioFileID audio_file = NULL;
-  OSStatus status = AudioFileOpenWithCallbacks(&file,
-                                               moon_rodio_read_proc,
-                                               NULL,
-                                               moon_rodio_get_size_proc,
-                                               NULL,
-                                               kAudioFileM4AType,
-                                               &audio_file);
+  OSStatus status = audio_toolbox->audio_file_open_with_callbacks(&file,
+                                                                  moon_rodio_read_proc,
+                                                                  NULL,
+                                                                  moon_rodio_get_size_proc,
+                                                                  NULL,
+                                                                  kAudioFileM4AType,
+                                                                  &audio_file);
   if (status != noErr || audio_file == NULL) {
-    status = AudioFileOpenWithCallbacks(&file,
-                                        moon_rodio_read_proc,
-                                        NULL,
-                                        moon_rodio_get_size_proc,
-                                        NULL,
-                                        0,
-                                        &audio_file);
+    status = audio_toolbox->audio_file_open_with_callbacks(&file,
+                                                           moon_rodio_read_proc,
+                                                           NULL,
+                                                           moon_rodio_get_size_proc,
+                                                           NULL,
+                                                           0,
+                                                           &audio_file);
   }
   if (status != noErr || audio_file == NULL) {
     if (out_meta != NULL && out_meta_len >= 1) {
@@ -525,9 +627,9 @@ moonbit_bytes_t moon_rodio_mp4a_decode_all_i16le(uint8_t *input,
   }
 
   ExtAudioFileRef ext_file = NULL;
-  status = ExtAudioFileWrapAudioFileID(audio_file, true, &ext_file);
+  status = audio_toolbox->ext_audio_file_wrap_audio_file_id(audio_file, true, &ext_file);
   if (status != noErr || ext_file == NULL) {
-    AudioFileClose(audio_file);
+    audio_toolbox->audio_file_close(audio_file);
     if (out_meta != NULL && out_meta_len >= 1) {
       out_meta[0] = 3;
     }
@@ -537,12 +639,12 @@ moonbit_bytes_t moon_rodio_mp4a_decode_all_i16le(uint8_t *input,
   AudioStreamBasicDescription file_format;
   memset(&file_format, 0, sizeof(file_format));
   UInt32 property_size = (UInt32)sizeof(file_format);
-  status = ExtAudioFileGetProperty(ext_file,
-                                   kExtAudioFileProperty_FileDataFormat,
-                                   &property_size,
-                                   &file_format);
+  status = audio_toolbox->ext_audio_file_get_property(ext_file,
+                                                      kExtAudioFileProperty_FileDataFormat,
+                                                      &property_size,
+                                                      &file_format);
   if (status != noErr || file_format.mChannelsPerFrame == 0 || file_format.mSampleRate <= 0) {
-    ExtAudioFileDispose(ext_file);
+    audio_toolbox->ext_audio_file_dispose(ext_file);
     if (out_meta != NULL && out_meta_len >= 1) {
       out_meta[0] = 4;
     }
@@ -560,12 +662,12 @@ moonbit_bytes_t moon_rodio_mp4a_decode_all_i16le(uint8_t *input,
   client_format.mBytesPerFrame = client_format.mChannelsPerFrame * sizeof(int16_t);
   client_format.mBytesPerPacket = client_format.mBytesPerFrame;
 
-  status = ExtAudioFileSetProperty(ext_file,
-                                   kExtAudioFileProperty_ClientDataFormat,
-                                   (UInt32)sizeof(client_format),
-                                   &client_format);
+  status = audio_toolbox->ext_audio_file_set_property(ext_file,
+                                                      kExtAudioFileProperty_ClientDataFormat,
+                                                      (UInt32)sizeof(client_format),
+                                                      &client_format);
   if (status != noErr) {
-    ExtAudioFileDispose(ext_file);
+    audio_toolbox->ext_audio_file_dispose(ext_file);
     if (out_meta != NULL && out_meta_len >= 1) {
       out_meta[0] = 5;
     }
@@ -576,7 +678,7 @@ moonbit_bytes_t moon_rodio_mp4a_decode_all_i16le(uint8_t *input,
   const size_t chunk_bytes = (size_t)frames_per_read * (size_t)client_format.mBytesPerFrame;
   uint8_t *chunk = (uint8_t *)malloc(chunk_bytes);
   if (chunk == NULL) {
-    ExtAudioFileDispose(ext_file);
+    audio_toolbox->ext_audio_file_dispose(ext_file);
     if (out_meta != NULL && out_meta_len >= 1) {
       out_meta[0] = 6;
     }
@@ -595,11 +697,11 @@ moonbit_bytes_t moon_rodio_mp4a_decode_all_i16le(uint8_t *input,
     buffers.mBuffers[0].mData = chunk;
     buffers.mBuffers[0].mDataByteSize = (UInt32)chunk_bytes;
 
-    status = ExtAudioFileRead(ext_file, &frames, &buffers);
+    status = audio_toolbox->ext_audio_file_read(ext_file, &frames, &buffers);
     if (status != noErr) {
       free(chunk);
       free(pcm_all);
-      ExtAudioFileDispose(ext_file);
+      audio_toolbox->ext_audio_file_dispose(ext_file);
       if (out_meta != NULL && out_meta_len >= 1) {
         out_meta[0] = 7;
       }
@@ -618,7 +720,7 @@ moonbit_bytes_t moon_rodio_mp4a_decode_all_i16le(uint8_t *input,
                                   sample_count) != 0) {
       free(chunk);
       free(pcm_all);
-      ExtAudioFileDispose(ext_file);
+      audio_toolbox->ext_audio_file_dispose(ext_file);
       if (out_meta != NULL && out_meta_len >= 1) {
         out_meta[0] = 6;
       }
@@ -627,7 +729,7 @@ moonbit_bytes_t moon_rodio_mp4a_decode_all_i16le(uint8_t *input,
   }
 
   free(chunk);
-  ExtAudioFileDispose(ext_file);
+  audio_toolbox->ext_audio_file_dispose(ext_file);
 
   if (pcm_len == 0) {
     free(pcm_all);
