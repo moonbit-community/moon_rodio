@@ -140,6 +140,27 @@ Reference fixtures required by native decoder tests are vendored in:
 
 This avoids CI depending on a local ignored `rodio-reference` checkout.
 
+## Decoder validation
+
+The native decoder test suite now validates real fixtures in two separate layers:
+
+- Golden/reference profiles
+  - `WAV` and `FLAC` use exact sample checkpoints from reference PCM output
+  - `MP3`, `Vorbis`, and `MP4A` use windowed `mean_abs` and `RMS` profiles with
+    per-format tolerances, which is more robust for lossy codecs and backend differences
+- Malformed/corrupt inputs
+  - Each supported format is checked against truncated fixture data
+  - Each supported format is checked against zeroed payload data
+
+This is intentionally stronger than a smoke test:
+
+- A format must decode with the expected shape, channel count, sample rate, and
+  content profile
+- Damaged inputs must fail cleanly instead of silently producing plausible output
+
+On macOS, `MP4A` validation also covers the native `AudioToolbox` path using the
+vendored `monkeys.mp4a` reference asset.
+
 ## Links
 
 - `Milky2018/moon_rodio` (this package)
