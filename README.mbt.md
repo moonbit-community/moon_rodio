@@ -2,113 +2,83 @@
 
 [![Native CI](https://github.com/moonbit-community/moon_rodio/actions/workflows/ci-native.yml/badge.svg)](https://github.com/moonbit-community/moon_rodio/actions/workflows/ci-native.yml)
 
-Native-only MoonBit port of Rust `rodio` with `preferred-target: native`.
+`moon_rodio` is a native-only MoonBit audio playback library modeled after Rust `rodio`.
+It provides stream/sink-based playback, source transforms, and built-in decoding for
+common audio formats.
 
-This package focuses on `Stream`/`Sink` style playback composition while aligning API
-surface and behavior to the upstream project as far as MoonBit allows.
-
-## Supported Targets
+## Target and scope
 
 - Preferred target: `native`
-- Native output is powered by `Milky2018/moon_cpal`
-- Lifecycle-drop semantics are intentionally simplified (MoonBit does not expose the same
-  Rust lifetime/drop model)
+- Output/input backend: `Milky2018/moon_cpal`
+- API alignment follows Rust `rodio` where it makes sense in MoonBit
+- Rust-specific lifetime/drop semantics are intentionally simplified
 
-## Modules
+## Installation
 
-- `Milky2018/moon_rodio`
-  - Playback pipeline (`Stream`, `Sink`, `Mixer`, `Source`, helpers)
-  - Audio effects and transforms (speed, gain, filters, controls, spatial helpers, queue, etc.)
-  - Built-in WAV decoding bridge
-  - Native input/output builders: `MicrophoneBuilder`, `SpeakersBuilder`
-  - Compatibility slices: `StaticSamplesBuffer`, `FixedSource`, `FixedSamplesBuffer`, `FixedSourceAdapter`
-  - Naming-compat wrappers: `Player`, `SpatialPlayer`, `DeviceSinkBuilder`, `MixerDeviceSink`
-  - Convenience helpers: `play(...)`, `play_reader(...)`, `play_file(...)`, `wav_to_file(...)`, `wav_to_writer(...)`
-  - Dither API slice: `BitDepth`, `DitherAlgorithm`, `dither(...)`
-- `Milky2018/moon_rodio/decoder`
-  - Generic decoder builder and `LoopedDecoder`
-  - Format detection via hints, MIME, and data heuristics
+Add the dependency to `moon.mod.json`:
 
-## Decoder backends
-
-- WAV: native parser (always available)
-- MP3: vendored `minimp3`
-- FLAC: vendored `dr_flac`
-- Vorbis: vendored `stb_vorbis`
-- MP4A/AAC:
-  - macOS: AudioToolbox backend
-  - Linux/Windows: FFmpeg backend (optional)
-
-## Quick start
-
-```moonbit nocheck
-import "Milky2018/moon_rodio"
-import "Milky2018/moon_rodio/decoder"
-import "moonbitlang/core/array"
-
-fn example() {
-  // open a native output stream from the default device
-  let stream = try {
-    OutputStreamBuilder::open_default_stream()
-  } catch err {
-    // handle StreamError
-    return
-  }
-
-  // connect a sink to the stream mixer
-  let sink = Sink::connect_new(stream.mixer())
-
-  // play synthetic samples
-  sink.append(SamplesBuffer::new(1, 44_100, [0.0, 0.0, 0.0]))
-
-  // optionally block until playback is finished
-  sink.sleep_until_end()
+```json
+{
+  "deps": {
+    "Milky2018/moon_rodio": "0.1.2"
+  },
+  "preferred-target": "native"
 }
 ```
 
-Decoder usage:
+## What is included
 
-```moonbit nocheck
-import "Milky2018/moon_rodio/decoder"
-import "moonbitlang/x/fs"
+### `Milky2018/moon_rodio`
 
-fn decode_file(path : String) {
-  let bytes = try fs.read_file_to_bytes(path) catch {
-    _ => return
-  } noraise {
-    bs => bs
-  }
-  let decoded = DecoderBuilder::new()
-    .with_data(bytes)
-    .with_mime_type("audio/mpeg")
-    .build()
-}
-```
+The main package includes:
 
-The returned decoder implements `Source`, so you can append it to `Sink` directly.
+- playback primitives such as `OutputStreamBuilder`, `Mixer`, `Sink`, and `Player`
+- `Source` helpers and effects such as speed, gain, delay, fades, filters, queueing,
+  repetition, spatial helpers, and WAV output helpers
+- high-level decoding through `Decoder` and `DecoderBuilder`
+- convenience helpers such as `play_file`, `play_bytes`, and `play_reader`
 
-## FFmpeg backend (Linux / Windows MP4A)
+### `Milky2018/moon_rodio/decoder`
 
-`build.js` enables MP4A/AAC decoding via FFmpeg when link flags are available.
+The decoder subpackage exposes lower-level decoding helpers such as:
 
-### Linux auto-detect
-- `pkg-config` is used to discover:
-  - `libavformat`
-  - `libavcodec`
-  - `libavutil`
-  - `libswresample`
+- `decode_wav_bytes`
+- `decode_mp3_bytes`
+- `decode_flac_bytes`
+- `decode_vorbis_bytes`
+- `decode_mp4a_bytes`
 
-### Windows notes
-- CI downloads a pinned prebuilt FFmpeg package from `GyanD/codexffmpeg` and verifies
-  the SHA256 digest before extraction
-- `Milky2018/moon_cpal@0.11.3` removed the previous `strings.h` MSVC blocker in ALSA stub
-- CI Windows lane uses MSVC (`cl`/`lib`) for compatibility with `moonbitlang/async` on Windows
-- CI validates FFmpeg on Windows strictly (checksum + required headers/libs + prebuild detection + native tests)
+Most users should start with `Milky2018/moon_rodio` and use `Decoder`.
 
-### Manual override (any platform)
+## Supported formats
+
+- WAV
+- MP3
+- FLAC
+- Ogg Vorbis
+- MP4A / AAC
+
+Backend notes:
+
+- WAV uses a native parser
+- MP3 uses vendored `minimp3`
+- FLAC uses vendored `dr_flac`
+- Vorbis uses vendored `stb_vorbis`
+- MP4A / AAC:
+  - macOS: AudioToolbox
+  - Linux / Windows: FFmpeg
+
+## Platform notes for MP4A / AAC
+
+On macOS, MP4A works through the system AudioToolbox framework.
+
+On Linux and Windows, MP4A requires FFmpeg development libraries to be available to
+native builds. `build.js` tries to discover them automatically, and you can also
+provide them explicitly:
+
 - `MOON_RODIO_FFMPEG_CFLAGS`
 - `MOON_RODIO_FFMPEG_LIBS`
-- `MOON_RODIO_ENABLE_FFMPEG=1` (forced enable by environment)
+- `MOON_RODIO_ENABLE_FFMPEG=1`
 
 Example:
 
@@ -116,53 +86,76 @@ Example:
 MOON_RODIO_FFMPEG_CFLAGS="-I/path/to/include" \
 MOON_RODIO_FFMPEG_LIBS="-L/path/to/lib -lavformat -lavcodec -lavutil -lswresample" \
 MOON_RODIO_ENABLE_FFMPEG=1 \
-moon test --target native
+moon run cmd/main --target native
 ```
 
-## Build & test
+## Quick start
 
-```bash
-moon test --target native
-moon test --target native --update   # refresh snapshot tests if needed
+Play a file from disk:
+
+```moonbit nocheck
+import "Milky2018/moon_rodio"
+
+fn play_file_example(path : String) -> Unit {
+  let stream = try {
+    OutputStreamBuilder::open_default_stream()
+  } catch {
+    _ => return
+  } noraise {
+    stream => stream
+  }
+
+  let player = try {
+    play_file(stream.mixer(), path)
+  } catch {
+    _ => return
+  } noraise {
+    player => player
+  }
+
+  player.sleep_until_end()
+}
 ```
 
-For publish/update metadata:
+Decode audio from bytes:
 
-```bash
-moon info && moon fmt
+```moonbit nocheck
+import "Milky2018/moon_rodio"
+
+fn decode_bytes_example(bytes : Bytes) -> Unit {
+  let decoder = try {
+    Decoder::builder()
+      .with_data(bytes)
+      .with_hint("mp3")
+      .with_seekable(true)
+      .build()
+  } catch {
+    _ => return
+  } noraise {
+    decoder => decoder
+  }
+
+  println(decoder.channels().to_string())
+  println(decoder.sample_rate().to_string())
+}
 ```
 
-## Test assets
+Play generated samples:
 
-Reference fixtures required by native decoder tests are vendored in:
+```moonbit nocheck
+import "Milky2018/moon_rodio"
 
-- `test_assets/rodio`
+fn play_sine_like_example() -> Unit {
+  let stream = try {
+    OutputStreamBuilder::open_default_stream()
+  } catch {
+    _ => return
+  } noraise {
+    stream => stream
+  }
 
-This avoids CI depending on a local ignored `rodio-reference` checkout.
-
-## Decoder validation
-
-The native decoder test suite now validates real fixtures in two separate layers:
-
-- Golden/reference profiles
-  - `WAV` and `FLAC` use exact sample checkpoints from reference PCM output
-  - `MP3`, `Vorbis`, and `MP4A` use windowed `mean_abs` and `RMS` profiles with
-    per-format tolerances, which is more robust for lossy codecs and backend differences
-- Malformed/corrupt inputs
-  - Each supported format is checked against truncated fixture data
-  - Each supported format is checked against zeroed payload data
-
-This is intentionally stronger than a smoke test:
-
-- A format must decode with the expected shape, channel count, sample rate, and
-  content profile
-- Damaged inputs must fail cleanly instead of silently producing plausible output
-
-On macOS, `MP4A` validation also covers the native `AudioToolbox` path using the
-vendored `monkeys.mp4a` reference asset.
-
-## Links
-
-- `Milky2018/moon_rodio` (this package)
-- `Milky2018/moon_cpal`
-- `Milky2018/moon_rodio/decoder`
+  let sink = Sink::connect_new(stream.mixer())
+  let source = SamplesBuffer::new(1, 44_100, [0.0, 0.2, 0.0, -0.2])
+  sink.append(source.repeat_infinite())
+}
+```
