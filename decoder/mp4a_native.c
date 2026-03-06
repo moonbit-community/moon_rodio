@@ -35,61 +35,10 @@ static int moon_rodio_append_pcm_i16(int16_t **buf,
   return 0;
 }
 
-#if defined(__APPLE__)
-#include <AudioToolbox/AudioToolbox.h>
-
-typedef struct {
-  const uint8_t *data;
-  int64_t len;
-} moon_rodio_memory_file_t;
-
-static OSStatus moon_rodio_read_proc(void *inClientData,
-                                     SInt64 inPosition,
-                                     UInt32 requestCount,
-                                     void *buffer,
-                                     UInt32 *actualCount) {
-  moon_rodio_memory_file_t *file = (moon_rodio_memory_file_t *)inClientData;
-  if (actualCount == NULL || file == NULL || buffer == NULL) {
-    return -50;
-  }
-  if (inPosition < 0 || inPosition >= file->len) {
-    *actualCount = 0;
-    return noErr;
-  }
-
-  uint64_t available = (uint64_t)(file->len - inPosition);
-  uint32_t to_copy = requestCount;
-  if ((uint64_t)to_copy > available) {
-    to_copy = (uint32_t)available;
-  }
-
-  if (to_copy > 0) {
-    memcpy(buffer, file->data + inPosition, to_copy);
-  }
-  *actualCount = to_copy;
-  return noErr;
-}
-
-static SInt64 moon_rodio_get_size_proc(void *inClientData) {
-  moon_rodio_memory_file_t *file = (moon_rodio_memory_file_t *)inClientData;
-  if (file == NULL) {
-    return 0;
-  }
-  return (SInt64)file->len;
-}
-#endif
-
-#if defined(MOON_RODIO_ENABLE_FFMPEG) && MOON_RODIO_ENABLE_FFMPEG
-#include <libavformat/avformat.h>
-#include <libavcodec/avcodec.h>
-#include <libswresample/swresample.h>
-#include <libavutil/mem.h>
-#include <libavutil/opt.h>
-#include <libavutil/samplefmt.h>
-#include <libavutil/version.h>
-#include <libavutil/channel_layout.h>
-
-static int moon_rodio_write_temp_file(const uint8_t *input, int32_t input_len, char *path, size_t path_len) {
+static int moon_rodio_write_temp_file(const uint8_t *input,
+                                      int32_t input_len,
+                                      char *path,
+                                      size_t path_len) {
   if (input == NULL || input_len <= 0 || path == NULL || path_len == 0) {
     return -1;
   }
@@ -132,6 +81,21 @@ static int moon_rodio_write_temp_file(const uint8_t *input, int32_t input_len, c
   }
   return 0;
 }
+
+#if defined(__APPLE__)
+#include <AudioToolbox/AudioToolbox.h>
+#include <CoreFoundation/CoreFoundation.h>
+#endif
+
+#if defined(MOON_RODIO_ENABLE_FFMPEG) && MOON_RODIO_ENABLE_FFMPEG
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+#include <libswresample/swresample.h>
+#include <libavutil/mem.h>
+#include <libavutil/opt.h>
+#include <libavutil/samplefmt.h>
+#include <libavutil/version.h>
+#include <libavutil/channel_layout.h>
 
 static int moon_rodio_get_channels_from_codec_ctx(const AVCodecContext *ctx) {
   if (ctx == NULL) {
@@ -495,29 +459,22 @@ moonbit_bytes_t moon_rodio_mp4a_decode_all_i16le(uint8_t *input,
   }
 
 #if defined(__APPLE__)
-  moon_rodio_memory_file_t file = {
-      .data = input,
-      .len = (int64_t)input_len,
-  };
-
-  AudioFileID audio_file = NULL;
-  OSStatus status = AudioFileOpenWithCallbacks(&file,
-                                               moon_rodio_read_proc,
-                                               NULL,
-                                               moon_rodio_get_size_proc,
-                                               NULL,
-                                               kAudioFileM4AType,
-                                               &audio_file);
-  if (status != noErr || audio_file == NULL) {
-    status = AudioFileOpenWithCallbacks(&file,
-                                        moon_rodio_read_proc,
-                                        NULL,
-                                        moon_rodio_get_size_proc,
-                                        NULL,
-                                        0,
-                                        &audio_file);
+  char temp_path[512];
+  temp_path[0] = '\0';
+  if (moon_rodio_write_temp_file(input, input_len, temp_path, sizeof(temp_path)) != 0) {
+    if (out_meta != NULL && out_meta_len >= 1) {
+      out_meta[0] = 2;
+    }
+    return moonbit_make_bytes_raw(0);
   }
-  if (status != noErr || audio_file == NULL) {
+
+  CFURLRef url = CFURLCreateFromFileSystemRepresentation(
+      kCFAllocatorDefault,
+      (const UInt8 *)temp_path,
+      (CFIndex)strlen(temp_path),
+      false);
+  if (url == NULL) {
+    remove(temp_path);
     if (out_meta != NULL && out_meta_len >= 1) {
       out_meta[0] = 2;
     }
@@ -525,9 +482,10 @@ moonbit_bytes_t moon_rodio_mp4a_decode_all_i16le(uint8_t *input,
   }
 
   ExtAudioFileRef ext_file = NULL;
-  status = ExtAudioFileWrapAudioFileID(audio_file, true, &ext_file);
+  OSStatus status = ExtAudioFileOpenURL(url, &ext_file);
   if (status != noErr || ext_file == NULL) {
-    AudioFileClose(audio_file);
+    CFRelease(url);
+    remove(temp_path);
     if (out_meta != NULL && out_meta_len >= 1) {
       out_meta[0] = 3;
     }
@@ -543,6 +501,8 @@ moonbit_bytes_t moon_rodio_mp4a_decode_all_i16le(uint8_t *input,
                                    &file_format);
   if (status != noErr || file_format.mChannelsPerFrame == 0 || file_format.mSampleRate <= 0) {
     ExtAudioFileDispose(ext_file);
+    CFRelease(url);
+    remove(temp_path);
     if (out_meta != NULL && out_meta_len >= 1) {
       out_meta[0] = 4;
     }
@@ -566,6 +526,8 @@ moonbit_bytes_t moon_rodio_mp4a_decode_all_i16le(uint8_t *input,
                                    &client_format);
   if (status != noErr) {
     ExtAudioFileDispose(ext_file);
+    CFRelease(url);
+    remove(temp_path);
     if (out_meta != NULL && out_meta_len >= 1) {
       out_meta[0] = 5;
     }
@@ -577,6 +539,8 @@ moonbit_bytes_t moon_rodio_mp4a_decode_all_i16le(uint8_t *input,
   uint8_t *chunk = (uint8_t *)malloc(chunk_bytes);
   if (chunk == NULL) {
     ExtAudioFileDispose(ext_file);
+    CFRelease(url);
+    remove(temp_path);
     if (out_meta != NULL && out_meta_len >= 1) {
       out_meta[0] = 6;
     }
@@ -600,6 +564,8 @@ moonbit_bytes_t moon_rodio_mp4a_decode_all_i16le(uint8_t *input,
       free(chunk);
       free(pcm_all);
       ExtAudioFileDispose(ext_file);
+      CFRelease(url);
+      remove(temp_path);
       if (out_meta != NULL && out_meta_len >= 1) {
         out_meta[0] = 7;
       }
@@ -619,6 +585,8 @@ moonbit_bytes_t moon_rodio_mp4a_decode_all_i16le(uint8_t *input,
       free(chunk);
       free(pcm_all);
       ExtAudioFileDispose(ext_file);
+      CFRelease(url);
+      remove(temp_path);
       if (out_meta != NULL && out_meta_len >= 1) {
         out_meta[0] = 6;
       }
@@ -628,6 +596,8 @@ moonbit_bytes_t moon_rodio_mp4a_decode_all_i16le(uint8_t *input,
 
   free(chunk);
   ExtAudioFileDispose(ext_file);
+  CFRelease(url);
+  remove(temp_path);
 
   if (pcm_len == 0) {
     free(pcm_all);

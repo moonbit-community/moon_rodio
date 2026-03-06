@@ -244,6 +244,142 @@ fn decode_all_samples(decoder : Decoder) -> Array[Sample] {
 }
 
 ///|
+fn assert_sample_near(
+  actual : Sample,
+  expected : Sample,
+  tolerance : Double,
+) -> Unit {
+  guard (actual - expected).abs() <= tolerance else { panic() }
+}
+
+///|
+fn assert_int_near(actual : Int, expected : Int, tolerance : Int) -> Unit {
+  let diff = abs_int(actual - expected)
+  guard diff <= tolerance else { panic() }
+}
+
+///|
+fn collect_decoded_profile(
+  decoded : @decoder.DecodedSamples,
+  checkpoint_indexes : Array[Int],
+  window_percents : Array[Int],
+  window_radius : Int,
+) -> (Int, Array[Sample], Array[(Double, Double)]) {
+  let len = decoded.len()
+  let checkpoint_values = Array::make(checkpoint_indexes.length(), 0.0)
+  let window_centers = Array::makei(window_percents.length(), fn(i) {
+    len * window_percents[i] / 100
+  })
+  let window_abs_sums = Array::make(window_centers.length(), 0.0)
+  let window_sq_sums = Array::make(window_centers.length(), 0.0)
+  let window_counts = Array::make(window_centers.length(), 0)
+
+  decoded.seek_to(0)
+  let mut checkpoint_cursor = 0
+  let mut index = 0
+  while true {
+    match decoded.next() {
+      Some(sample) => {
+        if checkpoint_cursor < checkpoint_indexes.length() &&
+          index == checkpoint_indexes[checkpoint_cursor] {
+          checkpoint_values[checkpoint_cursor] = sample
+          checkpoint_cursor += 1
+        }
+        for i in 0..<window_centers.length() {
+          if abs_int(index - window_centers[i]) <= window_radius {
+            window_abs_sums[i] += sample.abs()
+            window_sq_sums[i] += sample * sample
+            window_counts[i] += 1
+          }
+        }
+        index += 1
+      }
+      None => break
+    }
+  }
+
+  let windows = Array::makei(window_centers.length(), fn(i) {
+    if window_counts[i] == 0 {
+      (0.0, 0.0)
+    } else {
+      let count = Double::from_int(window_counts[i])
+      (window_abs_sums[i] / count, (window_sq_sums[i] / count).sqrt())
+    }
+  })
+  (index, checkpoint_values, windows)
+}
+
+///|
+fn take_prefix(bytes : Bytes, prefix_len : Int) -> Bytes {
+  let len = if prefix_len < bytes.length() {
+    prefix_len
+  } else {
+    bytes.length()
+  }
+  Bytes::makei(len, fn(i) { bytes[i] })
+}
+
+///|
+fn zeroed_bytes(len : Int) -> Bytes {
+  Bytes::makei(len, fn(_) { Byte::default() })
+}
+
+///|
+fn assert_decode_wav_rejected(bytes : Bytes) -> Unit {
+  let rejected = try {
+    ignore(@decoder.decode_wav_bytes(bytes))
+    false
+  } catch {
+    _ => true
+  }
+  guard rejected else { panic() }
+}
+
+///|
+fn assert_decode_flac_rejected(bytes : Bytes) -> Unit {
+  let rejected = try {
+    ignore(@decoder.decode_flac_bytes(bytes))
+    false
+  } catch {
+    _ => true
+  }
+  guard rejected else { panic() }
+}
+
+///|
+fn assert_decode_mp3_rejected(bytes : Bytes) -> Unit {
+  let rejected = try {
+    ignore(@decoder.decode_mp3_bytes(bytes))
+    false
+  } catch {
+    _ => true
+  }
+  guard rejected else { panic() }
+}
+
+///|
+fn assert_decode_vorbis_rejected(bytes : Bytes) -> Unit {
+  let rejected = try {
+    ignore(@decoder.decode_vorbis_bytes(bytes))
+    false
+  } catch {
+    _ => true
+  }
+  guard rejected else { panic() }
+}
+
+///|
+fn assert_decode_mp4a_rejected(bytes : Bytes) -> Unit {
+  let rejected = try {
+    ignore(@decoder.decode_mp4a_bytes(bytes))
+    false
+  } catch {
+    _ => true
+  }
+  guard rejected else { panic() }
+}
+
+///|
 fn[S : Source] collect_n_samples(source : S, n : Int) -> Array[Sample] {
   let samples : Array[Sample] = []
   for _ in 0..<n {
@@ -936,4 +1072,161 @@ test "rodio::decoder_api::try_from_file_variants" {
   assert_eq(looped.next(), Some(0.0))
 
   remove_file_if_exists(path)
+}
+
+///|
+#cfg(target="native")
+test "rodio::decoder::reference_sample_profiles_lossless" {
+  let wav = @decoder.decode_wav_bytes(read_reference_asset("music.wav"))
+  let wav_channels = wav.channels()
+  let wav_rate = wav.sample_rate()
+  let (wav_len, wav_checkpoints, _wav_windows) = collect_decoded_profile(
+    wav,
+    [0, 1, 2, 17, 101, 1000, 298_218, 447_327, 894_652, 894_653],
+    [],
+    0,
+  )
+  assert_eq(wav_channels, 2)
+  assert_eq(wav_rate, 44_100)
+  assert_eq(wav_len, 894_654)
+  let wav_expected = [
+    0.000335693359375, 0.00030517578125, 0.000274658203125, 0.000396728515625, 0.000335693359375,
+    0.00030517578125, 0.05401611328125, 0.035888671875, -0.00140380859375, -0.011322021484375,
+  ]
+  for i in 0..<wav_expected.length() {
+    assert_sample_near(wav_checkpoints[i], wav_expected[i], 0.000_001)
+  }
+
+  let flac = @decoder.decode_flac_bytes(read_reference_asset("music.flac"))
+  let flac_channels = flac.channels()
+  let flac_rate = flac.sample_rate()
+  let (flac_len, flac_checkpoints, _flac_windows) = collect_decoded_profile(
+    flac,
+    [0, 1, 2, 17, 101, 1000, 298_480, 447_720, 895_438, 895_439],
+    [],
+    0,
+  )
+  assert_eq(flac_channels, 2)
+  assert_eq(flac_rate, 44_100)
+  assert_eq(flac_len, 895_440)
+  let flac_expected = [
+    0.00018310546875, 0.000213623046875, 0.000152587890625, 0.00030517578125, 0.00030517578125,
+    0.0003662109375, 0.067047119140625, -0.020965576171875, -0.006378173828125, 0.003173828125,
+  ]
+  for i in 0..<flac_expected.length() {
+    assert_sample_near(flac_checkpoints[i], flac_expected[i], 0.000_001)
+  }
+}
+
+///|
+#cfg(target="native")
+test "rodio::decoder::reference_window_profiles_compressed" {
+  let percents = [10, 25, 50, 75, 90]
+
+  let ogg = @decoder.decode_vorbis_bytes(read_reference_asset("music.ogg"))
+  let ogg_channels = ogg.channels()
+  let ogg_rate = ogg.sample_rate()
+  let (ogg_len, _ogg_checkpoints, ogg_windows) = collect_decoded_profile(
+    ogg,
+    [],
+    percents,
+    1024,
+  )
+  assert_eq(ogg_channels, 2)
+  assert_eq(ogg_rate, 44_100)
+  assert_eq(ogg_len, 6_114_816)
+  let ogg_expected = [
+    (0.04313434170892183, 0.05425920069266579),
+    (0.04350286411024484, 0.054170956651592425),
+    (0.04161487335705871, 0.051764381310327234),
+    (0.03234914059727467, 0.03948050297062936),
+    (0.020866717874390872, 0.02572351699751796),
+  ]
+  for i in 0..<ogg_expected.length() {
+    assert_sample_near(ogg_windows[i].0, ogg_expected[i].0, 0.001)
+    assert_sample_near(ogg_windows[i].1, ogg_expected[i].1, 0.001)
+  }
+
+  let mp3 = @decoder.decode_mp3_bytes(read_reference_asset("music.mp3"))
+  let mp3_channels = mp3.channels()
+  let mp3_rate = mp3.sample_rate()
+  let (mp3_len, _mp3_checkpoints, mp3_windows) = collect_decoded_profile(
+    mp3,
+    [],
+    percents,
+    1024,
+  )
+  assert_eq(mp3_channels, 2)
+  assert_eq(mp3_rate, 44_100)
+  assert_int_near(mp3_len, 895_440, 6_000)
+  let mp3_expected = [
+    (0.0657046529192038, 0.07820607512000426),
+    (0.040511696337253156, 0.05050373770472725),
+    (0.048535983894460344, 0.06278251432585674),
+    (0.05292412335603558, 0.06497229327652844),
+    (0.04387900365902819, 0.05423722843820879),
+  ]
+  for i in 0..<mp3_expected.length() {
+    assert_sample_near(mp3_windows[i].0, mp3_expected[i].0, 0.01)
+    assert_sample_near(mp3_windows[i].1, mp3_expected[i].1, 0.01)
+  }
+
+  let mp4a = @decoder.decode_mp4a_bytes(read_reference_asset("monkeys.mp4a"))
+  let mp4a_channels = mp4a.channels()
+  let mp4a_rate = mp4a.sample_rate()
+  let (mp4a_len, _mp4a_checkpoints, mp4a_windows) = collect_decoded_profile(
+    mp4a,
+    [],
+    percents,
+    1024,
+  )
+  assert_eq(mp4a_channels, 2)
+  assert_eq(mp4a_rate, 44_100)
+  assert_int_near(mp4a_len, 11_026_432, 6_000)
+  let mp4a_expected = [
+    (0.04554002305873217, 0.057360358479170884),
+    (0.04928541577644374, 0.059746127320967235),
+    (0.035420953642950614, 0.04450785299939645),
+    (0.05390128638467617, 0.06547651960384654),
+    (0.03810434222328496, 0.048698040350064635),
+  ]
+  for i in 0..<mp4a_expected.length() {
+    assert_sample_near(mp4a_windows[i].0, mp4a_expected[i].0, 0.02)
+    assert_sample_near(mp4a_windows[i].1, mp4a_expected[i].1, 0.02)
+  }
+}
+
+///|
+#cfg(target="native")
+test "rodio::decoder::malformed_reference_assets_reject_truncated_inputs" {
+  assert_decode_wav_rejected(take_prefix(read_reference_asset("music.wav"), 16))
+  assert_decode_flac_rejected(
+    take_prefix(read_reference_asset("music.flac"), 16),
+  )
+  assert_decode_mp3_rejected(take_prefix(read_reference_asset("music.mp3"), 16))
+  assert_decode_vorbis_rejected(
+    take_prefix(read_reference_asset("music.ogg"), 16),
+  )
+  assert_decode_mp4a_rejected(
+    take_prefix(read_reference_asset("monkeys.mp4a"), 16),
+  )
+}
+
+///|
+#cfg(target="native")
+test "rodio::decoder::malformed_reference_assets_reject_zeroed_payloads" {
+  let wav_bytes = read_reference_asset("music.wav")
+  assert_decode_wav_rejected(zeroed_bytes(wav_bytes.length()))
+
+  let flac_bytes = read_reference_asset("music.flac")
+  assert_decode_flac_rejected(zeroed_bytes(flac_bytes.length()))
+
+  let mp3_bytes = read_reference_asset("music.mp3")
+  assert_decode_mp3_rejected(zeroed_bytes(mp3_bytes.length()))
+
+  let ogg_bytes = read_reference_asset("music.ogg")
+  assert_decode_vorbis_rejected(zeroed_bytes(ogg_bytes.length()))
+
+  let mp4a_bytes = read_reference_asset("monkeys.mp4a")
+  assert_decode_mp4a_rejected(zeroed_bytes(mp4a_bytes.length()))
 }
