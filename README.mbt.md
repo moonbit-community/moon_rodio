@@ -20,7 +20,7 @@ Add the dependency to `moon.mod.json`:
 ```json
 {
   "deps": {
-    "Milky2018/moon_rodio": "0.1.2"
+    "Milky2018/moon_rodio": "0.2.0"
   },
   "preferred-target": "native"
 }
