@@ -1,17 +1,23 @@
 const os = require('os');
 const { spawnSync } = require('child_process');
 const platform = os.platform();
+const moduleName = 'Milky2018/moon_rodio';
 
-let ccLinkFlags = '';
-if (platform === 'darwin') {
-  ccLinkFlags =
-    '-framework CoreAudio -framework CoreFoundation -framework AudioToolbox';
-} else if (platform === 'linux') {
-  ccLinkFlags = '-pthread -lasound -ljack';
-} else if (platform === 'win32') {
-  ccLinkFlags = 'ole32.lib uuid.lib mmdevapi.lib avrt.lib';
-} else {
+if (platform !== 'darwin' && platform !== 'linux' && platform !== 'win32') {
   throw new Error(`Unsupported platform: ${platform}`);
+}
+
+function pkg(path) {
+  return path.length === 0 ? moduleName : `${moduleName}/${path}`;
+}
+
+const linkConfigs = [];
+
+function addLinkConfig(path, config) {
+  linkConfigs.push({
+    package: pkg(path),
+    ...config,
+  });
 }
 
 function probePkgConfig(packages) {
@@ -31,14 +37,16 @@ function probePkgConfig(packages) {
 }
 
 let decoderStubCcFlags = '';
-let decoderCcLinkFlags = '';
-let decoderStubCcLinkFlags = '';
+let decoderLinkFlags = '';
 
 const envFfmpegCflags = process.env.MOON_RODIO_FFMPEG_CFLAGS || '';
 const envFfmpegLibs = process.env.MOON_RODIO_FFMPEG_LIBS || '';
-if (envFfmpegCflags !== '' && envFfmpegLibs !== '') {
+if (platform === 'darwin') {
+  decoderLinkFlags =
+    '-framework CoreAudio -framework CoreFoundation -framework AudioToolbox';
+} else if (envFfmpegCflags !== '' && envFfmpegLibs !== '') {
   decoderStubCcFlags = `${envFfmpegCflags} -DMOON_RODIO_ENABLE_FFMPEG=1`;
-  decoderCcLinkFlags = envFfmpegLibs;
+  decoderLinkFlags = envFfmpegLibs;
 } else if (platform === 'linux') {
   const ffmpeg = probePkgConfig([
     'libavformat',
@@ -48,23 +56,19 @@ if (envFfmpegCflags !== '' && envFfmpegLibs !== '') {
   ]);
   if (ffmpeg) {
     decoderStubCcFlags = `${ffmpeg.cflags} -DMOON_RODIO_ENABLE_FFMPEG=1`;
-    decoderCcLinkFlags = ffmpeg.libs;
+    decoderLinkFlags = ffmpeg.libs;
   }
 }
 
-if (platform === 'darwin') {
-  decoderStubCcLinkFlags = ccLinkFlags;
-} else if (decoderCcLinkFlags !== '') {
-  decoderStubCcLinkFlags = decoderCcLinkFlags;
+if (decoderLinkFlags !== '') {
+  addLinkConfig('decoder', { link_flags: decoderLinkFlags });
 }
 
 const output = {
   vars: {
-    MOON_RODIO_CC_LINK_FLAGS: ccLinkFlags,
     MOON_RODIO_DECODER_STUB_CC_FLAGS: decoderStubCcFlags,
-    MOON_RODIO_DECODER_CC_LINK_FLAGS: decoderCcLinkFlags,
-    MOON_RODIO_DECODER_STUB_CC_LINK_FLAGS: decoderStubCcLinkFlags,
   },
+  link_configs: linkConfigs,
 };
 
 console.log(JSON.stringify(output));
