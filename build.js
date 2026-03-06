@@ -32,6 +32,7 @@ function probePkgConfig(packages) {
 
 let decoderStubCcFlags = '';
 let decoderCcLinkFlags = '';
+let decoderStubCcLinkFlags = '';
 
 const envFfmpegCflags = process.env.MOON_RODIO_FFMPEG_CFLAGS || '';
 const envFfmpegLibs = process.env.MOON_RODIO_FFMPEG_LIBS || '';
@@ -51,11 +52,18 @@ if (envFfmpegCflags !== '' && envFfmpegLibs !== '') {
   }
 }
 
+if (platform === 'darwin') {
+  decoderStubCcLinkFlags = ccLinkFlags;
+} else if (decoderCcLinkFlags !== '') {
+  decoderStubCcLinkFlags = decoderCcLinkFlags;
+}
+
 const output = {
   vars: {
     MOON_RODIO_CC_LINK_FLAGS: ccLinkFlags,
     MOON_RODIO_DECODER_STUB_CC_FLAGS: decoderStubCcFlags,
     MOON_RODIO_DECODER_CC_LINK_FLAGS: decoderCcLinkFlags,
+    MOON_RODIO_DECODER_STUB_CC_LINK_FLAGS: decoderStubCcLinkFlags,
   },
 };
 
