@@ -1,6 +1,10 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "Milky2018/moon_rodio/decoder"
 
+import {
+  "moonbitlang/core/ref",
+}
+
 // Values
 pub fn decode_flac_bytes(Bytes) -> DecodedSamples raise DecoderError
 
@@ -31,7 +35,7 @@ pub struct DecodedSamples {
   channels : Int
   sample_rate : Int
   samples : Array[Double]
-  cursor : Ref[Int]
+  cursor : @ref.Ref[Int]
 }
 pub fn DecodedSamples::channels(Self) -> Int
 pub fn DecodedSamples::len(Self) -> Int

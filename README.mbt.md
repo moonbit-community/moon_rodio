@@ -15,7 +15,7 @@ It provides in-memory playback composition through `Mixer`, `Sink`, `Player`, an
 
 ## Installation
 
-- Add `"Milky2018/moon_rodio": "0.2.0"` to `deps` in `moon.mod.json`
+- Add `"Milky2018/moon_rodio": "0.3.0"` to `deps` in `moon.mod.json`
 - Set `"preferred-target": "native"` in `moon.mod.json`
 
 ## Packages
