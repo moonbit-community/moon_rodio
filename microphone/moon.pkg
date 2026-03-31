@@ -1,5 +1,3 @@
 import {
   "Milky2018/moon_rodio",
 }
-
-warnings = "-deprecated"

@@ -2,5 +2,3 @@ import {
   "Milky2018/moon_cpal",
   "Milky2018/moon_rodio",
 }
-
-warnings = "-deprecated"

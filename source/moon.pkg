@@ -3,5 +3,3 @@ import {
   "Milky2018/moon_rodio",
   "moonbitlang/core/ref",
 }
-
-warnings = "-deprecated"
