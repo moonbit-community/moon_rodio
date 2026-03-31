@@ -2,3 +2,5 @@ import {
   "Milky2018/moon_rodio",
   "Milky2018/moon_rodio/microphone",
 }
+
+warnings = "-deprecated"
