@@ -9,6 +9,8 @@ import {
   "moonbitlang/core/ref",
 }
 
+supported_targets = "native"
+
 options(
   "native-stub": [ "windows_wasapi_guid_shim.c" ],
 )

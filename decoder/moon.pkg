@@ -2,6 +2,8 @@ import {
   "moonbitlang/core/ref",
 }
 
+supported_targets = "native"
+
 options(
   link: {
     "native": { "stub-cc-flags": "${build.MOON_RODIO_DECODER_STUB_CC_FLAGS}" },
