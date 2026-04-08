@@ -15,12 +15,25 @@
 ///|
 pub suberror BitDepthError {
   OutOfRange(Int)
-} derive(Show, Eq)
+} derive(Debug, Eq)
+
+///|
+pub impl Show for BitDepthError with output(self, logger) {
+  match self {
+    OutOfRange(bits) =>
+      logger.write_string("BitDepthError::OutOfRange(\{bits})")
+  }
+}
 
 ///|
 pub struct BitDepth {
   bits : Int
-} derive(Show, Eq)
+} derive(Debug, Eq)
+
+///|
+pub impl Show for BitDepth with output(self, logger) {
+  logger.write_string("BitDepth::{ bits: \{self.bits} }")
+}
 
 ///|
 pub fn BitDepth::new(bits : Int) -> BitDepth raise BitDepthError {
@@ -41,7 +54,17 @@ pub enum DitherAlgorithm {
   HighPass
   RPDF
   TPDF
-} derive(Show, Eq)
+} derive(Debug, Eq)
+
+///|
+pub impl Show for DitherAlgorithm with output(self, logger) {
+  match self {
+    GPDF => logger.write_string("DitherAlgorithm::GPDF")
+    HighPass => logger.write_string("DitherAlgorithm::HighPass")
+    RPDF => logger.write_string("DitherAlgorithm::RPDF")
+    TPDF => logger.write_string("DitherAlgorithm::TPDF")
+  }
+}
 
 ///|
 pub fn DitherAlgorithm::gpdf() -> DitherAlgorithm {

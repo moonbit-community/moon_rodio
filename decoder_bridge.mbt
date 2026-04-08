@@ -16,12 +16,28 @@
 pub suberror DecoderError {
   Backend(@decoder.DecoderError)
   UnrecognizedFormat
-} derive(Show, Eq)
+} derive(Debug, Eq)
+
+///|
+pub impl Show for DecoderError with output(self, logger) {
+  match self {
+    Backend(err) => logger.write_string("DecoderError::Backend(\{err})")
+    UnrecognizedFormat =>
+      logger.write_string("DecoderError::UnrecognizedFormat")
+  }
+}
 
 ///|
 pub suberror PlayError {
   DecoderError(DecoderError)
-} derive(Show, Eq)
+} derive(Debug, Eq)
+
+///|
+pub impl Show for PlayError with output(self, logger) {
+  match self {
+    DecoderError(err) => logger.write_string("PlayError::DecoderError(\{err})")
+  }
+}
 
 ///|
 enum DecoderKind {
@@ -30,7 +46,7 @@ enum DecoderKind {
   Vorbis
   Mp3
   Mp4a
-} derive(Show, Eq)
+} derive(Debug, Eq)
 
 ///|
 pub struct Decoder {
@@ -48,7 +64,14 @@ pub struct Settings {
   hint : String?
   mime_type : String?
   is_seekable : Bool
-} derive(Show, Eq)
+} derive(Debug, Eq)
+
+///|
+pub impl Show for Settings with output(self, logger) {
+  logger.write_string(
+    "Settings::{ byte_len: \{self.byte_len}, coarse_seek: \{self.coarse_seek}, gapless: \{self.gapless}, hint: \{self.hint}, mime_type: \{self.mime_type}, is_seekable: \{self.is_seekable} }",
+  )
+}
 
 ///|
 pub fn Settings::default() -> Settings {

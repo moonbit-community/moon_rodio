@@ -73,7 +73,18 @@ pub suberror ToWavError {
   Writing
   Finishing
   Flushing
-} derive(Eq, Show)
+} derive(Eq, Debug)
+
+///|
+pub impl Show for ToWavError with output(self, logger) {
+  match self {
+    OpenFile => logger.write_string("ToWavError::OpenFile")
+    Creating => logger.write_string("ToWavError::Creating")
+    Writing => logger.write_string("ToWavError::Writing")
+    Finishing => logger.write_string("ToWavError::Finishing")
+    Flushing => logger.write_string("ToWavError::Flushing")
+  }
+}
 
 ///|
 pub(open) trait WavWriter {

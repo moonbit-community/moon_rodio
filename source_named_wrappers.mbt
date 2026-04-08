@@ -426,7 +426,14 @@ pub struct LimitSettings {
   knee_width : Sample
   attack : @moon_cpal.Duration
   release : @moon_cpal.Duration
-} derive(Show, Eq)
+} derive(Eq)
+
+///|
+pub impl Show for LimitSettings with output(self, logger) {
+  logger.write_string(
+    "LimitSettings::{ min_value: \{self.min_value}, max_value: \{self.max_value}, threshold: \{self.threshold}, knee_width: \{self.knee_width}, attack: \{self.attack}, release: \{self.release} }",
+  )
+}
 
 ///|
 pub fn LimitSettings::default() -> LimitSettings {
@@ -972,7 +979,17 @@ pub enum Function {
   Triangle
   Square
   Sawtooth
-} derive(Show, Eq)
+} derive(Debug, Eq)
+
+///|
+pub impl Show for Function with output(self, logger) {
+  match self {
+    Sine => logger.write_string("Function::Sine")
+    Triangle => logger.write_string("Function::Triangle")
+    Square => logger.write_string("Function::Square")
+    Sawtooth => logger.write_string("Function::Sawtooth")
+  }
+}
 
 ///|
 pub fn Function::sine() -> Function {

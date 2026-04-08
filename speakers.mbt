@@ -15,7 +15,15 @@
 ///|
 pub suberror SpeakersListError {
   DevicesError(@moon_cpal.DevicesError)
-} derive(Show, Eq)
+} derive(Eq)
+
+///|
+pub impl Show for SpeakersListError with output(self, logger) {
+  match self {
+    DevicesError(err) =>
+      logger.write_string("SpeakersListError::DevicesError(\{err})")
+  }
+}
 
 ///|
 pub suberror SpeakersError {
@@ -25,14 +33,46 @@ pub suberror SpeakersError {
   SupportedOutputConfigsError(@moon_cpal.SupportedStreamConfigsError)
   UnsupportedByDevice
   DeviceSinkError(DeviceSinkError)
-} derive(Show, Eq)
+} derive(Eq)
+
+///|
+pub impl Show for SpeakersError with output(self, logger) {
+  match self {
+    NoDevice => logger.write_string("SpeakersError::NoDevice")
+    NoConfig => logger.write_string("SpeakersError::NoConfig")
+    DefaultOutputConfigError(err) =>
+      logger.write_string("SpeakersError::DefaultOutputConfigError(\{err})")
+    SupportedOutputConfigsError(err) =>
+      logger.write_string("SpeakersError::SupportedOutputConfigsError(\{err})")
+    UnsupportedByDevice =>
+      logger.write_string("SpeakersError::UnsupportedByDevice")
+    DeviceSinkError(err) =>
+      logger.write_string("SpeakersError::DeviceSinkError(\{err})")
+  }
+}
 
 ///|
 pub suberror SpeakersPlayError {
   WrongChannelCount(ChannelCount, ChannelCount)
   WrongSampleRate(SampleRate, SampleRate)
   BuilderError(SpeakersError)
-} derive(Show, Eq)
+} derive(Eq)
+
+///|
+pub impl Show for SpeakersPlayError with output(self, logger) {
+  match self {
+    WrongChannelCount(expected, actual) =>
+      logger.write_string(
+        "SpeakersPlayError::WrongChannelCount(\{expected}, \{actual})",
+      )
+    WrongSampleRate(expected, actual) =>
+      logger.write_string(
+        "SpeakersPlayError::WrongSampleRate(\{expected}, \{actual})",
+      )
+    BuilderError(err) =>
+      logger.write_string("SpeakersPlayError::BuilderError(\{err})")
+  }
+}
 
 ///|
 pub struct Output {
@@ -95,7 +135,14 @@ pub struct OutputConfig {
   sample_rate : SampleRate
   buffer_size : @moon_cpal.BufferSize
   sample_format : @moon_cpal.SampleFormat
-} derive(Show, Eq)
+} derive(Eq)
+
+///|
+pub impl Show for OutputConfig with output(self, logger) {
+  logger.write_string(
+    "OutputConfig::{ channel_count: \{self.channel_count}, sample_rate: \{self.sample_rate}, buffer_size: \{self.buffer_size}, sample_format: \{self.sample_format} }",
+  )
+}
 
 ///|
 pub fn OutputConfig::default() -> OutputConfig {

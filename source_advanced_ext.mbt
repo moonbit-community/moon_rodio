@@ -298,7 +298,15 @@ pub impl Source for AutomaticGainControl with sample_rate(
 pub enum BltMode {
   LowPass
   HighPass
-} derive(Show, Eq)
+} derive(Debug, Eq)
+
+///|
+pub impl Show for BltMode with output(self, logger) {
+  match self {
+    LowPass => logger.write_string("BltMode::LowPass")
+    HighPass => logger.write_string("BltMode::HighPass")
+  }
+}
 
 ///|
 pub struct BltFilter {

@@ -15,7 +15,15 @@
 ///|
 pub suberror MicrophoneListError {
   DevicesError(@moon_cpal.DevicesError)
-} derive(Show, Eq)
+} derive(Eq)
+
+///|
+pub impl Show for MicrophoneListError with output(self, logger) {
+  match self {
+    DevicesError(err) =>
+      logger.write_string("MicrophoneListError::DevicesError(\{err})")
+  }
+}
 
 ///|
 pub suberror MicrophoneError {
@@ -27,7 +35,27 @@ pub suberror MicrophoneError {
   BuildStreamError(@moon_cpal.BuildStreamError)
   PlayStreamError(@moon_cpal.PlayStreamError)
   UnsupportedSampleFormat
-} derive(Show, Eq)
+} derive(Eq)
+
+///|
+pub impl Show for MicrophoneError with output(self, logger) {
+  match self {
+    NoDevice => logger.write_string("MicrophoneError::NoDevice")
+    NoConfig => logger.write_string("MicrophoneError::NoConfig")
+    DefaultInputConfigError(err) =>
+      logger.write_string("MicrophoneError::DefaultInputConfigError(\{err})")
+    SupportedInputConfigsError(err) =>
+      logger.write_string("MicrophoneError::SupportedInputConfigsError(\{err})")
+    UnsupportedByDevice =>
+      logger.write_string("MicrophoneError::UnsupportedByDevice")
+    BuildStreamError(err) =>
+      logger.write_string("MicrophoneError::BuildStreamError(\{err})")
+    PlayStreamError(err) =>
+      logger.write_string("MicrophoneError::PlayStreamError(\{err})")
+    UnsupportedSampleFormat =>
+      logger.write_string("MicrophoneError::UnsupportedSampleFormat")
+  }
+}
 
 ///|
 pub struct Input {
@@ -70,7 +98,14 @@ pub struct InputConfig {
   sample_rate : SampleRate
   buffer_size : @moon_cpal.BufferSize
   sample_format : @moon_cpal.SampleFormat
-} derive(Show, Eq)
+} derive(Eq)
+
+///|
+pub impl Show for InputConfig with output(self, logger) {
+  logger.write_string(
+    "InputConfig::{ channel_count: \{self.channel_count}, sample_rate: \{self.sample_rate}, buffer_size: \{self.buffer_size}, sample_format: \{self.sample_format} }",
+  )
+}
 
 ///|
 pub fn InputConfig::default() -> InputConfig {

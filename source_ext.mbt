@@ -18,7 +18,17 @@ pub enum SignalFunction {
   Square
   Sawtooth
   Triangle
-} derive(Show, Eq)
+} derive(Debug, Eq)
+
+///|
+pub impl Show for SignalFunction with output(self, logger) {
+  match self {
+    Sine => logger.write_string("SignalFunction::Sine")
+    Square => logger.write_string("SignalFunction::Square")
+    Sawtooth => logger.write_string("SignalFunction::Sawtooth")
+    Triangle => logger.write_string("SignalFunction::Triangle")
+  }
+}
 
 ///|
 pub struct SignalGenerator {

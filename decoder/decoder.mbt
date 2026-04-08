@@ -16,7 +16,17 @@
 pub suberror DecoderError {
   InvalidFormat(String)
   Unsupported(String)
-} derive(Show, Eq)
+} derive(Debug, Eq)
+
+///|
+pub impl Show for DecoderError with output(self, logger) {
+  match self {
+    InvalidFormat(reason) =>
+      logger.write_string("DecoderError::InvalidFormat(\{reason})")
+    Unsupported(reason) =>
+      logger.write_string("DecoderError::Unsupported(\{reason})")
+  }
+}
 
 ///|
 pub struct DecodedSamples {

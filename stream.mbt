@@ -18,7 +18,14 @@ pub struct OutputStreamConfig {
   sample_rate : SampleRate
   buffer_size : @moon_cpal.BufferSize
   sample_format : @moon_cpal.SampleFormat
-} derive(Show, Eq)
+} derive(Eq)
+
+///|
+pub impl Show for OutputStreamConfig with output(self, logger) {
+  logger.write_string(
+    "OutputStreamConfig::{ channel_count: \{self.channel_count}, sample_rate: \{self.sample_rate}, buffer_size: \{self.buffer_size}, sample_format: \{self.sample_format} }",
+  )
+}
 
 ///|
 pub fn OutputStreamConfig::default() -> OutputStreamConfig {
@@ -64,7 +71,24 @@ pub suberror StreamError {
   SupportedStreamConfigsError(@moon_cpal.SupportedStreamConfigsError)
   NoDevice
   UnsupportedSampleFormat
-} derive(Show, Eq)
+} derive(Eq)
+
+///|
+pub impl Show for StreamError with output(self, logger) {
+  match self {
+    PlayStreamError(err) =>
+      logger.write_string("StreamError::PlayStreamError(\{err})")
+    DefaultStreamConfigError(err) =>
+      logger.write_string("StreamError::DefaultStreamConfigError(\{err})")
+    BuildStreamError(err) =>
+      logger.write_string("StreamError::BuildStreamError(\{err})")
+    SupportedStreamConfigsError(err) =>
+      logger.write_string("StreamError::SupportedStreamConfigsError(\{err})")
+    NoDevice => logger.write_string("StreamError::NoDevice")
+    UnsupportedSampleFormat =>
+      logger.write_string("StreamError::UnsupportedSampleFormat")
+  }
+}
 
 ///|
 pub struct OutputStream {

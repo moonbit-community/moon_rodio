@@ -6,6 +6,7 @@ import {
   "Milky2018/moon_cpal/spec",
   "Milky2018/moon_rodio/decoder",
   "moonbitlang/core/buffer",
+  "moonbitlang/core/debug",
   "moonbitlang/core/ref",
 }
 
@@ -157,15 +158,13 @@ pub fn zero_samples(Int, Int, Int) -> DynSource
 // Errors
 pub suberror BitDepthError {
   OutOfRange(Int)
-}
-pub impl Eq for BitDepthError
+} derive(Eq, @debug.Debug)
 pub impl Show for BitDepthError
 
 pub suberror DecoderError {
   Backend(@decoder.DecoderError)
   UnrecognizedFormat
-}
-pub impl Eq for DecoderError
+} derive(Eq, @debug.Debug)
 pub impl Show for DecoderError
 
 pub suberror MicrophoneError {
@@ -177,27 +176,23 @@ pub suberror MicrophoneError {
   BuildStreamError(@core.BuildStreamError)
   PlayStreamError(@core.PlayStreamError)
   UnsupportedSampleFormat
-}
-pub impl Eq for MicrophoneError
+} derive(Eq)
 pub impl Show for MicrophoneError
 
 pub suberror MicrophoneListError {
   DevicesError(@core.DevicesError)
-}
-pub impl Eq for MicrophoneListError
+} derive(Eq)
 pub impl Show for MicrophoneListError
 
 pub suberror PlayError {
   DecoderError(DecoderError)
-}
-pub impl Eq for PlayError
+} derive(Eq, @debug.Debug)
 pub impl Show for PlayError
 
 pub suberror SeekError {
   NotSupported
-}
+} derive(Eq, @debug.Debug)
 pub fn SeekError::source_intact(Self) -> Bool
-pub impl Eq for SeekError
 pub impl Show for SeekError
 
 pub suberror SpeakersError {
@@ -207,22 +202,19 @@ pub suberror SpeakersError {
   SupportedOutputConfigsError(@core.SupportedStreamConfigsError)
   UnsupportedByDevice
   DeviceSinkError(StreamError)
-}
-pub impl Eq for SpeakersError
+} derive(Eq)
 pub impl Show for SpeakersError
 
 pub suberror SpeakersListError {
   DevicesError(@core.DevicesError)
-}
-pub impl Eq for SpeakersListError
+} derive(Eq)
 pub impl Show for SpeakersListError
 
 pub suberror SpeakersPlayError {
   WrongChannelCount(Int, Int)
   WrongSampleRate(Int, Int)
   BuilderError(SpeakersError)
-}
-pub impl Eq for SpeakersPlayError
+} derive(Eq)
 pub impl Show for SpeakersPlayError
 
 #alias(DeviceSinkError)
@@ -233,8 +225,7 @@ pub suberror StreamError {
   SupportedStreamConfigsError(@core.SupportedStreamConfigsError)
   NoDevice
   UnsupportedSampleFormat
-}
-pub impl Eq for StreamError
+} derive(Eq)
 pub impl Show for StreamError
 
 pub suberror ToWavError {
@@ -243,8 +234,7 @@ pub suberror ToWavError {
   Writing
   Finishing
   Flushing
-}
-pub impl Eq for ToWavError
+} derive(Eq, @debug.Debug)
 pub impl Show for ToWavError
 
 // Types and methods
@@ -301,10 +291,9 @@ pub fn AutomaticGainControlSettings::with_target_level(Self, Double) -> Self
 
 pub struct BitDepth {
   bits : Int
-}
+} derive(Eq, @debug.Debug)
 pub fn BitDepth::get(Self) -> Int
 pub fn BitDepth::new(Int) -> Self raise BitDepthError
-pub impl Eq for BitDepth
 pub impl Show for BitDepth
 
 pub struct BltFilter {
@@ -337,8 +326,7 @@ pub impl Source for BltFilter
 pub enum BltMode {
   LowPass
   HighPass
-}
-pub impl Eq for BltMode
+} derive(Eq, @debug.Debug)
 pub impl Show for BltMode
 
 pub struct Blue {
@@ -472,9 +460,7 @@ pub fn DecoderBuilder::with_hint(Self, StringView) -> Self
 pub fn DecoderBuilder::with_mime_type(Self, StringView) -> Self
 pub fn DecoderBuilder::with_seekable(Self, Bool) -> Self
 
-type DecoderKind
-pub impl Eq for DecoderKind
-pub impl Show for DecoderKind
+type DecoderKind derive(Eq, @debug.Debug)
 
 pub struct Delay {
   inner : DynSource
@@ -539,12 +525,11 @@ pub enum DitherAlgorithm {
   HighPass
   RPDF
   TPDF
-}
+} derive(Eq, @debug.Debug)
 pub fn DitherAlgorithm::gpdf() -> Self
 pub fn DitherAlgorithm::high_pass() -> Self
 pub fn DitherAlgorithm::rpdf() -> Self
 pub fn DitherAlgorithm::tpdf() -> Self
-pub impl Eq for DitherAlgorithm
 pub impl Show for DitherAlgorithm
 
 pub struct Done {
@@ -661,12 +646,11 @@ pub enum Function {
   Triangle
   Square
   Sawtooth
-}
+} derive(Eq, @debug.Debug)
 pub fn Function::sawtooth() -> Self
 pub fn Function::sine() -> Self
 pub fn Function::square() -> Self
 pub fn Function::triangle() -> Self
-pub impl Eq for Function
 pub impl Show for Function
 
 pub struct GeneratorFunction {
@@ -685,7 +669,7 @@ pub struct InputConfig {
   sample_rate : Int
   buffer_size : @core.BufferSize
   sample_format : @core.SampleFormat
-}
+} derive(Eq)
 pub fn InputConfig::default() -> Self
 pub fn InputConfig::from_supported(@core.SupportedStreamConfig) -> Self
 pub fn InputConfig::new(Int, Int, @core.BufferSize, @core.SampleFormat) -> Self
@@ -695,7 +679,6 @@ pub fn InputConfig::with_buffer_size(Self, @core.BufferSize) -> Self
 pub fn InputConfig::with_channel_count(Self, Int) -> Self
 pub fn InputConfig::with_sample_format(Self, @core.SampleFormat) -> Self
 pub fn InputConfig::with_sample_rate(Self, Int) -> Self
-pub impl Eq for InputConfig
 pub impl Show for InputConfig
 
 pub struct LcgNoiseRng {
@@ -745,7 +728,7 @@ pub struct LimitSettings {
   knee_width : Double
   attack : @core.Duration
   release : @core.Duration
-}
+} derive(Eq)
 pub fn LimitSettings::broadcast() -> Self
 pub fn LimitSettings::default() -> Self
 pub fn LimitSettings::dynamic_content() -> Self
@@ -759,7 +742,6 @@ pub fn LimitSettings::with_max(Self, Double) -> Self
 pub fn LimitSettings::with_min(Self, Double) -> Self
 pub fn LimitSettings::with_release(Self, @core.Duration) -> Self
 pub fn LimitSettings::with_threshold(Self, Double) -> Self
-pub impl Eq for LimitSettings
 pub impl Show for LimitSettings
 
 pub struct LimitStereo {
@@ -877,7 +859,7 @@ pub struct OutputConfig {
   sample_rate : Int
   buffer_size : @core.BufferSize
   sample_format : @core.SampleFormat
-}
+} derive(Eq)
 pub fn OutputConfig::default() -> Self
 pub fn OutputConfig::from_supported(@core.SupportedStreamConfig) -> Self
 pub fn OutputConfig::new(Int, Int, @core.BufferSize, @core.SampleFormat) -> Self
@@ -886,7 +868,6 @@ pub fn OutputConfig::with_buffer_size(Self, @core.BufferSize) -> Self
 pub fn OutputConfig::with_channel_count(Self, Int) -> Self
 pub fn OutputConfig::with_sample_format(Self, @core.SampleFormat) -> Self
 pub fn OutputConfig::with_sample_rate(Self, Int) -> Self
-pub impl Eq for OutputConfig
 pub impl Show for OutputConfig
 
 pub struct OutputStream {
@@ -926,13 +907,12 @@ pub struct OutputStreamConfig {
   sample_rate : Int
   buffer_size : @core.BufferSize
   sample_format : @core.SampleFormat
-}
+} derive(Eq)
 pub fn OutputStreamConfig::buffer_size(Self) -> @core.BufferSize
 pub fn OutputStreamConfig::channel_count(Self) -> Int
 pub fn OutputStreamConfig::default() -> Self
 pub fn OutputStreamConfig::sample_format(Self) -> @core.SampleFormat
 pub fn OutputStreamConfig::sample_rate(Self) -> Int
-pub impl Eq for OutputStreamConfig
 pub impl Show for OutputStreamConfig
 
 pub struct Pausable {
@@ -1088,9 +1068,8 @@ pub struct Settings {
   hint : String?
   mime_type : String?
   is_seekable : Bool
-}
+} derive(Eq, @debug.Debug)
 pub fn Settings::default() -> Self
-pub impl Eq for Settings
 pub impl Show for Settings
 
 pub enum SignalFunction {
@@ -1098,8 +1077,7 @@ pub enum SignalFunction {
   Square
   Sawtooth
   Triangle
-}
-pub impl Eq for SignalFunction
+} derive(Eq, @debug.Debug)
 pub impl Show for SignalFunction
 
 pub struct SignalGenerator {

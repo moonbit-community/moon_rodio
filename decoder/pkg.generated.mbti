@@ -2,6 +2,7 @@
 package "Milky2018/moon_rodio/decoder"
 
 import {
+  "moonbitlang/core/debug",
   "moonbitlang/core/ref",
 }
 
@@ -26,8 +27,7 @@ pub fn vorbis_sine_48k_mono_bytes() -> Bytes
 pub suberror DecoderError {
   InvalidFormat(String)
   Unsupported(String)
-}
-pub impl Eq for DecoderError
+} derive(Eq, @debug.Debug)
 pub impl Show for DecoderError
 
 // Types and methods
