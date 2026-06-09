@@ -15,8 +15,8 @@
 ///|
 test "rodio::source::skippable::aliases" {
   let s = skippable(@Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [1.0, 2.0]))
-  assert_eq(s.channels(), 1)
-  assert_eq(s.sample_rate(), 8)
+  @debug.assert_eq(s.channels(), 1)
+  @debug.assert_eq(s.sample_rate(), 8)
   s.skip()
-  assert_eq(s.next(), None)
+  @debug.assert_eq(s.next(), None)
 }

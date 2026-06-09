@@ -18,7 +18,7 @@ pub suberror BitDepthError {
 } derive(Debug, Eq)
 
 ///|
-pub impl Show for BitDepthError with output(self, logger) {
+pub impl Show for BitDepthError with fn output(self, logger) {
   match self {
     OutOfRange(bits) =>
       logger.write_string("BitDepthError::OutOfRange(\{bits})")
@@ -31,14 +31,14 @@ pub struct BitDepth {
 } derive(Debug, Eq)
 
 ///|
-pub impl Show for BitDepth with output(self, logger) {
+pub impl Show for BitDepth with fn output(self, logger) {
   logger.write_string("BitDepth::{ bits: \{self.bits} }")
 }
 
 ///|
 pub fn BitDepth::new(bits : Int) -> BitDepth raise BitDepthError {
   if bits <= 0 || bits > 64 {
-    raise BitDepthError::OutOfRange(bits)
+    raise OutOfRange(bits)
   }
   { bits, }
 }
@@ -57,7 +57,7 @@ pub enum DitherAlgorithm {
 } derive(Debug, Eq)
 
 ///|
-pub impl Show for DitherAlgorithm with output(self, logger) {
+pub impl Show for DitherAlgorithm with fn output(self, logger) {
   match self {
     GPDF => logger.write_string("DitherAlgorithm::GPDF")
     HighPass => logger.write_string("DitherAlgorithm::HighPass")
@@ -68,22 +68,22 @@ pub impl Show for DitherAlgorithm with output(self, logger) {
 
 ///|
 pub fn DitherAlgorithm::gpdf() -> DitherAlgorithm {
-  DitherAlgorithm::GPDF
+  GPDF
 }
 
 ///|
 pub fn DitherAlgorithm::high_pass() -> DitherAlgorithm {
-  DitherAlgorithm::HighPass
+  HighPass
 }
 
 ///|
 pub fn DitherAlgorithm::rpdf() -> DitherAlgorithm {
-  DitherAlgorithm::RPDF
+  RPDF
 }
 
 ///|
 pub fn DitherAlgorithm::tpdf() -> DitherAlgorithm {
-  DitherAlgorithm::TPDF
+  TPDF
 }
 
 ///|
@@ -128,17 +128,16 @@ fn ensure_highpass_state(d : Dither, channels : Int) -> Unit {
 fn dither_noise_sample(d : Dither, channels : Int) -> Sample {
   let channel = if channels <= 0 { 0 } else { d.current_channel.val % channels }
   let noise = match d.noise.val {
-    DitherAlgorithm::RPDF => dither_rand_unit(d.rng_state) * 2.0 - 1.0
-    DitherAlgorithm::TPDF =>
-      dither_rand_unit(d.rng_state) - dither_rand_unit(d.rng_state)
-    DitherAlgorithm::GPDF => {
+    RPDF => dither_rand_unit(d.rng_state) * 2.0 - 1.0
+    TPDF => dither_rand_unit(d.rng_state) - dither_rand_unit(d.rng_state)
+    GPDF => {
       let mut sum = 0.0
       for _ in 0..<6 {
         sum += dither_rand_unit(d.rng_state)
       }
       (sum - 3.0) / 3.0
     }
-    DitherAlgorithm::HighPass => {
+    HighPass => {
       ensure_highpass_state(d, channels)
       let white = dither_rand_unit(d.rng_state) * 2.0 - 1.0
       let out = white - d.highpass_prev.val[channel]
@@ -189,7 +188,7 @@ pub fn Dither::set_algorithm(
   algorithm : DitherAlgorithm,
 ) -> Unit {
   self.noise.val = algorithm
-  if algorithm == DitherAlgorithm::HighPass {
+  if algorithm == HighPass {
     ensure_highpass_state(self, self.input.channels())
   }
 }
@@ -222,37 +221,37 @@ pub fn Dither::sample_rate(self : Dither) -> SampleRate {
 }
 
 ///|
-pub impl Source for Dither with next(self : Dither) {
+pub impl Source for Dither with fn next(self : Dither) {
   self.next()
 }
 
 ///|
-pub impl Source for Dither with channels(self : Dither) {
+pub impl Source for Dither with fn channels(self : Dither) {
   self.channels()
 }
 
 ///|
-pub impl Source for Dither with sample_rate(self : Dither) {
+pub impl Source for Dither with fn sample_rate(self : Dither) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for Dither with current_span_len(self : Dither) {
+pub impl Source for Dither with fn current_span_len(self : Dither) {
   self.input.current_span_len()
 }
 
 ///|
-pub impl Source for Dither with total_duration(self : Dither) {
+pub impl Source for Dither with fn total_duration(self : Dither) {
   self.input.total_duration()
 }
 
 ///|
-pub impl Source for Dither with try_seek(
+pub impl Source for Dither with fn try_seek(
   self : Dither,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
   self.current_channel.val = 0
-  if self.noise.val == DitherAlgorithm::HighPass {
+  if self.noise.val == HighPass {
     ensure_highpass_state(self, self.input.channels())
     for i in 0..<self.highpass_prev.val.length() {
       self.highpass_prev.val[i] = 0.0

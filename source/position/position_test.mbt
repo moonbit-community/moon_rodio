@@ -17,11 +17,11 @@ test "rodio::source::position::aliases" {
   let t = track_position(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0]),
   )
-  assert_eq(t.channels(), 1)
-  assert_eq(t.sample_rate(), 2)
-  assert_eq(t.get_pos().secs, (0 : UInt64))
-  assert_eq(t.next(), Some(1.0))
-  assert_eq(t.next(), Some(2.0))
+  @debug.assert_eq(t.channels(), 1)
+  @debug.assert_eq(t.sample_rate(), 2)
+  @debug.assert_eq(t.get_pos().secs, (0 : UInt64))
+  @debug.assert_eq(t.next(), Some(1.0))
+  @debug.assert_eq(t.next(), Some(2.0))
   let pos = t.get_pos()
   assert_true(pos.secs > (0 : UInt64) || pos.nanos > 0)
 }

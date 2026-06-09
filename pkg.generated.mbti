@@ -2,9 +2,9 @@
 package "Milky2018/moon_rodio"
 
 import {
-  "Milky2018/moon_cpal/core",
-  "Milky2018/moon_cpal/spec",
   "Milky2018/moon_rodio/decoder",
+  "moonbit-community/moon_cpal/core",
+  "moonbit-community/moon_cpal/spec",
   "moonbitlang/core/buffer",
   "moonbitlang/core/debug",
   "moonbitlang/core/ref",
@@ -176,12 +176,12 @@ pub suberror MicrophoneError {
   BuildStreamError(@core.BuildStreamError)
   PlayStreamError(@core.PlayStreamError)
   UnsupportedSampleFormat
-} derive(Eq)
+} derive(Eq, @debug.Debug)
 pub impl Show for MicrophoneError
 
 pub suberror MicrophoneListError {
   DevicesError(@core.DevicesError)
-} derive(Eq)
+} derive(Eq, @debug.Debug)
 pub impl Show for MicrophoneListError
 
 pub suberror PlayError {
@@ -202,19 +202,19 @@ pub suberror SpeakersError {
   SupportedOutputConfigsError(@core.SupportedStreamConfigsError)
   UnsupportedByDevice
   DeviceSinkError(StreamError)
-} derive(Eq)
+} derive(Eq, @debug.Debug)
 pub impl Show for SpeakersError
 
 pub suberror SpeakersListError {
   DevicesError(@core.DevicesError)
-} derive(Eq)
+} derive(Eq, @debug.Debug)
 pub impl Show for SpeakersListError
 
 pub suberror SpeakersPlayError {
   WrongChannelCount(Int, Int)
   WrongSampleRate(Int, Int)
   BuilderError(SpeakersError)
-} derive(Eq)
+} derive(Eq, @debug.Debug)
 pub impl Show for SpeakersPlayError
 
 #alias(DeviceSinkError)
@@ -225,7 +225,7 @@ pub suberror StreamError {
   SupportedStreamConfigsError(@core.SupportedStreamConfigsError)
   NoDevice
   UnsupportedSampleFormat
-} derive(Eq)
+} derive(Eq, @debug.Debug)
 pub impl Show for StreamError
 
 pub suberror ToWavError {
@@ -669,7 +669,7 @@ pub struct InputConfig {
   sample_rate : Int
   buffer_size : @core.BufferSize
   sample_format : @core.SampleFormat
-} derive(Eq)
+} derive(Eq, @debug.Debug)
 pub fn InputConfig::default() -> Self
 pub fn InputConfig::from_supported(@core.SupportedStreamConfig) -> Self
 pub fn InputConfig::new(Int, Int, @core.BufferSize, @core.SampleFormat) -> Self
@@ -728,7 +728,7 @@ pub struct LimitSettings {
   knee_width : Double
   attack : @core.Duration
   release : @core.Duration
-} derive(Eq)
+} derive(Eq, @debug.Debug)
 pub fn LimitSettings::broadcast() -> Self
 pub fn LimitSettings::default() -> Self
 pub fn LimitSettings::dynamic_content() -> Self
@@ -859,7 +859,7 @@ pub struct OutputConfig {
   sample_rate : Int
   buffer_size : @core.BufferSize
   sample_format : @core.SampleFormat
-} derive(Eq)
+} derive(Eq, @debug.Debug)
 pub fn OutputConfig::default() -> Self
 pub fn OutputConfig::from_supported(@core.SupportedStreamConfig) -> Self
 pub fn OutputConfig::new(Int, Int, @core.BufferSize, @core.SampleFormat) -> Self
@@ -907,7 +907,7 @@ pub struct OutputStreamConfig {
   sample_rate : Int
   buffer_size : @core.BufferSize
   sample_format : @core.SampleFormat
-} derive(Eq)
+} derive(Eq, @debug.Debug)
 pub fn OutputStreamConfig::buffer_size(Self) -> @core.BufferSize
 pub fn OutputStreamConfig::channel_count(Self) -> Int
 pub fn OutputStreamConfig::default() -> Self
@@ -1487,27 +1487,27 @@ pub type SampleRate = Int
 
 // Traits
 pub(open) trait FixedSource {
-  next(Self) -> Double?
-  channels(Self) -> Int
-  sample_rate(Self) -> Int
-  total_duration(Self) -> @core.Duration?
+  fn next(Self) -> Double?
+  fn channels(Self) -> Int
+  fn sample_rate(Self) -> Int
+  fn total_duration(Self) -> @core.Duration?
 }
 
 pub(open) trait NoiseRng {
-  next_u64(Self) -> UInt64
+  fn next_u64(Self) -> UInt64
 }
 
 pub(open) trait Source {
-  next(Self) -> Double?
-  channels(Self) -> Int
-  sample_rate(Self) -> Int
-  current_span_len(Self) -> Int?
-  total_duration(Self) -> @core.Duration?
-  try_seek(Self, @core.Duration) -> Unit raise SeekError
+  fn next(Self) -> Double?
+  fn channels(Self) -> Int
+  fn sample_rate(Self) -> Int
+  fn current_span_len(Self) -> Int?
+  fn total_duration(Self) -> @core.Duration?
+  fn try_seek(Self, @core.Duration) -> Unit raise SeekError
 }
 
 pub(open) trait WavWriter {
-  write_all(Self, Bytes) -> Unit raise ToWavError
+  fn write_all(Self, Bytes) -> Unit raise ToWavError
 }
 pub impl WavWriter for @buffer.Buffer
 

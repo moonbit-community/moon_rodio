@@ -19,13 +19,13 @@ test "rodio::mixer::tests::basic" {
   tx.add(@moon_rodio.SamplesBuffer::new(1, 48_000, [10.0, -10.0, 10.0, -10.0]))
   tx.add(@moon_rodio.SamplesBuffer::new(1, 48_000, [5.0, 5.0, 5.0, 5.0]))
 
-  assert_eq(rx.channels(), 1)
-  assert_eq(rx.sample_rate(), 48_000)
-  assert_eq(rx.next(), Some(15.0))
-  assert_eq(rx.next(), Some(-5.0))
-  assert_eq(rx.next(), Some(15.0))
-  assert_eq(rx.next(), Some(-5.0))
-  assert_eq(rx.next(), None)
+  @debug.assert_eq(rx.channels(), 1)
+  @debug.assert_eq(rx.sample_rate(), 48_000)
+  @debug.assert_eq(rx.next(), Some(15.0))
+  @debug.assert_eq(rx.next(), Some(-5.0))
+  @debug.assert_eq(rx.next(), Some(15.0))
+  @debug.assert_eq(rx.next(), Some(-5.0))
+  @debug.assert_eq(rx.next(), None)
 }
 
 ///|
@@ -35,17 +35,17 @@ test "rodio::mixer::tests::channels_conv" {
   tx.add(@moon_rodio.SamplesBuffer::new(1, 48_000, [10.0, -10.0, 10.0, -10.0]))
   tx.add(@moon_rodio.SamplesBuffer::new(1, 48_000, [5.0, 5.0, 5.0, 5.0]))
 
-  assert_eq(rx.channels(), 2)
-  assert_eq(rx.sample_rate(), 48_000)
-  assert_eq(rx.next(), Some(15.0))
-  assert_eq(rx.next(), Some(15.0))
-  assert_eq(rx.next(), Some(-5.0))
-  assert_eq(rx.next(), Some(-5.0))
-  assert_eq(rx.next(), Some(15.0))
-  assert_eq(rx.next(), Some(15.0))
-  assert_eq(rx.next(), Some(-5.0))
-  assert_eq(rx.next(), Some(-5.0))
-  assert_eq(rx.next(), None)
+  @debug.assert_eq(rx.channels(), 2)
+  @debug.assert_eq(rx.sample_rate(), 48_000)
+  @debug.assert_eq(rx.next(), Some(15.0))
+  @debug.assert_eq(rx.next(), Some(15.0))
+  @debug.assert_eq(rx.next(), Some(-5.0))
+  @debug.assert_eq(rx.next(), Some(-5.0))
+  @debug.assert_eq(rx.next(), Some(15.0))
+  @debug.assert_eq(rx.next(), Some(15.0))
+  @debug.assert_eq(rx.next(), Some(-5.0))
+  @debug.assert_eq(rx.next(), Some(-5.0))
+  @debug.assert_eq(rx.next(), None)
 }
 
 ///|
@@ -55,16 +55,16 @@ test "rodio::mixer::tests::rate_conv" {
   tx.add(@moon_rodio.SamplesBuffer::new(1, 48_000, [10.0, -10.0, 10.0, -10.0]))
   tx.add(@moon_rodio.SamplesBuffer::new(1, 48_000, [5.0, 5.0, 5.0, 5.0]))
 
-  assert_eq(rx.channels(), 1)
-  assert_eq(rx.sample_rate(), 96_000)
-  assert_eq(rx.next(), Some(15.0))
-  assert_eq(rx.next(), Some(5.0))
-  assert_eq(rx.next(), Some(-5.0))
-  assert_eq(rx.next(), Some(5.0))
-  assert_eq(rx.next(), Some(15.0))
-  assert_eq(rx.next(), Some(5.0))
-  assert_eq(rx.next(), Some(-5.0))
-  assert_eq(rx.next(), None)
+  @debug.assert_eq(rx.channels(), 1)
+  @debug.assert_eq(rx.sample_rate(), 96_000)
+  @debug.assert_eq(rx.next(), Some(15.0))
+  @debug.assert_eq(rx.next(), Some(5.0))
+  @debug.assert_eq(rx.next(), Some(-5.0))
+  @debug.assert_eq(rx.next(), Some(5.0))
+  @debug.assert_eq(rx.next(), Some(15.0))
+  @debug.assert_eq(rx.next(), Some(5.0))
+  @debug.assert_eq(rx.next(), Some(-5.0))
+  @debug.assert_eq(rx.next(), None)
 }
 
 ///|
@@ -73,8 +73,8 @@ test "rodio::mixer::tests::start_afterwards" {
 
   tx.add(@moon_rodio.SamplesBuffer::new(1, 48_000, [10.0, -10.0, 10.0, -10.0]))
 
-  assert_eq(rx.next(), Some(10.0))
-  assert_eq(rx.next(), Some(-10.0))
+  @debug.assert_eq(rx.next(), Some(10.0))
+  @debug.assert_eq(rx.next(), Some(-10.0))
 
   tx.add(
     @moon_rodio.SamplesBuffer::new(1, 48_000, [
@@ -82,19 +82,19 @@ test "rodio::mixer::tests::start_afterwards" {
     ]),
   )
 
-  assert_eq(rx.next(), Some(15.0))
-  assert_eq(rx.next(), Some(-5.0))
+  @debug.assert_eq(rx.next(), Some(15.0))
+  @debug.assert_eq(rx.next(), Some(-5.0))
 
-  assert_eq(rx.next(), Some(6.0))
-  assert_eq(rx.next(), Some(6.0))
+  @debug.assert_eq(rx.next(), Some(6.0))
+  @debug.assert_eq(rx.next(), Some(6.0))
 
   tx.add(@moon_rodio.SamplesBuffer::new(1, 48_000, [2.0]))
 
-  assert_eq(rx.next(), Some(9.0))
-  assert_eq(rx.next(), Some(7.0))
-  assert_eq(rx.next(), Some(7.0))
+  @debug.assert_eq(rx.next(), Some(9.0))
+  @debug.assert_eq(rx.next(), Some(7.0))
+  @debug.assert_eq(rx.next(), Some(7.0))
 
-  assert_eq(rx.next(), None)
+  @debug.assert_eq(rx.next(), None)
 }
 
 ///|
@@ -106,25 +106,25 @@ test "rodio::queue::tests::basic" {
   )
   tx.append(@moon_rodio.SamplesBuffer::new(2, 96_000, [5.0, 5.0, 5.0, 5.0]))
 
-  assert_eq(rx.channels(), 1)
-  assert_eq(rx.sample_rate(), 48_000)
-  assert_eq(rx.next(), Some(10.0))
-  assert_eq(rx.next(), Some(-10.0))
-  assert_eq(rx.next(), Some(10.0))
-  assert_eq(rx.next(), Some(-10.0))
-  assert_eq(rx.channels(), 2)
-  assert_eq(rx.sample_rate(), 96_000)
-  assert_eq(rx.next(), Some(5.0))
-  assert_eq(rx.next(), Some(5.0))
-  assert_eq(rx.next(), Some(5.0))
-  assert_eq(rx.next(), Some(5.0))
-  assert_eq(rx.next(), None)
+  @debug.assert_eq(rx.channels(), 1)
+  @debug.assert_eq(rx.sample_rate(), 48_000)
+  @debug.assert_eq(rx.next(), Some(10.0))
+  @debug.assert_eq(rx.next(), Some(-10.0))
+  @debug.assert_eq(rx.next(), Some(10.0))
+  @debug.assert_eq(rx.next(), Some(-10.0))
+  @debug.assert_eq(rx.channels(), 2)
+  @debug.assert_eq(rx.sample_rate(), 96_000)
+  @debug.assert_eq(rx.next(), Some(5.0))
+  @debug.assert_eq(rx.next(), Some(5.0))
+  @debug.assert_eq(rx.next(), Some(5.0))
+  @debug.assert_eq(rx.next(), Some(5.0))
+  @debug.assert_eq(rx.next(), None)
 }
 
 ///|
 test "rodio::queue::tests::immediate_end" {
   let (_, rx) = @moon_rodio.queue(false)
-  assert_eq(rx.next(), None)
+  @debug.assert_eq(rx.next(), None)
 }
 
 ///|
@@ -134,13 +134,13 @@ test "rodio::queue::tests::keep_alive" {
     @moon_rodio.SamplesBuffer::new(1, 48_000, [10.0, -10.0, 10.0, -10.0]),
   )
 
-  assert_eq(rx.next(), Some(10.0))
-  assert_eq(rx.next(), Some(-10.0))
-  assert_eq(rx.next(), Some(10.0))
-  assert_eq(rx.next(), Some(-10.0))
+  @debug.assert_eq(rx.next(), Some(10.0))
+  @debug.assert_eq(rx.next(), Some(-10.0))
+  @debug.assert_eq(rx.next(), Some(10.0))
+  @debug.assert_eq(rx.next(), Some(-10.0))
 
   for _ in 0..<100_000 {
-    assert_eq(rx.next(), Some(0.0))
+    @debug.assert_eq(rx.next(), Some(0.0))
   }
 }
 
@@ -149,16 +149,16 @@ test "rodio::queue::tests::no_delay_when_added" {
   let (tx, rx) = @moon_rodio.queue(true)
 
   for _ in 0..<500 {
-    assert_eq(rx.next(), Some(0.0))
+    @debug.assert_eq(rx.next(), Some(0.0))
   }
 
   tx.append(
     @moon_rodio.SamplesBuffer::new(1, 48_000, [10.0, -10.0, 10.0, -10.0]),
   )
-  assert_eq(rx.next(), Some(10.0))
-  assert_eq(rx.next(), Some(-10.0))
-  assert_eq(rx.next(), Some(10.0))
-  assert_eq(rx.next(), Some(-10.0))
+  @debug.assert_eq(rx.next(), Some(10.0))
+  @debug.assert_eq(rx.next(), Some(-10.0))
+  @debug.assert_eq(rx.next(), Some(10.0))
+  @debug.assert_eq(rx.next(), Some(-10.0))
 }
 
 ///|
@@ -168,8 +168,8 @@ test "rodio::queue::tests::append_with_signal" {
     @moon_rodio.SamplesBuffer::new(1, 1, [7.0]),
   )
   assert_true(!signal.is_done())
-  assert_eq(rx.next(), Some(7.0))
-  assert_eq(rx.next(), None)
+  @debug.assert_eq(rx.next(), Some(7.0))
+  @debug.assert_eq(rx.next(), None)
   assert_true(signal.is_done())
 }
 
@@ -180,21 +180,21 @@ test "rodio::queue::tests::clear_keeps_current_source" {
   tx.append(@moon_rodio.SamplesBuffer::new(1, 1, [3.0]))
   tx.append(@moon_rodio.SamplesBuffer::new(1, 1, [4.0]))
 
-  assert_eq(rx.next(), Some(1.0))
-  assert_eq(tx.clear(), 2)
-  assert_eq(rx.next(), Some(2.0))
-  assert_eq(rx.next(), None)
+  @debug.assert_eq(rx.next(), Some(1.0))
+  @debug.assert_eq(tx.clear(), 2)
+  @debug.assert_eq(rx.next(), Some(2.0))
+  @debug.assert_eq(rx.next(), None)
 }
 
 ///|
 test "rodio::queue::tests::set_keep_alive_if_empty_runtime_toggle" {
   let (tx, rx) = @moon_rodio.queue(true)
-  assert_eq(rx.next(), Some(0.0))
+  @debug.assert_eq(rx.next(), Some(0.0))
   tx.set_keep_alive_if_empty(false)
   for _ in 0..<511 {
-    assert_eq(rx.next(), Some(0.0))
+    @debug.assert_eq(rx.next(), Some(0.0))
   }
-  assert_eq(rx.next(), None)
+  @debug.assert_eq(rx.next(), None)
 }
 
 ///|
@@ -207,23 +207,23 @@ test "rodio::queue::tests::try_seek_only_current_source" {
     rx.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
     false
   } catch {
-    SeekError::NotSupported => true
+    NotSupported => true
   }
   assert_true(seek_err)
-  assert_eq(rx.next(), Some(7.0))
-  assert_eq(rx.next(), Some(8.0))
+  @debug.assert_eq(rx.next(), Some(7.0))
+  @debug.assert_eq(rx.next(), Some(8.0))
 }
 
 ///|
 test "rodio::queue::tests::append_updates_metadata" {
   for keep_alive in [false, true] {
     let (tx, rx) = @moon_rodio.queue(keep_alive)
-    assert_eq(rx.channels(), 1)
-    assert_eq(rx.sample_rate(), 44_100)
+    @debug.assert_eq(rx.channels(), 1)
+    @debug.assert_eq(rx.sample_rate(), 44_100)
 
     tx.append(@moon_rodio.SamplesBuffer::new(2, 44_100, [0.1, 0.2, 0.3, 0.4]))
-    assert_eq(rx.channels(), 2)
-    assert_eq(rx.sample_rate(), 44_100)
+    @debug.assert_eq(rx.channels(), 2)
+    @debug.assert_eq(rx.sample_rate(), 44_100)
   }
 }
 
@@ -247,7 +247,7 @@ fn SpanMismatchSource::new(
 }
 
 ///|
-impl @moon_rodio.Source for SpanMismatchSource with next(
+impl @moon_rodio.Source for SpanMismatchSource with fn next(
   self : SpanMismatchSource,
 ) {
   if self.cursor.val >= self.samples.length() {
@@ -260,21 +260,21 @@ impl @moon_rodio.Source for SpanMismatchSource with next(
 }
 
 ///|
-impl @moon_rodio.Source for SpanMismatchSource with channels(
+impl @moon_rodio.Source for SpanMismatchSource with fn channels(
   self : SpanMismatchSource,
 ) {
   self.channels
 }
 
 ///|
-impl @moon_rodio.Source for SpanMismatchSource with sample_rate(
+impl @moon_rodio.Source for SpanMismatchSource with fn sample_rate(
   self : SpanMismatchSource,
 ) {
   self.sample_rate
 }
 
 ///|
-impl @moon_rodio.Source for SpanMismatchSource with current_span_len(
+impl @moon_rodio.Source for SpanMismatchSource with fn current_span_len(
   self : SpanMismatchSource,
 ) {
   match self.total_span_len {
@@ -285,14 +285,14 @@ impl @moon_rodio.Source for SpanMismatchSource with current_span_len(
 }
 
 ///|
-impl @moon_rodio.Source for SpanMismatchSource with total_duration(
+impl @moon_rodio.Source for SpanMismatchSource with fn total_duration(
   _self : SpanMismatchSource,
 ) {
   None
 }
 
 ///|
-impl @moon_rodio.Source for SpanMismatchSource with try_seek(
+impl @moon_rodio.Source for SpanMismatchSource with fn try_seek(
   _self : SpanMismatchSource,
   pos : @moon_cpal.Duration,
 ) -> Unit raise @moon_rodio.SeekError {
@@ -313,14 +313,14 @@ test "rodio::queue::tests::span_ending_mid_frame" {
   controls.append(source1)
   controls.append(source2)
 
-  assert_eq(source.next(), Some(0.1))
-  assert_eq(source.next(), Some(0.2))
-  assert_eq(source.next(), Some(0.1))
-  assert_eq(source.next(), Some(0.2))
-  assert_eq(source.next(), Some(0.1))
-  assert_eq(source.next(), Some(0.0))
-  assert_eq(source.next(), Some(0.3))
-  assert_eq(source.next(), Some(0.4))
-  assert_eq(source.next(), Some(0.3))
-  assert_eq(source.next(), Some(0.4))
+  @debug.assert_eq(source.next(), Some(0.1))
+  @debug.assert_eq(source.next(), Some(0.2))
+  @debug.assert_eq(source.next(), Some(0.1))
+  @debug.assert_eq(source.next(), Some(0.2))
+  @debug.assert_eq(source.next(), Some(0.1))
+  @debug.assert_eq(source.next(), Some(0.0))
+  @debug.assert_eq(source.next(), Some(0.3))
+  @debug.assert_eq(source.next(), Some(0.4))
+  @debug.assert_eq(source.next(), Some(0.3))
+  @debug.assert_eq(source.next(), Some(0.4))
 }

@@ -19,7 +19,7 @@ pub suberror DecoderError {
 } derive(Debug, Eq)
 
 ///|
-pub impl Show for DecoderError with output(self, logger) {
+pub impl Show for DecoderError with fn output(self, logger) {
   match self {
     InvalidFormat(reason) =>
       logger.write_string("DecoderError::InvalidFormat(\{reason})")

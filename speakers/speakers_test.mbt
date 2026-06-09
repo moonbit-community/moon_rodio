@@ -25,10 +25,10 @@ test "rodio::speakers::alias_error_types" {
   let list_err : ListError? = None
   let root_list_err : @Milky2018/moon_rodio.SpeakersListError? = list_err
 
-  assert_eq(root_err, None)
-  assert_eq(root_open_err, None)
-  assert_eq(root_play_err, None)
-  assert_eq(root_list_err, None)
+  @debug.assert_eq(root_err, None)
+  @debug.assert_eq(root_open_err, None)
+  @debug.assert_eq(root_play_err, None)
+  @debug.assert_eq(root_list_err, None)
 }
 
 ///|

@@ -18,15 +18,15 @@ test "rodio::source::blt::aliases" {
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8_000, [1.0, 0.0, -1.0, 0.0]),
     1_000,
   )
-  assert_eq(lp.channels(), 1)
-  assert_eq(lp.sample_rate(), 8_000)
+  @debug.assert_eq(lp.channels(), 1)
+  @debug.assert_eq(lp.sample_rate(), 8_000)
   assert_true(lp.next() != None)
 
   let hp = high_pass(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8_000, [1.0, 0.0, -1.0, 0.0]),
     500,
   )
-  assert_eq(hp.channels(), 1)
+  @debug.assert_eq(hp.channels(), 1)
   assert_true(hp.next() != None)
 
   let lpq = low_pass_with_q(
@@ -34,12 +34,12 @@ test "rodio::source::blt::aliases" {
     700,
     0.8,
   )
-  assert_eq(lpq.channels(), 1)
+  @debug.assert_eq(lpq.channels(), 1)
 
   let hpq = high_pass_with_q(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8_000, [0.2, 0.3]),
     700,
     0.8,
   )
-  assert_eq(hpq.channels(), 1)
+  @debug.assert_eq(hpq.channels(), 1)
 }

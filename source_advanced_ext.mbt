@@ -276,19 +276,21 @@ pub fn AutomaticGainControl::sample_rate(
 }
 
 ///|
-pub impl Source for AutomaticGainControl with next(self : AutomaticGainControl) {
+pub impl Source for AutomaticGainControl with fn next(
+  self : AutomaticGainControl,
+) {
   self.next()
 }
 
 ///|
-pub impl Source for AutomaticGainControl with channels(
+pub impl Source for AutomaticGainControl with fn channels(
   self : AutomaticGainControl,
 ) {
   self.channels()
 }
 
 ///|
-pub impl Source for AutomaticGainControl with sample_rate(
+pub impl Source for AutomaticGainControl with fn sample_rate(
   self : AutomaticGainControl,
 ) {
   self.sample_rate()
@@ -301,7 +303,7 @@ pub enum BltMode {
 } derive(Debug, Eq)
 
 ///|
-pub impl Show for BltMode with output(self, logger) {
+pub impl Show for BltMode with fn output(self, logger) {
   match self {
     LowPass => logger.write_string("BltMode::LowPass")
     HighPass => logger.write_string("BltMode::HighPass")
@@ -340,7 +342,7 @@ fn compute_blt_coeffs(
   let alpha = sin_w0 / (2.0 * qq)
 
   match mode {
-    BltMode::LowPass => {
+    LowPass => {
       let bb1 = 1.0 - cos_w0
       let bb0 = bb1 / 2.0
       let bb2 = bb0
@@ -349,7 +351,7 @@ fn compute_blt_coeffs(
       let aa2 = 1.0 - alpha
       (bb0 / aa0, bb1 / aa0, bb2 / aa0, aa1 / aa0, aa2 / aa0)
     }
-    BltMode::HighPass => {
+    HighPass => {
       let bb0 = (1.0 + cos_w0) / 2.0
       let bb1 = -1.0 - cos_w0
       let bb2 = bb0
@@ -409,12 +411,12 @@ pub fn BltFilter::into_inner(self : BltFilter) -> DynSource {
 
 ///|
 pub fn[S : Source] low_pass(source : S, freq : Int) -> BltFilter {
-  blt_new(source, BltMode::LowPass, freq, 0.5)
+  blt_new(source, LowPass, freq, 0.5)
 }
 
 ///|
 pub fn[S : Source] high_pass(source : S, freq : Int) -> BltFilter {
-  blt_new(source, BltMode::HighPass, freq, 0.5)
+  blt_new(source, HighPass, freq, 0.5)
 }
 
 ///|
@@ -423,7 +425,7 @@ pub fn[S : Source] low_pass_with_q(
   freq : Int,
   q : Sample,
 ) -> BltFilter {
-  blt_new(source, BltMode::LowPass, freq, q)
+  blt_new(source, LowPass, freq, q)
 }
 
 ///|
@@ -432,7 +434,7 @@ pub fn[S : Source] high_pass_with_q(
   freq : Int,
   q : Sample,
 ) -> BltFilter {
-  blt_new(source, BltMode::HighPass, freq, q)
+  blt_new(source, HighPass, freq, q)
 }
 
 ///|
@@ -460,12 +462,12 @@ fn BltFilter::set_formula(
 
 ///|
 pub fn BltFilter::to_low_pass(self : BltFilter, freq : Int) -> Unit {
-  self.set_formula(BltMode::LowPass, freq, 0.5)
+  self.set_formula(LowPass, freq, 0.5)
 }
 
 ///|
 pub fn BltFilter::to_high_pass(self : BltFilter, freq : Int) -> Unit {
-  self.set_formula(BltMode::HighPass, freq, 0.5)
+  self.set_formula(HighPass, freq, 0.5)
 }
 
 ///|
@@ -474,7 +476,7 @@ pub fn BltFilter::to_low_pass_with_q(
   freq : Int,
   q : Sample,
 ) -> Unit {
-  self.set_formula(BltMode::LowPass, freq, q)
+  self.set_formula(LowPass, freq, q)
 }
 
 ///|
@@ -483,7 +485,7 @@ pub fn BltFilter::to_high_pass_with_q(
   freq : Int,
   q : Sample,
 ) -> Unit {
-  self.set_formula(BltMode::HighPass, freq, q)
+  self.set_formula(HighPass, freq, q)
 }
 
 ///|
@@ -516,17 +518,17 @@ pub fn BltFilter::sample_rate(self : BltFilter) -> SampleRate {
 }
 
 ///|
-pub impl Source for BltFilter with next(self : BltFilter) {
+pub impl Source for BltFilter with fn next(self : BltFilter) {
   self.next()
 }
 
 ///|
-pub impl Source for BltFilter with channels(self : BltFilter) {
+pub impl Source for BltFilter with fn channels(self : BltFilter) {
   self.channels()
 }
 
 ///|
-pub impl Source for BltFilter with sample_rate(self : BltFilter) {
+pub impl Source for BltFilter with fn sample_rate(self : BltFilter) {
   self.sample_rate()
 }
 
@@ -548,7 +550,7 @@ fn seed_or_default(seed : UInt64) -> UInt64 {
 
 ///|
 pub(open) trait NoiseRng {
-  next_u64(Self) -> UInt64
+  fn next_u64(Self) -> UInt64
 }
 
 ///|
@@ -567,7 +569,7 @@ pub fn LcgNoiseRng::next_u64(self : LcgNoiseRng) -> UInt64 {
 }
 
 ///|
-pub impl NoiseRng for LcgNoiseRng with next_u64(self : LcgNoiseRng) {
+pub impl NoiseRng for LcgNoiseRng with fn next_u64(self : LcgNoiseRng) {
   self.next_u64()
 }
 
@@ -653,17 +655,17 @@ pub fn WhiteUniform::sample_rate(self : WhiteUniform) -> SampleRate {
 }
 
 ///|
-pub impl Source for WhiteUniform with next(self : WhiteUniform) {
+pub impl Source for WhiteUniform with fn next(self : WhiteUniform) {
   self.next()
 }
 
 ///|
-pub impl Source for WhiteUniform with channels(self : WhiteUniform) {
+pub impl Source for WhiteUniform with fn channels(self : WhiteUniform) {
   self.channels()
 }
 
 ///|
-pub impl Source for WhiteUniform with sample_rate(self : WhiteUniform) {
+pub impl Source for WhiteUniform with fn sample_rate(self : WhiteUniform) {
   self.sample_rate()
 }
 
@@ -717,17 +719,17 @@ pub fn Pink::sample_rate(self : Pink) -> SampleRate {
 }
 
 ///|
-pub impl Source for Pink with next(self : Pink) {
+pub impl Source for Pink with fn next(self : Pink) {
   self.next()
 }
 
 ///|
-pub impl Source for Pink with channels(self : Pink) {
+pub impl Source for Pink with fn channels(self : Pink) {
   self.channels()
 }
 
 ///|
-pub impl Source for Pink with sample_rate(self : Pink) {
+pub impl Source for Pink with fn sample_rate(self : Pink) {
   self.sample_rate()
 }
 
@@ -786,17 +788,17 @@ pub fn WhiteTriangular::sample_rate(self : WhiteTriangular) -> SampleRate {
 }
 
 ///|
-pub impl Source for WhiteTriangular with next(self : WhiteTriangular) {
+pub impl Source for WhiteTriangular with fn next(self : WhiteTriangular) {
   self.next()
 }
 
 ///|
-pub impl Source for WhiteTriangular with channels(self : WhiteTriangular) {
+pub impl Source for WhiteTriangular with fn channels(self : WhiteTriangular) {
   self.channels()
 }
 
 ///|
-pub impl Source for WhiteTriangular with sample_rate(self : WhiteTriangular) {
+pub impl Source for WhiteTriangular with fn sample_rate(self : WhiteTriangular) {
   self.sample_rate()
 }
 
@@ -860,17 +862,17 @@ pub fn WhiteGaussian::sample_rate(self : WhiteGaussian) -> SampleRate {
 }
 
 ///|
-pub impl Source for WhiteGaussian with next(self : WhiteGaussian) {
+pub impl Source for WhiteGaussian with fn next(self : WhiteGaussian) {
   self.next()
 }
 
 ///|
-pub impl Source for WhiteGaussian with channels(self : WhiteGaussian) {
+pub impl Source for WhiteGaussian with fn channels(self : WhiteGaussian) {
   self.channels()
 }
 
 ///|
-pub impl Source for WhiteGaussian with sample_rate(self : WhiteGaussian) {
+pub impl Source for WhiteGaussian with fn sample_rate(self : WhiteGaussian) {
   self.sample_rate()
 }
 
@@ -988,17 +990,17 @@ pub fn Velvet::sample_rate(self : Velvet) -> SampleRate {
 }
 
 ///|
-pub impl Source for Velvet with next(self : Velvet) {
+pub impl Source for Velvet with fn next(self : Velvet) {
   self.next()
 }
 
 ///|
-pub impl Source for Velvet with channels(self : Velvet) {
+pub impl Source for Velvet with fn channels(self : Velvet) {
   self.channels()
 }
 
 ///|
-pub impl Source for Velvet with sample_rate(self : Velvet) {
+pub impl Source for Velvet with fn sample_rate(self : Velvet) {
   self.sample_rate()
 }
 
@@ -1056,17 +1058,17 @@ pub fn Blue::sample_rate(self : Blue) -> SampleRate {
 }
 
 ///|
-pub impl Source for Blue with next(self : Blue) {
+pub impl Source for Blue with fn next(self : Blue) {
   self.next()
 }
 
 ///|
-pub impl Source for Blue with channels(self : Blue) {
+pub impl Source for Blue with fn channels(self : Blue) {
   self.channels()
 }
 
 ///|
-pub impl Source for Blue with sample_rate(self : Blue) {
+pub impl Source for Blue with fn sample_rate(self : Blue) {
   self.sample_rate()
 }
 
@@ -1124,17 +1126,17 @@ pub fn Violet::sample_rate(self : Violet) -> SampleRate {
 }
 
 ///|
-pub impl Source for Violet with next(self : Violet) {
+pub impl Source for Violet with fn next(self : Violet) {
   self.next()
 }
 
 ///|
-pub impl Source for Violet with channels(self : Violet) {
+pub impl Source for Violet with fn channels(self : Violet) {
   self.channels()
 }
 
 ///|
-pub impl Source for Violet with sample_rate(self : Violet) {
+pub impl Source for Violet with fn sample_rate(self : Violet) {
   self.sample_rate()
 }
 
@@ -1220,17 +1222,17 @@ pub fn Brownian::sample_rate(self : Brownian) -> SampleRate {
 }
 
 ///|
-pub impl Source for Brownian with next(self : Brownian) {
+pub impl Source for Brownian with fn next(self : Brownian) {
   self.next()
 }
 
 ///|
-pub impl Source for Brownian with channels(self : Brownian) {
+pub impl Source for Brownian with fn channels(self : Brownian) {
   self.channels()
 }
 
 ///|
-pub impl Source for Brownian with sample_rate(self : Brownian) {
+pub impl Source for Brownian with fn sample_rate(self : Brownian) {
   self.sample_rate()
 }
 
@@ -1313,36 +1315,36 @@ pub fn Red::sample_rate(self : Red) -> SampleRate {
 }
 
 ///|
-pub impl Source for Red with next(self : Red) {
+pub impl Source for Red with fn next(self : Red) {
   self.next()
 }
 
 ///|
-pub impl Source for Red with channels(self : Red) {
+pub impl Source for Red with fn channels(self : Red) {
   self.channels()
 }
 
 ///|
-pub impl Source for Red with sample_rate(self : Red) {
+pub impl Source for Red with fn sample_rate(self : Red) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for AutomaticGainControl with current_span_len(
+pub impl Source for AutomaticGainControl with fn current_span_len(
   _self : AutomaticGainControl,
 ) {
   _self.input.current_span_len()
 }
 
 ///|
-pub impl Source for AutomaticGainControl with total_duration(
+pub impl Source for AutomaticGainControl with fn total_duration(
   _self : AutomaticGainControl,
 ) {
   _self.input.total_duration()
 }
 
 ///|
-pub impl Source for AutomaticGainControl with try_seek(
+pub impl Source for AutomaticGainControl with fn try_seek(
   _self : AutomaticGainControl,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1350,17 +1352,17 @@ pub impl Source for AutomaticGainControl with try_seek(
 }
 
 ///|
-pub impl Source for BltFilter with current_span_len(_self : BltFilter) {
+pub impl Source for BltFilter with fn current_span_len(_self : BltFilter) {
   _self.input.current_span_len()
 }
 
 ///|
-pub impl Source for BltFilter with total_duration(_self : BltFilter) {
+pub impl Source for BltFilter with fn total_duration(_self : BltFilter) {
   _self.input.total_duration()
 }
 
 ///|
-pub impl Source for BltFilter with try_seek(
+pub impl Source for BltFilter with fn try_seek(
   _self : BltFilter,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1368,17 +1370,17 @@ pub impl Source for BltFilter with try_seek(
 }
 
 ///|
-pub impl Source for WhiteUniform with current_span_len(_self : WhiteUniform) {
+pub impl Source for WhiteUniform with fn current_span_len(_self : WhiteUniform) {
   source_default_current_span_len()
 }
 
 ///|
-pub impl Source for WhiteUniform with total_duration(_self : WhiteUniform) {
+pub impl Source for WhiteUniform with fn total_duration(_self : WhiteUniform) {
   source_default_total_duration()
 }
 
 ///|
-pub impl Source for WhiteUniform with try_seek(
+pub impl Source for WhiteUniform with fn try_seek(
   _self : WhiteUniform,
   _pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1386,34 +1388,39 @@ pub impl Source for WhiteUniform with try_seek(
 }
 
 ///|
-pub impl Source for Pink with current_span_len(_self : Pink) {
+pub impl Source for Pink with fn current_span_len(_self : Pink) {
   source_default_current_span_len()
 }
 
 ///|
-pub impl Source for Pink with total_duration(_self : Pink) {
+pub impl Source for Pink with fn total_duration(_self : Pink) {
   source_default_total_duration()
 }
 
 ///|
-pub impl Source for Pink with try_seek(_self : Pink, pos : @moon_cpal.Duration) -> Unit raise SeekError {
+pub impl Source for Pink with fn try_seek(
+  _self : Pink,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
   ignore(pos)
 }
 
 ///|
-pub impl Source for WhiteTriangular with current_span_len(
+pub impl Source for WhiteTriangular with fn current_span_len(
   _self : WhiteTriangular,
 ) {
   source_default_current_span_len()
 }
 
 ///|
-pub impl Source for WhiteTriangular with total_duration(_self : WhiteTriangular) {
+pub impl Source for WhiteTriangular with fn total_duration(
+  _self : WhiteTriangular,
+) {
   source_default_total_duration()
 }
 
 ///|
-pub impl Source for WhiteTriangular with try_seek(
+pub impl Source for WhiteTriangular with fn try_seek(
   _self : WhiteTriangular,
   _pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1421,17 +1428,19 @@ pub impl Source for WhiteTriangular with try_seek(
 }
 
 ///|
-pub impl Source for WhiteGaussian with current_span_len(_self : WhiteGaussian) {
+pub impl Source for WhiteGaussian with fn current_span_len(
+  _self : WhiteGaussian,
+) {
   source_default_current_span_len()
 }
 
 ///|
-pub impl Source for WhiteGaussian with total_duration(_self : WhiteGaussian) {
+pub impl Source for WhiteGaussian with fn total_duration(_self : WhiteGaussian) {
   source_default_total_duration()
 }
 
 ///|
-pub impl Source for WhiteGaussian with try_seek(
+pub impl Source for WhiteGaussian with fn try_seek(
   _self : WhiteGaussian,
   _pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1439,17 +1448,17 @@ pub impl Source for WhiteGaussian with try_seek(
 }
 
 ///|
-pub impl Source for Velvet with current_span_len(_self : Velvet) {
+pub impl Source for Velvet with fn current_span_len(_self : Velvet) {
   source_default_current_span_len()
 }
 
 ///|
-pub impl Source for Velvet with total_duration(_self : Velvet) {
+pub impl Source for Velvet with fn total_duration(_self : Velvet) {
   source_default_total_duration()
 }
 
 ///|
-pub impl Source for Velvet with try_seek(
+pub impl Source for Velvet with fn try_seek(
   _self : Velvet,
   _pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1457,32 +1466,35 @@ pub impl Source for Velvet with try_seek(
 }
 
 ///|
-pub impl Source for Blue with current_span_len(_self : Blue) {
+pub impl Source for Blue with fn current_span_len(_self : Blue) {
   source_default_current_span_len()
 }
 
 ///|
-pub impl Source for Blue with total_duration(_self : Blue) {
+pub impl Source for Blue with fn total_duration(_self : Blue) {
   source_default_total_duration()
 }
 
 ///|
-pub impl Source for Blue with try_seek(_self : Blue, pos : @moon_cpal.Duration) -> Unit raise SeekError {
+pub impl Source for Blue with fn try_seek(
+  _self : Blue,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
   ignore(pos)
 }
 
 ///|
-pub impl Source for Violet with current_span_len(_self : Violet) {
+pub impl Source for Violet with fn current_span_len(_self : Violet) {
   source_default_current_span_len()
 }
 
 ///|
-pub impl Source for Violet with total_duration(_self : Violet) {
+pub impl Source for Violet with fn total_duration(_self : Violet) {
   source_default_total_duration()
 }
 
 ///|
-pub impl Source for Violet with try_seek(
+pub impl Source for Violet with fn try_seek(
   _self : Violet,
   _pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1490,17 +1502,17 @@ pub impl Source for Violet with try_seek(
 }
 
 ///|
-pub impl Source for Brownian with current_span_len(_self : Brownian) {
+pub impl Source for Brownian with fn current_span_len(_self : Brownian) {
   source_default_current_span_len()
 }
 
 ///|
-pub impl Source for Brownian with total_duration(_self : Brownian) {
+pub impl Source for Brownian with fn total_duration(_self : Brownian) {
   source_default_total_duration()
 }
 
 ///|
-pub impl Source for Brownian with try_seek(
+pub impl Source for Brownian with fn try_seek(
   _self : Brownian,
   _pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1508,16 +1520,19 @@ pub impl Source for Brownian with try_seek(
 }
 
 ///|
-pub impl Source for Red with current_span_len(_self : Red) {
+pub impl Source for Red with fn current_span_len(_self : Red) {
   source_default_current_span_len()
 }
 
 ///|
-pub impl Source for Red with total_duration(_self : Red) {
+pub impl Source for Red with fn total_duration(_self : Red) {
   source_default_total_duration()
 }
 
 ///|
-pub impl Source for Red with try_seek(_self : Red, _pos : @moon_cpal.Duration) -> Unit raise SeekError {
+pub impl Source for Red with fn try_seek(
+  _self : Red,
+  _pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
   ()
 }

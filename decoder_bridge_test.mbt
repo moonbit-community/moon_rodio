@@ -815,33 +815,33 @@ fn assert_seek_keeps_channel_order(path : String) -> Unit {
 ///|
 test "rodio::decoder_api::new_wav" {
   let d = Decoder::new(wav_mono([0, 32767, -32768], 16))
-  assert_eq(d.channels(), 1)
-  assert_eq(d.sample_rate(), 44_100)
-  assert_eq(d.next(), Some(0.0))
+  @debug.assert_eq(d.channels(), 1)
+  @debug.assert_eq(d.sample_rate(), 44_100)
+  @debug.assert_eq(d.next(), Some(0.0))
   assert_true(d.next().unwrap() > 0.99)
-  assert_eq(d.next(), Some(-1.0))
-  assert_eq(d.next(), None)
+  @debug.assert_eq(d.next(), Some(-1.0))
+  @debug.assert_eq(d.next(), None)
 }
 
 ///|
 test "rodio::decoder_api::new_mp3" {
   let d = Decoder::new_mp3(@decoder.mp3_ill2_mono_bytes())
-  assert_eq(d.channels(), 1)
-  assert_eq(d.sample_rate(), 48_000)
+  @debug.assert_eq(d.channels(), 1)
+  @debug.assert_eq(d.sample_rate(), 48_000)
 }
 
 ///|
 test "rodio::decoder_api::new_flac" {
   let d = Decoder::new_flac(@decoder.flac_pop_bytes())
-  assert_eq(d.channels(), 1)
-  assert_eq(d.sample_rate(), 44_100)
+  @debug.assert_eq(d.channels(), 1)
+  @debug.assert_eq(d.sample_rate(), 44_100)
 }
 
 ///|
 test "rodio::decoder_api::new_vorbis" {
   let d = Decoder::new_vorbis(@decoder.vorbis_sine_48k_mono_bytes())
-  assert_eq(d.channels(), 1)
-  assert_eq(d.sample_rate(), 48_000)
+  @debug.assert_eq(d.channels(), 1)
+  @debug.assert_eq(d.sample_rate(), 48_000)
 }
 
 ///|
@@ -856,7 +856,7 @@ test "rodio::decoder_api::mp4a_native_decode_and_builder_paths" {
     assert_true(decoder_has_non_zero_sample(d))
     true
   } catch {
-    DecoderError::Backend(@decoder.DecoderError::Unsupported(_)) => false
+    DecoderError::Backend(Unsupported(_)) => false
     _ => false
   }
 
@@ -899,8 +899,8 @@ test "rodio::decoder_api::mp4a_native_decode_and_builder_paths" {
       ignore(Decoder::builder().with_data(bytes).with_hint("m4a").build())
       false
     } catch {
-      DecoderError::UnrecognizedFormat => true
-      DecoderError::Backend(@decoder.DecoderError::Unsupported(_)) => true
+      UnrecognizedFormat => true
+      Backend(Unsupported(_)) => true
       _ => false
     }
     assert_true(hinted_fails)
@@ -913,7 +913,7 @@ test "rodio::decoder_api::reject_unknown_format" {
     ignore(Decoder::new(b"abc"))
     false
   } catch {
-    DecoderError::UnrecognizedFormat => true
+    UnrecognizedFormat => true
     _ => false
   }
   assert_true(bad)
@@ -925,7 +925,7 @@ test "rodio::decoder_api::play" {
   let sink = play(tx, Reader::from_bytes(@decoder.flac_pop_bytes()))
 
   assert_true(!sink.empty())
-  assert_eq(rx.next(), Some(0.0))
+  @debug.assert_eq(rx.next(), Some(0.0))
   assert_true(rx.next().unwrap() > 0.06)
 }
 
@@ -936,7 +936,7 @@ test "rodio::decoder_api::play_decode_error_variant" {
     ignore(play(tx, Reader::from_bytes(b"not audio")))
     false
   } catch {
-    PlayError::DecoderError(DecoderError::UnrecognizedFormat) => true
+    DecoderError(UnrecognizedFormat) => true
     _ => false
   }
   assert_true(got)
@@ -948,7 +948,7 @@ test "rodio::decoder_api::play_bytes_compat" {
   let player = play_bytes(tx, @decoder.flac_pop_bytes())
 
   assert_true(!player.empty())
-  assert_eq(rx.next(), Some(0.0))
+  @debug.assert_eq(rx.next(), Some(0.0))
   assert_true(rx.next().unwrap() > 0.06)
 }
 
@@ -959,7 +959,7 @@ test "rodio::decoder_api::play_reader" {
   let player = play_reader(tx, reader)
 
   assert_true(!player.empty())
-  assert_eq(rx.next(), Some(0.0))
+  @debug.assert_eq(rx.next(), Some(0.0))
   assert_true(rx.next().unwrap() > 0.06)
 }
 
@@ -973,7 +973,7 @@ test "rodio::decoder_api::play_file" {
   let (tx, rx) = mixer(1, 44_100)
   let player = play_file(tx, path)
   assert_true(!player.empty())
-  assert_eq(rx.next(), Some(0.0))
+  @debug.assert_eq(rx.next(), Some(0.0))
   assert_true(rx.next().unwrap() > 0.45)
 
   remove_file_if_exists(path)
@@ -988,8 +988,8 @@ test "rodio::decoder_api::builder_build" {
     .with_seekable(true)
     .build()
 
-  assert_eq(decoder.channels(), 1)
-  assert_eq(decoder.sample_rate(), 48_000)
+  @debug.assert_eq(decoder.channels(), 1)
+  @debug.assert_eq(decoder.sample_rate(), 48_000)
 }
 
 ///|
@@ -998,15 +998,15 @@ test "rodio::decoder_api::builder_mime_and_hint_fallbacks" {
     .with_data(@decoder.flac_pop_bytes())
     .with_mime_type("audio/flac")
     .build()
-  assert_eq(from_mime.channels(), 1)
-  assert_eq(from_mime.sample_rate(), 44_100)
+  @debug.assert_eq(from_mime.channels(), 1)
+  @debug.assert_eq(from_mime.sample_rate(), 44_100)
 
   let bad_hint_fallback = Decoder::builder()
     .with_data(@decoder.flac_pop_bytes())
     .with_hint("mp3")
     .build()
-  assert_eq(bad_hint_fallback.channels(), 1)
-  assert_eq(bad_hint_fallback.sample_rate(), 44_100)
+  @debug.assert_eq(bad_hint_fallback.channels(), 1)
+  @debug.assert_eq(bad_hint_fallback.sample_rate(), 44_100)
 }
 
 ///|
@@ -1015,7 +1015,7 @@ test "rodio::decoder_api::builder_requires_data" {
     ignore(Decoder::builder().build())
     false
   } catch {
-    DecoderError::UnrecognizedFormat => true
+    UnrecognizedFormat => true
     _ => false
   }
   assert_true(failed)
@@ -1028,13 +1028,13 @@ test "rodio::decoder_api::looped_decoder_repeats" {
     .with_hint("wav")
     .build_looped()
 
-  assert_eq(looped.channels(), 1)
-  assert_eq(looped.sample_rate(), 44_100)
-  assert_eq(looped.current_span_len(), Some(2))
-  assert_eq(looped.total_duration(), None)
-  assert_eq(looped.next(), Some(0.0))
+  @debug.assert_eq(looped.channels(), 1)
+  @debug.assert_eq(looped.sample_rate(), 44_100)
+  @debug.assert_eq(looped.current_span_len(), Some(2))
+  @debug.assert_eq(looped.total_duration(), None)
+  @debug.assert_eq(looped.next(), Some(0.0))
   assert_true(looped.next().unwrap() > 0.99)
-  assert_eq(looped.next(), Some(0.0))
+  @debug.assert_eq(looped.next(), Some(0.0))
   assert_true(looped.next().unwrap() > 0.99)
 }
 
@@ -1047,7 +1047,7 @@ test "rodio::decoder_api::builder_seekability_controls_try_seek" {
     non_seekable.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
     false
   } catch {
-    SeekError::NotSupported => true
+    NotSupported => true
   }
   assert_true(err)
 
@@ -1056,7 +1056,7 @@ test "rodio::decoder_api::builder_seekability_controls_try_seek" {
     .with_seekable(true)
     .build()
   seekable.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
-  assert_eq(seekable.next(), None)
+  @debug.assert_eq(seekable.next(), None)
 
   let disabled_again = Decoder::builder()
     .with_data(wav_mono([0, 10_000, 20_000, 30_000], 16))
@@ -1067,7 +1067,7 @@ test "rodio::decoder_api::builder_seekability_controls_try_seek" {
     disabled_again.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
     false
   } catch {
-    SeekError::NotSupported => true
+    NotSupported => true
   }
   assert_true(err2)
 }
@@ -1086,7 +1086,7 @@ test "rodio::decoder_api::mp3_seek_without_byte_len_is_forward_only" {
     forward_only.try_seek(@moon_cpal.Duration::new((0 : UInt64), 5_000_000))
     false
   } catch {
-    SeekError::NotSupported => true
+    NotSupported => true
   }
   assert_true(backward_blocked)
 
@@ -1104,11 +1104,11 @@ test "rodio::decoder_api::mp3_seek_without_byte_len_is_forward_only" {
 ///|
 test "rodio::decoder_api::metadata_methods" {
   let d = Decoder::new(wav_mono([0, 32767], 16))
-  assert_eq(d.current_span_len(), Some(2))
+  @debug.assert_eq(d.current_span_len(), Some(2))
   let total = d.total_duration().unwrap()
-  assert_eq(total.secs, (0 : UInt64))
-  assert_eq(d.next(), Some(0.0))
-  assert_eq(d.current_span_len(), Some(1))
+  @debug.assert_eq(total.secs, (0 : UInt64))
+  @debug.assert_eq(d.next(), Some(0.0))
+  @debug.assert_eq(d.current_span_len(), Some(1))
 }
 
 ///|
@@ -1119,8 +1119,8 @@ test "rodio::decoder_api::seek_beyond_end_saturates" {
     .build()
 
   d.try_seek(@moon_cpal.Duration::from_secs((999 : UInt64)))
-  assert_eq(d.next(), None)
-  assert_eq(d.current_span_len(), Some(0))
+  @debug.assert_eq(d.next(), None)
+  @debug.assert_eq(d.current_span_len(), Some(0))
 }
 
 ///|
@@ -1130,12 +1130,12 @@ test "rodio::decoder_api::seek_possible_after_exhausting_source" {
     .with_seekable(true)
     .build()
 
-  assert_eq(d.next(), Some(0.0))
+  @debug.assert_eq(d.next(), Some(0.0))
   assert_true(d.next().unwrap() > 0.35)
-  assert_eq(d.next(), None)
+  @debug.assert_eq(d.next(), None)
 
   d.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
-  assert_eq(d.next(), Some(0.0))
+  @debug.assert_eq(d.next(), Some(0.0))
 }
 
 ///|
@@ -1146,11 +1146,11 @@ test "rodio::decoder_api::seek_results_in_correct_remaining_playtime" {
     .build()
 
   let total = d.total_duration().unwrap()
-  assert_eq(total.secs, (4 : UInt64))
+  @debug.assert_eq(total.secs, (4 : UInt64))
   d.try_seek(@moon_cpal.Duration::from_secs((3 : UInt64)))
-  assert_eq(d.current_span_len(), Some(1))
+  @debug.assert_eq(d.current_span_len(), Some(1))
   assert_true(d.next().unwrap() > 0.9)
-  assert_eq(d.next(), None)
+  @debug.assert_eq(d.next(), None)
 }
 
 ///|
@@ -1158,20 +1158,20 @@ test "rodio::decoder_api::total_duration_for_reference_formats" {
   let mp3_total = Decoder::new_mp3(@decoder.mp3_ill2_mono_bytes())
     .total_duration()
     .unwrap()
-  assert_eq(mp3_total.secs, (0 : UInt64))
-  assert_eq(mp3_total.nanos, 24_000_000)
+  @debug.assert_eq(mp3_total.secs, (0 : UInt64))
+  @debug.assert_eq(mp3_total.nanos, 24_000_000)
 
   let flac_total = Decoder::new_flac(@decoder.flac_pop_bytes())
     .total_duration()
     .unwrap()
-  assert_eq(flac_total.secs, (0 : UInt64))
-  assert_eq(flac_total.nanos, 2_267_573)
+  @debug.assert_eq(flac_total.secs, (0 : UInt64))
+  @debug.assert_eq(flac_total.nanos, 2_267_573)
 
   let vorbis_total = Decoder::new_vorbis(@decoder.vorbis_sine_48k_mono_bytes())
     .total_duration()
     .unwrap()
-  assert_eq(vorbis_total.secs, (0 : UInt64))
-  assert_eq(vorbis_total.nanos, 50_000_000)
+  @debug.assert_eq(vorbis_total.secs, (0 : UInt64))
+  @debug.assert_eq(vorbis_total.nanos, 50_000_000)
 }
 
 ///|
@@ -1182,16 +1182,16 @@ test "rodio::decoder_api::seek_preserves_stereo_channel_offset" {
     10,
   )
   let d = Decoder::builder().with_data(stereo).with_seekable(true).build()
-  assert_eq(d.channels(), 2)
+  @debug.assert_eq(d.channels(), 2)
 
-  assert_eq(d.next(), Some(0.0))
+  @debug.assert_eq(d.next(), Some(0.0))
   assert_true(d.next().unwrap() > 0.9)
 
   // Consume a single sample to force an odd channel offset before seek.
-  assert_eq(d.next(), Some(0.0))
+  @debug.assert_eq(d.next(), Some(0.0))
   d.try_seek(@moon_cpal.Duration::new((0 : UInt64), 100_000_000))
   assert_true(d.next().unwrap() > 0.9)
-  assert_eq(d.next(), Some(0.0))
+  @debug.assert_eq(d.next(), Some(0.0))
 }
 
 ///|
@@ -1233,7 +1233,7 @@ test "rodio::decoder_api::flac_encodings_reference_assets" {
     read_reference_asset("audacity16bit_level5.flac"),
   )
   assert_true(decoder_has_non_zero_sample(base))
-  assert_eq(base.total_duration().unwrap().secs, (3 : UInt64))
+  @debug.assert_eq(base.total_duration().unwrap().secs, (3 : UInt64))
 
   let files = [
     "audacity24bit_level0.flac", "audacity24bit_level5.flac", "audacity24bit_level8.flac",
@@ -1241,7 +1241,7 @@ test "rodio::decoder_api::flac_encodings_reference_assets" {
   for path in files {
     let decoder = Decoder::new_flac(read_reference_asset(path))
     assert_true(decoder_has_non_zero_sample(decoder))
-    assert_eq(decoder.total_duration().unwrap().secs, (3 : UInt64))
+    @debug.assert_eq(decoder.total_duration().unwrap().secs, (3 : UInt64))
   }
 }
 
@@ -1277,17 +1277,17 @@ test "rodio::decoder_api::try_from_file_variants" {
   write_file_bytes(path, wav_mono([0, 12000, -12000], 16))
 
   let d = Decoder::try_from_file(path)
-  assert_eq(d.channels(), 1)
-  assert_eq(d.sample_rate(), 44_100)
-  assert_eq(d.next(), Some(0.0))
+  @debug.assert_eq(d.channels(), 1)
+  @debug.assert_eq(d.sample_rate(), 44_100)
+  @debug.assert_eq(d.next(), Some(0.0))
 
   let looped = Decoder::try_from_file_looped(path)
-  assert_eq(looped.channels(), 1)
-  assert_eq(looped.sample_rate(), 44_100)
-  assert_eq(looped.next(), Some(0.0))
+  @debug.assert_eq(looped.channels(), 1)
+  @debug.assert_eq(looped.sample_rate(), 44_100)
+  @debug.assert_eq(looped.next(), Some(0.0))
   assert_true(looped.next().unwrap() > 0.35)
   assert_true(looped.next().unwrap() < -0.35)
-  assert_eq(looped.next(), Some(0.0))
+  @debug.assert_eq(looped.next(), Some(0.0))
 
   remove_file_if_exists(path)
 }

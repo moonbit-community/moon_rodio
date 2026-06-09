@@ -19,10 +19,10 @@ test "rodio::queue::aliases" {
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [1.0, 2.0]),
   )
   assert_true(!signal.is_done())
-  assert_eq(rx.channels(), 1)
-  assert_eq(rx.sample_rate(), 8)
-  assert_eq(rx.next(), Some(1.0))
-  assert_eq(rx.next(), Some(2.0))
-  assert_eq(rx.next(), None)
+  @debug.assert_eq(rx.channels(), 1)
+  @debug.assert_eq(rx.sample_rate(), 8)
+  @debug.assert_eq(rx.next(), Some(1.0))
+  @debug.assert_eq(rx.next(), Some(2.0))
+  @debug.assert_eq(rx.next(), None)
   assert_true(signal.is_done())
 }

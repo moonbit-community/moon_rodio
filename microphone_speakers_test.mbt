@@ -18,22 +18,17 @@ test "rodio::microphone::input_config_supported_given" {
     1,
     16_000,
     48_000,
-    @moon_cpal.SupportedBufferSize::Range(min=256, max=4096),
-    @moon_cpal.SampleFormat::F32,
+    Range(min=256, max=4096),
+    F32,
   )
 
-  let ok = InputConfig::new(
-    1,
-    44_100,
-    @moon_cpal.BufferSize::fixed(512),
-    @moon_cpal.SampleFormat::F32,
-  )
+  let ok = InputConfig::new(1, 44_100, @moon_cpal.BufferSize::fixed(512), F32)
   assert_true(ok.supported_given(range))
 
   let bad_channels = ok.with_channel_count(2)
   assert_true(!bad_channels.supported_given(range))
 
-  let bad_sample_format = ok.with_sample_format(@moon_cpal.SampleFormat::I16)
+  let bad_sample_format = ok.with_sample_format(I16)
   assert_true(!bad_sample_format.supported_given(range))
 }
 
@@ -43,16 +38,11 @@ test "rodio::speakers::output_config_supported_given" {
     2,
     22_050,
     96_000,
-    @moon_cpal.SupportedBufferSize::Range(min=512, max=16_384),
-    @moon_cpal.SampleFormat::F32,
+    Range(min=512, max=16_384),
+    F32,
   )
 
-  let ok = OutputConfig::new(
-    2,
-    48_000,
-    @moon_cpal.BufferSize::fixed(2048),
-    @moon_cpal.SampleFormat::F32,
-  )
+  let ok = OutputConfig::new(2, 48_000, @moon_cpal.BufferSize::fixed(2048), F32)
   assert_true(ok.supported_given(range))
 
   let bad_rate = ok.with_sample_rate(192_000)
@@ -69,7 +59,7 @@ test "rodio::speakers::play_requires_builder_config" {
     ignore(SpeakersBuilder::new().play(src))
     false
   } catch {
-    SpeakersPlayError::BuilderError(SpeakersError::NoConfig) => true
+    BuilderError(NoConfig) => true
     _ => false
   }
   assert_true(got)

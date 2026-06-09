@@ -120,14 +120,14 @@ fn bytes_eq4(
 ///|
 pub fn decode_wav_bytes(bytes : Bytes) -> DecodedSamples raise DecoderError {
   guard bytes.length() >= 12 else {
-    raise DecoderError::InvalidFormat("wav header too short")
+    raise InvalidFormat("wav header too short")
   }
 
   guard bytes_eq4(bytes, 0, 0x52, 0x49, 0x46, 0x46) else {
-    raise DecoderError::InvalidFormat("missing RIFF")
+    raise InvalidFormat("missing RIFF")
   }
   guard bytes_eq4(bytes, 8, 0x57, 0x41, 0x56, 0x45) else {
-    raise DecoderError::InvalidFormat("missing WAVE")
+    raise InvalidFormat("missing WAVE")
   }
 
   let mut audio_format = -1
@@ -144,13 +144,11 @@ pub fn decode_wav_bytes(bytes : Bytes) -> DecodedSamples raise DecoderError {
     let chunk_len = read_u32_le(bytes, offset + 4)
     let chunk_data = offset + 8
     guard chunk_len >= 0 && chunk_data + chunk_len <= bytes.length() else {
-      raise DecoderError::InvalidFormat("chunk length out of bounds")
+      raise InvalidFormat("chunk length out of bounds")
     }
 
     if bytes_eq4(bytes, offset, 0x66, 0x6d, 0x74, 0x20) {
-      guard chunk_len >= 16 else {
-        raise DecoderError::InvalidFormat("fmt chunk too short")
-      }
+      guard chunk_len >= 16 else { raise InvalidFormat("fmt chunk too short") }
       audio_format = read_u16_le(bytes, chunk_data)
       channels = read_u16_le(bytes, chunk_data + 2)
       sample_rate = read_u32_le(bytes, chunk_data + 4)
@@ -178,11 +176,11 @@ pub fn decode_wav_bytes(bytes : Bytes) -> DecodedSamples raise DecoderError {
     channels != -1 &&
     sample_rate != -1 &&
     data_offset != -1 else {
-    raise DecoderError::InvalidFormat("missing fmt or data chunk")
+    raise InvalidFormat("missing fmt or data chunk")
   }
 
   guard channels > 0 && sample_rate > 0 else {
-    raise DecoderError::InvalidFormat("invalid channel count or sample rate")
+    raise InvalidFormat("invalid channel count or sample rate")
   }
 
   let effective_bits = if valid_bits_per_sample > 0 {
@@ -199,14 +197,14 @@ pub fn decode_wav_bytes(bytes : Bytes) -> DecodedSamples raise DecoderError {
   } else if effective_bits <= 32 {
     4
   } else {
-    raise DecoderError::Unsupported("unsupported bits per sample")
+    raise Unsupported("unsupported bits per sample")
   }
   let expected_block_align = channels * bytes_per_sample
   guard block_align == expected_block_align else {
-    raise DecoderError::InvalidFormat("invalid block align")
+    raise InvalidFormat("invalid block align")
   }
   guard data_len % bytes_per_sample == 0 else {
-    raise DecoderError::InvalidFormat("data chunk alignment is invalid")
+    raise InvalidFormat("data chunk alignment is invalid")
   }
 
   let sample_count = data_len / bytes_per_sample
@@ -233,18 +231,18 @@ pub fn decode_wav_bytes(bytes : Bytes) -> DecodedSamples raise DecoderError {
           let s = read_i32_le(bytes, data_offset + i * 4)
           samples.push(Double::from_int(s) / 2_147_483_648.0)
         }
-      _ => raise DecoderError::Unsupported("unsupported PCM bit depth")
+      _ => raise Unsupported("unsupported PCM bit depth")
     }
   } else if audio_format == 3 {
     guard effective_bits == 32 else {
-      raise DecoderError::Unsupported("only 32-bit IEEE float is supported")
+      raise Unsupported("only 32-bit IEEE float is supported")
     }
     for i in 0..<sample_count {
       let bits = read_u32_le(bytes, data_offset + i * 4)
       samples.push(decode_f32_bits(bits))
     }
   } else {
-    raise DecoderError::Unsupported("unsupported WAV format")
+    raise Unsupported("unsupported WAV format")
   }
 
   DecodedSamples::new(channels, sample_rate, samples)

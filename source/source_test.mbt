@@ -20,20 +20,20 @@ test "rodio::source::aliases_and_factories" {
     200.0,
     @moon_cpal.Duration::from_secs((1 : UInt64)),
   )
-  assert_eq(c.channels(), 1)
-  assert_eq(c.sample_rate(), 8_000)
+  @debug.assert_eq(c.channels(), 1)
+  @debug.assert_eq(c.sample_rate(), 8_000)
   assert_true(c.next() != None)
 
   let fi = from_iter([
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [1.0, 2.0]),
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [3.0]),
   ])
-  assert_eq(fi.channels(), 1)
-  assert_eq(fi.sample_rate(), 8)
-  assert_eq(fi.next(), Some(1.0))
-  assert_eq(fi.next(), Some(2.0))
-  assert_eq(fi.next(), Some(3.0))
-  assert_eq(fi.next(), None)
+  @debug.assert_eq(fi.channels(), 1)
+  @debug.assert_eq(fi.sample_rate(), 8)
+  @debug.assert_eq(fi.next(), Some(1.0))
+  @debug.assert_eq(fi.next(), Some(2.0))
+  @debug.assert_eq(fi.next(), Some(3.0))
+  @debug.assert_eq(fi.next(), None)
 
   let emitted = @ref.new(false)
   let ff = from_factory(fn() {
@@ -44,8 +44,8 @@ test "rodio::source::aliases_and_factories" {
       Some(@Milky2018/moon_rodio.SamplesBuffer::new(1, 4, [9.0]))
     }
   })
-  assert_eq(ff.channels(), 1)
-  assert_eq(ff.sample_rate(), 4)
-  assert_eq(ff.next(), Some(9.0))
-  assert_eq(ff.next(), None)
+  @debug.assert_eq(ff.channels(), 1)
+  @debug.assert_eq(ff.sample_rate(), 4)
+  @debug.assert_eq(ff.next(), Some(9.0))
+  @debug.assert_eq(ff.next(), None)
 }

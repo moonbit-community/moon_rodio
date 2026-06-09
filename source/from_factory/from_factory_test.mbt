@@ -23,8 +23,8 @@ test "rodio::source::from_factory::aliases" {
       Some(@Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [1.0]))
     }
   })
-  assert_eq(ff.channels(), 1)
-  assert_eq(ff.sample_rate(), 8)
-  assert_eq(ff.next(), Some(1.0))
-  assert_eq(ff.next(), None)
+  @debug.assert_eq(ff.channels(), 1)
+  @debug.assert_eq(ff.sample_rate(), 8)
+  @debug.assert_eq(ff.next(), Some(1.0))
+  @debug.assert_eq(ff.next(), None)
 }

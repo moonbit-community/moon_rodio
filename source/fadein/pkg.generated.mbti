@@ -2,8 +2,8 @@
 package "Milky2018/moon_rodio/source/fadein"
 
 import {
-  "Milky2018/moon_cpal/core",
   "Milky2018/moon_rodio",
+  "moonbit-community/moon_cpal/core",
 }
 
 // Values

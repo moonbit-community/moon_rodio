@@ -44,7 +44,7 @@ fn[S : Source] source_to_wav_bytes(source : S) -> Bytes {
   let byte_rate = sample_rate * channels * 4
   let block_align = channels * 4
 
-  let buf = @buffer.new(size_hint=44 + data_size)
+  let buf = Buffer(size_hint=44 + data_size)
   buf.write_bytes(b"RIFF")
   buf.write_uint_le(riff_size.reinterpret_as_uint())
   buf.write_bytes(b"WAVE")
@@ -76,7 +76,7 @@ pub suberror ToWavError {
 } derive(Eq, Debug)
 
 ///|
-pub impl Show for ToWavError with output(self, logger) {
+pub impl Show for ToWavError with fn output(self, logger) {
   match self {
     OpenFile => logger.write_string("ToWavError::OpenFile")
     Creating => logger.write_string("ToWavError::Creating")
@@ -88,11 +88,11 @@ pub impl Show for ToWavError with output(self, logger) {
 
 ///|
 pub(open) trait WavWriter {
-  write_all(Self, bytes : Bytes) -> Unit raise ToWavError
+  fn write_all(Self, bytes : Bytes) -> Unit raise ToWavError
 }
 
 ///|
-pub impl WavWriter for @buffer.Buffer with write_all(
+pub impl WavWriter for @buffer.Buffer with fn write_all(
   self : @buffer.Buffer,
   bytes : Bytes,
 ) -> Unit raise ToWavError {
@@ -113,8 +113,8 @@ pub fn[S : Source] wav_to_file(
   wav_file : StringView,
 ) -> Unit raise ToWavError {
   let wav_bytes = source_to_wav_bytes(source)
-  @fs.write_bytes_to_file(wav_file.to_string(), wav_bytes) catch {
-    _ => raise ToWavError::Writing
+  @fs.write_bytes_to_file(wav_file.to_owned(), wav_bytes) catch {
+    _ => raise Writing
   }
 }
 

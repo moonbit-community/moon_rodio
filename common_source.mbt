@@ -26,12 +26,12 @@ let hz_44100 : SampleRate = 44_100
 
 ///|
 pub(open) trait Source {
-  next(Self) -> Sample?
-  channels(Self) -> ChannelCount
-  sample_rate(Self) -> SampleRate
-  current_span_len(Self) -> Int?
-  total_duration(Self) -> @moon_cpal.Duration?
-  try_seek(Self, pos : @moon_cpal.Duration) -> Unit raise SeekError
+  fn next(Self) -> Sample?
+  fn channels(Self) -> ChannelCount
+  fn sample_rate(Self) -> SampleRate
+  fn current_span_len(Self) -> Int?
+  fn total_duration(Self) -> @moon_cpal.Duration?
+  fn try_seek(Self, pos : @moon_cpal.Duration) -> Unit raise SeekError
 }
 
 ///|
@@ -140,32 +140,32 @@ pub fn DynSource::try_seek(
 }
 
 ///|
-pub impl Source for DynSource with next(self : DynSource) {
+pub impl Source for DynSource with fn next(self : DynSource) {
   self.next()
 }
 
 ///|
-pub impl Source for DynSource with channels(self : DynSource) {
+pub impl Source for DynSource with fn channels(self : DynSource) {
   self.channels()
 }
 
 ///|
-pub impl Source for DynSource with sample_rate(self : DynSource) {
+pub impl Source for DynSource with fn sample_rate(self : DynSource) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for DynSource with current_span_len(_self : DynSource) {
+pub impl Source for DynSource with fn current_span_len(_self : DynSource) {
   _self.current_span_len()
 }
 
 ///|
-pub impl Source for DynSource with total_duration(_self : DynSource) {
+pub impl Source for DynSource with fn total_duration(_self : DynSource) {
   _self.total_duration()
 }
 
 ///|
-pub impl Source for DynSource with try_seek(
+pub impl Source for DynSource with fn try_seek(
   _self : DynSource,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -365,7 +365,7 @@ fn source_default_total_duration() -> @moon_cpal.Duration? {
 
 ///|
 fn source_default_try_seek(_pos : @moon_cpal.Duration) -> Unit raise SeekError {
-  raise SeekError::NotSupported
+  raise NotSupported
 }
 
 ///|
@@ -387,22 +387,22 @@ pub fn SamplesBuffer::amplify(
 }
 
 ///|
-pub impl Source for SamplesBuffer with next(self : SamplesBuffer) {
+pub impl Source for SamplesBuffer with fn next(self : SamplesBuffer) {
   self.next()
 }
 
 ///|
-pub impl Source for SamplesBuffer with channels(self : SamplesBuffer) {
+pub impl Source for SamplesBuffer with fn channels(self : SamplesBuffer) {
   self.channels()
 }
 
 ///|
-pub impl Source for SamplesBuffer with sample_rate(self : SamplesBuffer) {
+pub impl Source for SamplesBuffer with fn sample_rate(self : SamplesBuffer) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for SamplesBuffer with current_span_len(self : SamplesBuffer) {
+pub impl Source for SamplesBuffer with fn current_span_len(self : SamplesBuffer) {
   let remaining = self.samples.length() - self.cursor.val
   if remaining <= 0 {
     Some(0)
@@ -412,7 +412,7 @@ pub impl Source for SamplesBuffer with current_span_len(self : SamplesBuffer) {
 }
 
 ///|
-pub impl Source for SamplesBuffer with total_duration(self : SamplesBuffer) {
+pub impl Source for SamplesBuffer with fn total_duration(self : SamplesBuffer) {
   duration_from_sample_count(
     self.samples.length(),
     self.channels(),
@@ -421,7 +421,7 @@ pub impl Source for SamplesBuffer with total_duration(self : SamplesBuffer) {
 }
 
 ///|
-pub impl Source for SamplesBuffer with try_seek(
+pub impl Source for SamplesBuffer with fn try_seek(
   self : SamplesBuffer,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {

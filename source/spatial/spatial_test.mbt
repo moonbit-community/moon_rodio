@@ -20,7 +20,7 @@ test "rodio::source::spatial::aliases" {
     [-1.0, 0.0, 0.0],
     [1.0, 0.0, 0.0],
   )
-  assert_eq(s.channels(), 2)
-  assert_eq(s.sample_rate(), 44_100)
+  @debug.assert_eq(s.channels(), 2)
+  @debug.assert_eq(s.sample_rate(), 44_100)
   assert_true(s.next() != None)
 }

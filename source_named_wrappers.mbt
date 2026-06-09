@@ -426,10 +426,10 @@ pub struct LimitSettings {
   knee_width : Sample
   attack : @moon_cpal.Duration
   release : @moon_cpal.Duration
-} derive(Eq)
+} derive(Debug, Eq)
 
 ///|
-pub impl Show for LimitSettings with output(self, logger) {
+pub impl Show for LimitSettings with fn output(self, logger) {
   logger.write_string(
     "LimitSettings::{ min_value: \{self.min_value}, max_value: \{self.max_value}, threshold: \{self.threshold}, knee_width: \{self.knee_width}, attack: \{self.attack}, release: \{self.release} }",
   )
@@ -982,7 +982,7 @@ pub enum Function {
 } derive(Debug, Eq)
 
 ///|
-pub impl Show for Function with output(self, logger) {
+pub impl Show for Function with fn output(self, logger) {
   match self {
     Sine => logger.write_string("Function::Sine")
     Triangle => logger.write_string("Function::Triangle")
@@ -993,22 +993,22 @@ pub impl Show for Function with output(self, logger) {
 
 ///|
 pub fn Function::sine() -> Function {
-  Function::Sine
+  Sine
 }
 
 ///|
 pub fn Function::triangle() -> Function {
-  Function::Triangle
+  Triangle
 }
 
 ///|
 pub fn Function::square() -> Function {
-  Function::Square
+  Square
 }
 
 ///|
 pub fn Function::sawtooth() -> Function {
-  Function::Sawtooth
+  Sawtooth
 }
 
 ///|
@@ -1030,10 +1030,10 @@ pub fn SignalGenerator::from_function(
   function : Function,
 ) -> SignalGenerator {
   let sf = match function {
-    Function::Sine => SignalFunction::Sine
-    Function::Triangle => SignalFunction::Triangle
-    Function::Square => SignalFunction::Square
-    Function::Sawtooth => SignalFunction::Sawtooth
+    Sine => SignalFunction::Sine
+    Triangle => Triangle
+    Square => Square
+    Sawtooth => Sawtooth
   }
   SignalGenerator::new(sample_rate, frequency, sf)
 }
@@ -1085,7 +1085,7 @@ fn dyn_sample_rate(inner : DynSource) -> SampleRate {
 }
 
 ///|
-pub impl Source for Amplify with next(self : Amplify) {
+pub impl Source for Amplify with fn next(self : Amplify) {
   match self.input.next() {
     None => None
     Some(v) => Some(v * self.factor.val)
@@ -1093,17 +1093,17 @@ pub impl Source for Amplify with next(self : Amplify) {
 }
 
 ///|
-pub impl Source for Amplify with channels(self : Amplify) {
+pub impl Source for Amplify with fn channels(self : Amplify) {
   self.input.channels()
 }
 
 ///|
-pub impl Source for Amplify with sample_rate(self : Amplify) {
+pub impl Source for Amplify with fn sample_rate(self : Amplify) {
   self.input.sample_rate()
 }
 
 ///|
-pub impl Source for ChannelVolume with next(self : ChannelVolume) {
+pub impl Source for ChannelVolume with fn next(self : ChannelVolume) {
   let out_channels = self.channel_factors.val.length()
   if self.current_channel.val >= out_channels {
     self.current_channel.val = 0
@@ -1130,47 +1130,47 @@ pub impl Source for ChannelVolume with next(self : ChannelVolume) {
 }
 
 ///|
-pub impl Source for ChannelVolume with channels(self : ChannelVolume) {
+pub impl Source for ChannelVolume with fn channels(self : ChannelVolume) {
   self.channel_factors.val.length()
 }
 
 ///|
-pub impl Source for ChannelVolume with sample_rate(self : ChannelVolume) {
+pub impl Source for ChannelVolume with fn sample_rate(self : ChannelVolume) {
   self.input.sample_rate()
 }
 
 ///|
-pub impl Source for Crossfade with next(self : Crossfade) {
+pub impl Source for Crossfade with fn next(self : Crossfade) {
   dyn_next(self.inner)
 }
 
 ///|
-pub impl Source for Crossfade with channels(self : Crossfade) {
+pub impl Source for Crossfade with fn channels(self : Crossfade) {
   dyn_channels(self.inner)
 }
 
 ///|
-pub impl Source for Crossfade with sample_rate(self : Crossfade) {
+pub impl Source for Crossfade with fn sample_rate(self : Crossfade) {
   dyn_sample_rate(self.inner)
 }
 
 ///|
-pub impl Source for Delay with next(self : Delay) {
+pub impl Source for Delay with fn next(self : Delay) {
   dyn_next(self.inner)
 }
 
 ///|
-pub impl Source for Delay with channels(self : Delay) {
+pub impl Source for Delay with fn channels(self : Delay) {
   dyn_channels(self.inner)
 }
 
 ///|
-pub impl Source for Delay with sample_rate(self : Delay) {
+pub impl Source for Delay with fn sample_rate(self : Delay) {
   dyn_sample_rate(self.inner)
 }
 
 ///|
-pub impl Source for Distortion with next(self : Distortion) {
+pub impl Source for Distortion with fn next(self : Distortion) {
   match self.input.next() {
     None => None
     Some(v) => {
@@ -1188,62 +1188,62 @@ pub impl Source for Distortion with next(self : Distortion) {
 }
 
 ///|
-pub impl Source for Distortion with channels(self : Distortion) {
+pub impl Source for Distortion with fn channels(self : Distortion) {
   self.input.channels()
 }
 
 ///|
-pub impl Source for Distortion with sample_rate(self : Distortion) {
+pub impl Source for Distortion with fn sample_rate(self : Distortion) {
   self.input.sample_rate()
 }
 
 ///|
-pub impl Source for Empty with next(self : Empty) {
+pub impl Source for Empty with fn next(self : Empty) {
   dyn_next(self.inner)
 }
 
 ///|
-pub impl Source for Empty with channels(self : Empty) {
+pub impl Source for Empty with fn channels(self : Empty) {
   dyn_channels(self.inner)
 }
 
 ///|
-pub impl Source for Empty with sample_rate(self : Empty) {
+pub impl Source for Empty with fn sample_rate(self : Empty) {
   dyn_sample_rate(self.inner)
 }
 
 ///|
-pub impl Source for FadeIn with next(self : FadeIn) {
+pub impl Source for FadeIn with fn next(self : FadeIn) {
   dyn_next(self.inner)
 }
 
 ///|
-pub impl Source for FadeIn with channels(self : FadeIn) {
+pub impl Source for FadeIn with fn channels(self : FadeIn) {
   dyn_channels(self.inner)
 }
 
 ///|
-pub impl Source for FadeIn with sample_rate(self : FadeIn) {
+pub impl Source for FadeIn with fn sample_rate(self : FadeIn) {
   dyn_sample_rate(self.inner)
 }
 
 ///|
-pub impl Source for FadeOut with next(self : FadeOut) {
+pub impl Source for FadeOut with fn next(self : FadeOut) {
   dyn_next(self.inner)
 }
 
 ///|
-pub impl Source for FadeOut with channels(self : FadeOut) {
+pub impl Source for FadeOut with fn channels(self : FadeOut) {
   dyn_channels(self.inner)
 }
 
 ///|
-pub impl Source for FadeOut with sample_rate(self : FadeOut) {
+pub impl Source for FadeOut with fn sample_rate(self : FadeOut) {
   dyn_sample_rate(self.inner)
 }
 
 ///|
-pub impl Source for Limit with next(self : Limit) {
+pub impl Source for Limit with fn next(self : Limit) {
   match self.input.next() {
     None => None
     Some(sample) => {
@@ -1278,117 +1278,117 @@ pub impl Source for Limit with next(self : Limit) {
 }
 
 ///|
-pub impl Source for Limit with channels(self : Limit) {
+pub impl Source for Limit with fn channels(self : Limit) {
   self.input.channels()
 }
 
 ///|
-pub impl Source for Limit with sample_rate(self : Limit) {
+pub impl Source for Limit with fn sample_rate(self : Limit) {
   self.input.sample_rate()
 }
 
 ///|
-pub impl Source for LimitMono with next(self : LimitMono) {
+pub impl Source for LimitMono with fn next(self : LimitMono) {
   self.inner.next()
 }
 
 ///|
-pub impl Source for LimitMono with channels(self : LimitMono) {
+pub impl Source for LimitMono with fn channels(self : LimitMono) {
   self.inner.channels()
 }
 
 ///|
-pub impl Source for LimitMono with sample_rate(self : LimitMono) {
+pub impl Source for LimitMono with fn sample_rate(self : LimitMono) {
   self.inner.sample_rate()
 }
 
 ///|
-pub impl Source for LimitStereo with next(self : LimitStereo) {
+pub impl Source for LimitStereo with fn next(self : LimitStereo) {
   self.inner.next()
 }
 
 ///|
-pub impl Source for LimitStereo with channels(self : LimitStereo) {
+pub impl Source for LimitStereo with fn channels(self : LimitStereo) {
   self.inner.channels()
 }
 
 ///|
-pub impl Source for LimitStereo with sample_rate(self : LimitStereo) {
+pub impl Source for LimitStereo with fn sample_rate(self : LimitStereo) {
   self.inner.sample_rate()
 }
 
 ///|
-pub impl Source for LimitMulti with next(self : LimitMulti) {
+pub impl Source for LimitMulti with fn next(self : LimitMulti) {
   self.inner.next()
 }
 
 ///|
-pub impl Source for LimitMulti with channels(self : LimitMulti) {
+pub impl Source for LimitMulti with fn channels(self : LimitMulti) {
   self.inner.channels()
 }
 
 ///|
-pub impl Source for LimitMulti with sample_rate(self : LimitMulti) {
+pub impl Source for LimitMulti with fn sample_rate(self : LimitMulti) {
   self.inner.sample_rate()
 }
 
 ///|
-pub impl Source for Mix with next(self : Mix) {
+pub impl Source for Mix with fn next(self : Mix) {
   dyn_next(self.inner)
 }
 
 ///|
-pub impl Source for Mix with channels(self : Mix) {
+pub impl Source for Mix with fn channels(self : Mix) {
   dyn_channels(self.inner)
 }
 
 ///|
-pub impl Source for Mix with sample_rate(self : Mix) {
+pub impl Source for Mix with fn sample_rate(self : Mix) {
   dyn_sample_rate(self.inner)
 }
 
 ///|
-pub impl Source for Repeat with next(self : Repeat) {
+pub impl Source for Repeat with fn next(self : Repeat) {
   dyn_next(self.inner)
 }
 
 ///|
-pub impl Source for Repeat with channels(self : Repeat) {
+pub impl Source for Repeat with fn channels(self : Repeat) {
   dyn_channels(self.inner)
 }
 
 ///|
-pub impl Source for Repeat with sample_rate(self : Repeat) {
+pub impl Source for Repeat with fn sample_rate(self : Repeat) {
   dyn_sample_rate(self.inner)
 }
 
 ///|
-pub impl Source for SkipDuration with next(self : SkipDuration) {
+pub impl Source for SkipDuration with fn next(self : SkipDuration) {
   dyn_next(self.inner)
 }
 
 ///|
-pub impl Source for SkipDuration with channels(self : SkipDuration) {
+pub impl Source for SkipDuration with fn channels(self : SkipDuration) {
   dyn_channels(self.inner)
 }
 
 ///|
-pub impl Source for SkipDuration with sample_rate(self : SkipDuration) {
+pub impl Source for SkipDuration with fn sample_rate(self : SkipDuration) {
   dyn_sample_rate(self.inner)
 }
 
 ///|
-pub impl Source for Speed with next(self : Speed) {
+pub impl Source for Speed with fn next(self : Speed) {
   self.input.next()
 }
 
 ///|
-pub impl Source for Speed with channels(self : Speed) {
+pub impl Source for Speed with fn channels(self : Speed) {
   self.input.channels()
 }
 
 ///|
-pub impl Source for Speed with sample_rate(self : Speed) {
+pub impl Source for Speed with fn sample_rate(self : Speed) {
   let rate = (Double::from_int(self.input.sample_rate()) * self.factor.val).to_int()
   if rate <= 0 {
     1
@@ -1398,7 +1398,7 @@ pub impl Source for Speed with sample_rate(self : Speed) {
 }
 
 ///|
-pub impl Source for TakeDuration with next(self : TakeDuration) {
+pub impl Source for TakeDuration with fn next(self : TakeDuration) {
   if self.remaining_samples.val <= 0 {
     return None
   }
@@ -1423,42 +1423,42 @@ pub impl Source for TakeDuration with next(self : TakeDuration) {
 }
 
 ///|
-pub impl Source for TakeDuration with channels(self : TakeDuration) {
+pub impl Source for TakeDuration with fn channels(self : TakeDuration) {
   self.inner.channels()
 }
 
 ///|
-pub impl Source for TakeDuration with sample_rate(self : TakeDuration) {
+pub impl Source for TakeDuration with fn sample_rate(self : TakeDuration) {
   self.inner.sample_rate()
 }
 
 ///|
-pub impl Source for Zero with next(self : Zero) {
+pub impl Source for Zero with fn next(self : Zero) {
   dyn_next(self.inner)
 }
 
 ///|
-pub impl Source for Zero with channels(self : Zero) {
+pub impl Source for Zero with fn channels(self : Zero) {
   dyn_channels(self.inner)
 }
 
 ///|
-pub impl Source for Zero with sample_rate(self : Zero) {
+pub impl Source for Zero with fn sample_rate(self : Zero) {
   dyn_sample_rate(self.inner)
 }
 
 ///|
-pub impl Source for LinearGainRamp with next(self : LinearGainRamp) {
+pub impl Source for LinearGainRamp with fn next(self : LinearGainRamp) {
   dyn_next(self.inner)
 }
 
 ///|
-pub impl Source for LinearGainRamp with channels(self : LinearGainRamp) {
+pub impl Source for LinearGainRamp with fn channels(self : LinearGainRamp) {
   dyn_channels(self.inner)
 }
 
 ///|
-pub impl Source for LinearGainRamp with sample_rate(self : LinearGainRamp) {
+pub impl Source for LinearGainRamp with fn sample_rate(self : LinearGainRamp) {
   dyn_sample_rate(self.inner)
 }
 
@@ -1478,17 +1478,17 @@ pub fn Buffered::sample_rate(self : Buffered) -> SampleRate {
 }
 
 ///|
-pub impl Source for Buffered with next(self : Buffered) {
+pub impl Source for Buffered with fn next(self : Buffered) {
   self.next()
 }
 
 ///|
-pub impl Source for Buffered with channels(self : Buffered) {
+pub impl Source for Buffered with fn channels(self : Buffered) {
   self.channels()
 }
 
 ///|
-pub impl Source for Buffered with sample_rate(self : Buffered) {
+pub impl Source for Buffered with fn sample_rate(self : Buffered) {
   self.sample_rate()
 }
 
@@ -1508,32 +1508,32 @@ pub fn Spatial::sample_rate(self : Spatial) -> SampleRate {
 }
 
 ///|
-pub impl Source for Spatial with next(self : Spatial) {
+pub impl Source for Spatial with fn next(self : Spatial) {
   self.next()
 }
 
 ///|
-pub impl Source for Spatial with channels(self : Spatial) {
+pub impl Source for Spatial with fn channels(self : Spatial) {
   self.channels()
 }
 
 ///|
-pub impl Source for Spatial with sample_rate(self : Spatial) {
+pub impl Source for Spatial with fn sample_rate(self : Spatial) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for Amplify with current_span_len(_self : Amplify) {
+pub impl Source for Amplify with fn current_span_len(_self : Amplify) {
   _self.inner().current_span_len()
 }
 
 ///|
-pub impl Source for Amplify with total_duration(_self : Amplify) {
+pub impl Source for Amplify with fn total_duration(_self : Amplify) {
   _self.inner().total_duration()
 }
 
 ///|
-pub impl Source for Amplify with try_seek(
+pub impl Source for Amplify with fn try_seek(
   _self : Amplify,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1541,17 +1541,19 @@ pub impl Source for Amplify with try_seek(
 }
 
 ///|
-pub impl Source for ChannelVolume with current_span_len(_self : ChannelVolume) {
+pub impl Source for ChannelVolume with fn current_span_len(
+  _self : ChannelVolume,
+) {
   _self.inner().current_span_len()
 }
 
 ///|
-pub impl Source for ChannelVolume with total_duration(_self : ChannelVolume) {
+pub impl Source for ChannelVolume with fn total_duration(_self : ChannelVolume) {
   _self.inner().total_duration()
 }
 
 ///|
-pub impl Source for ChannelVolume with try_seek(
+pub impl Source for ChannelVolume with fn try_seek(
   _self : ChannelVolume,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1559,17 +1561,17 @@ pub impl Source for ChannelVolume with try_seek(
 }
 
 ///|
-pub impl Source for Crossfade with current_span_len(_self : Crossfade) {
+pub impl Source for Crossfade with fn current_span_len(_self : Crossfade) {
   _self.inner().current_span_len()
 }
 
 ///|
-pub impl Source for Crossfade with total_duration(_self : Crossfade) {
+pub impl Source for Crossfade with fn total_duration(_self : Crossfade) {
   _self.inner().total_duration()
 }
 
 ///|
-pub impl Source for Crossfade with try_seek(
+pub impl Source for Crossfade with fn try_seek(
   _self : Crossfade,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1577,17 +1579,17 @@ pub impl Source for Crossfade with try_seek(
 }
 
 ///|
-pub impl Source for Delay with current_span_len(_self : Delay) {
+pub impl Source for Delay with fn current_span_len(_self : Delay) {
   _self.inner().current_span_len()
 }
 
 ///|
-pub impl Source for Delay with total_duration(_self : Delay) {
+pub impl Source for Delay with fn total_duration(_self : Delay) {
   _self.inner().total_duration()
 }
 
 ///|
-pub impl Source for Delay with try_seek(
+pub impl Source for Delay with fn try_seek(
   _self : Delay,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1595,17 +1597,17 @@ pub impl Source for Delay with try_seek(
 }
 
 ///|
-pub impl Source for Distortion with current_span_len(_self : Distortion) {
+pub impl Source for Distortion with fn current_span_len(_self : Distortion) {
   _self.inner().current_span_len()
 }
 
 ///|
-pub impl Source for Distortion with total_duration(_self : Distortion) {
+pub impl Source for Distortion with fn total_duration(_self : Distortion) {
   _self.inner().total_duration()
 }
 
 ///|
-pub impl Source for Distortion with try_seek(
+pub impl Source for Distortion with fn try_seek(
   _self : Distortion,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1613,17 +1615,17 @@ pub impl Source for Distortion with try_seek(
 }
 
 ///|
-pub impl Source for Empty with current_span_len(_self : Empty) {
+pub impl Source for Empty with fn current_span_len(_self : Empty) {
   _self.inner().current_span_len()
 }
 
 ///|
-pub impl Source for Empty with total_duration(_self : Empty) {
+pub impl Source for Empty with fn total_duration(_self : Empty) {
   _self.inner().total_duration()
 }
 
 ///|
-pub impl Source for Empty with try_seek(
+pub impl Source for Empty with fn try_seek(
   _self : Empty,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1631,17 +1633,17 @@ pub impl Source for Empty with try_seek(
 }
 
 ///|
-pub impl Source for FadeIn with current_span_len(_self : FadeIn) {
+pub impl Source for FadeIn with fn current_span_len(_self : FadeIn) {
   _self.inner().current_span_len()
 }
 
 ///|
-pub impl Source for FadeIn with total_duration(_self : FadeIn) {
+pub impl Source for FadeIn with fn total_duration(_self : FadeIn) {
   _self.inner().total_duration()
 }
 
 ///|
-pub impl Source for FadeIn with try_seek(
+pub impl Source for FadeIn with fn try_seek(
   _self : FadeIn,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1649,17 +1651,17 @@ pub impl Source for FadeIn with try_seek(
 }
 
 ///|
-pub impl Source for FadeOut with current_span_len(_self : FadeOut) {
+pub impl Source for FadeOut with fn current_span_len(_self : FadeOut) {
   _self.inner().current_span_len()
 }
 
 ///|
-pub impl Source for FadeOut with total_duration(_self : FadeOut) {
+pub impl Source for FadeOut with fn total_duration(_self : FadeOut) {
   _self.inner().total_duration()
 }
 
 ///|
-pub impl Source for FadeOut with try_seek(
+pub impl Source for FadeOut with fn try_seek(
   _self : FadeOut,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1667,17 +1669,17 @@ pub impl Source for FadeOut with try_seek(
 }
 
 ///|
-pub impl Source for Limit with current_span_len(_self : Limit) {
+pub impl Source for Limit with fn current_span_len(_self : Limit) {
   _self.input.current_span_len()
 }
 
 ///|
-pub impl Source for Limit with total_duration(_self : Limit) {
+pub impl Source for Limit with fn total_duration(_self : Limit) {
   _self.input.total_duration()
 }
 
 ///|
-pub impl Source for Limit with try_seek(
+pub impl Source for Limit with fn try_seek(
   _self : Limit,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1686,17 +1688,17 @@ pub impl Source for Limit with try_seek(
 }
 
 ///|
-pub impl Source for LimitMono with current_span_len(_self : LimitMono) {
+pub impl Source for LimitMono with fn current_span_len(_self : LimitMono) {
   _self.inner.current_span_len()
 }
 
 ///|
-pub impl Source for LimitMono with total_duration(_self : LimitMono) {
+pub impl Source for LimitMono with fn total_duration(_self : LimitMono) {
   _self.inner.total_duration()
 }
 
 ///|
-pub impl Source for LimitMono with try_seek(
+pub impl Source for LimitMono with fn try_seek(
   _self : LimitMono,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1704,17 +1706,17 @@ pub impl Source for LimitMono with try_seek(
 }
 
 ///|
-pub impl Source for LimitStereo with current_span_len(_self : LimitStereo) {
+pub impl Source for LimitStereo with fn current_span_len(_self : LimitStereo) {
   _self.inner.current_span_len()
 }
 
 ///|
-pub impl Source for LimitStereo with total_duration(_self : LimitStereo) {
+pub impl Source for LimitStereo with fn total_duration(_self : LimitStereo) {
   _self.inner.total_duration()
 }
 
 ///|
-pub impl Source for LimitStereo with try_seek(
+pub impl Source for LimitStereo with fn try_seek(
   _self : LimitStereo,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1722,17 +1724,17 @@ pub impl Source for LimitStereo with try_seek(
 }
 
 ///|
-pub impl Source for LimitMulti with current_span_len(_self : LimitMulti) {
+pub impl Source for LimitMulti with fn current_span_len(_self : LimitMulti) {
   _self.inner.current_span_len()
 }
 
 ///|
-pub impl Source for LimitMulti with total_duration(_self : LimitMulti) {
+pub impl Source for LimitMulti with fn total_duration(_self : LimitMulti) {
   _self.inner.total_duration()
 }
 
 ///|
-pub impl Source for LimitMulti with try_seek(
+pub impl Source for LimitMulti with fn try_seek(
   _self : LimitMulti,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1740,32 +1742,32 @@ pub impl Source for LimitMulti with try_seek(
 }
 
 ///|
-pub impl Source for Mix with current_span_len(_self : Mix) {
+pub impl Source for Mix with fn current_span_len(_self : Mix) {
   _self.inner().current_span_len()
 }
 
 ///|
-pub impl Source for Mix with total_duration(_self : Mix) {
+pub impl Source for Mix with fn total_duration(_self : Mix) {
   _self.inner().total_duration()
 }
 
 ///|
-pub impl Source for Mix with try_seek(_self : Mix, pos : @moon_cpal.Duration) -> Unit raise SeekError {
+pub impl Source for Mix with fn try_seek(_self : Mix, pos : @moon_cpal.Duration) -> Unit raise SeekError {
   _self.inner().try_seek(pos)
 }
 
 ///|
-pub impl Source for Repeat with current_span_len(_self : Repeat) {
+pub impl Source for Repeat with fn current_span_len(_self : Repeat) {
   _self.inner().current_span_len()
 }
 
 ///|
-pub impl Source for Repeat with total_duration(_self : Repeat) {
+pub impl Source for Repeat with fn total_duration(_self : Repeat) {
   _self.inner().total_duration()
 }
 
 ///|
-pub impl Source for Repeat with try_seek(
+pub impl Source for Repeat with fn try_seek(
   _self : Repeat,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1773,17 +1775,17 @@ pub impl Source for Repeat with try_seek(
 }
 
 ///|
-pub impl Source for SkipDuration with current_span_len(_self : SkipDuration) {
+pub impl Source for SkipDuration with fn current_span_len(_self : SkipDuration) {
   _self.inner().current_span_len()
 }
 
 ///|
-pub impl Source for SkipDuration with total_duration(_self : SkipDuration) {
+pub impl Source for SkipDuration with fn total_duration(_self : SkipDuration) {
   _self.inner().total_duration()
 }
 
 ///|
-pub impl Source for SkipDuration with try_seek(
+pub impl Source for SkipDuration with fn try_seek(
   _self : SkipDuration,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1791,12 +1793,12 @@ pub impl Source for SkipDuration with try_seek(
 }
 
 ///|
-pub impl Source for Speed with current_span_len(_self : Speed) {
+pub impl Source for Speed with fn current_span_len(_self : Speed) {
   _self.inner().current_span_len()
 }
 
 ///|
-pub impl Source for Speed with total_duration(_self : Speed) {
+pub impl Source for Speed with fn total_duration(_self : Speed) {
   _self
   .inner()
   .total_duration()
@@ -1804,7 +1806,7 @@ pub impl Source for Speed with total_duration(_self : Speed) {
 }
 
 ///|
-pub impl Source for Speed with try_seek(
+pub impl Source for Speed with fn try_seek(
   _self : Speed,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1812,7 +1814,7 @@ pub impl Source for Speed with try_seek(
 }
 
 ///|
-pub impl Source for TakeDuration with current_span_len(_self : TakeDuration) {
+pub impl Source for TakeDuration with fn current_span_len(_self : TakeDuration) {
   let rem = if _self.remaining_samples.val <= 0 {
     0
   } else {
@@ -1825,7 +1827,7 @@ pub impl Source for TakeDuration with current_span_len(_self : TakeDuration) {
 }
 
 ///|
-pub impl Source for TakeDuration with total_duration(_self : TakeDuration) {
+pub impl Source for TakeDuration with fn total_duration(_self : TakeDuration) {
   _self
   .inner()
   .total_duration()
@@ -1833,7 +1835,7 @@ pub impl Source for TakeDuration with total_duration(_self : TakeDuration) {
 }
 
 ///|
-pub impl Source for TakeDuration with try_seek(
+pub impl Source for TakeDuration with fn try_seek(
   _self : TakeDuration,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1851,32 +1853,39 @@ pub impl Source for TakeDuration with try_seek(
 }
 
 ///|
-pub impl Source for Zero with current_span_len(_self : Zero) {
+pub impl Source for Zero with fn current_span_len(_self : Zero) {
   _self.inner().current_span_len()
 }
 
 ///|
-pub impl Source for Zero with total_duration(_self : Zero) {
+pub impl Source for Zero with fn total_duration(_self : Zero) {
   _self.inner().total_duration()
 }
 
 ///|
-pub impl Source for Zero with try_seek(_self : Zero, pos : @moon_cpal.Duration) -> Unit raise SeekError {
+pub impl Source for Zero with fn try_seek(
+  _self : Zero,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
   _self.inner().try_seek(pos)
 }
 
 ///|
-pub impl Source for LinearGainRamp with current_span_len(_self : LinearGainRamp) {
+pub impl Source for LinearGainRamp with fn current_span_len(
+  _self : LinearGainRamp,
+) {
   _self.inner().current_span_len()
 }
 
 ///|
-pub impl Source for LinearGainRamp with total_duration(_self : LinearGainRamp) {
+pub impl Source for LinearGainRamp with fn total_duration(
+  _self : LinearGainRamp,
+) {
   _self.inner().total_duration()
 }
 
 ///|
-pub impl Source for LinearGainRamp with try_seek(
+pub impl Source for LinearGainRamp with fn try_seek(
   _self : LinearGainRamp,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1884,17 +1893,17 @@ pub impl Source for LinearGainRamp with try_seek(
 }
 
 ///|
-pub impl Source for Buffered with current_span_len(_self : Buffered) {
+pub impl Source for Buffered with fn current_span_len(_self : Buffered) {
   _self.inner().current_span_len()
 }
 
 ///|
-pub impl Source for Buffered with total_duration(_self : Buffered) {
+pub impl Source for Buffered with fn total_duration(_self : Buffered) {
   _self.inner().total_duration()
 }
 
 ///|
-pub impl Source for Buffered with try_seek(
+pub impl Source for Buffered with fn try_seek(
   _self : Buffered,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -1902,17 +1911,17 @@ pub impl Source for Buffered with try_seek(
 }
 
 ///|
-pub impl Source for Spatial with current_span_len(_self : Spatial) {
+pub impl Source for Spatial with fn current_span_len(_self : Spatial) {
   _self.inner().current_span_len()
 }
 
 ///|
-pub impl Source for Spatial with total_duration(_self : Spatial) {
+pub impl Source for Spatial with fn total_duration(_self : Spatial) {
   _self.inner().total_duration()
 }
 
 ///|
-pub impl Source for Spatial with try_seek(
+pub impl Source for Spatial with fn try_seek(
   _self : Spatial,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {

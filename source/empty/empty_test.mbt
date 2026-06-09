@@ -15,7 +15,7 @@
 ///|
 test "rodio::source::empty::aliases" {
   let e = empty(2, 44_100)
-  assert_eq(e.channels(), 2)
-  assert_eq(e.sample_rate(), 44_100)
-  assert_eq(e.next(), None)
+  @debug.assert_eq(e.channels(), 2)
+  @debug.assert_eq(e.sample_rate(), 44_100)
+  @debug.assert_eq(e.next(), None)
 }

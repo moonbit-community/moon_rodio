@@ -15,10 +15,10 @@
 ///|
 pub suberror MicrophoneListError {
   DevicesError(@moon_cpal.DevicesError)
-} derive(Eq)
+} derive(Debug, Eq)
 
 ///|
-pub impl Show for MicrophoneListError with output(self, logger) {
+pub impl Show for MicrophoneListError with fn output(self, logger) {
   match self {
     DevicesError(err) =>
       logger.write_string("MicrophoneListError::DevicesError(\{err})")
@@ -35,10 +35,10 @@ pub suberror MicrophoneError {
   BuildStreamError(@moon_cpal.BuildStreamError)
   PlayStreamError(@moon_cpal.PlayStreamError)
   UnsupportedSampleFormat
-} derive(Eq)
+} derive(Debug, Eq)
 
 ///|
-pub impl Show for MicrophoneError with output(self, logger) {
+pub impl Show for MicrophoneError with fn output(self, logger) {
   match self {
     NoDevice => logger.write_string("MicrophoneError::NoDevice")
     NoConfig => logger.write_string("MicrophoneError::NoConfig")
@@ -80,7 +80,7 @@ pub fn Input::name(self : Input) -> String {
 pub fn available_inputs() -> Array[Input] raise MicrophoneListError {
   let host = @moon_cpal.default_host()
   let devices = try host.input_devices() catch {
-    err => raise MicrophoneListError::DevicesError(err)
+    err => raise DevicesError(err)
   } noraise {
     xs => xs
   }
@@ -98,10 +98,10 @@ pub struct InputConfig {
   sample_rate : SampleRate
   buffer_size : @moon_cpal.BufferSize
   sample_format : @moon_cpal.SampleFormat
-} derive(Eq)
+} derive(Debug, Eq)
 
 ///|
-pub impl Show for InputConfig with output(self, logger) {
+pub impl Show for InputConfig with fn output(self, logger) {
   logger.write_string(
     "InputConfig::{ channel_count: \{self.channel_count}, sample_rate: \{self.sample_rate}, buffer_size: \{self.buffer_size}, sample_format: \{self.sample_format} }",
   )
@@ -113,7 +113,7 @@ pub fn InputConfig::default() -> InputConfig {
     channel_count: 1,
     sample_rate: hz_44100,
     buffer_size: @moon_cpal.BufferSize::default(),
-    sample_format: @moon_cpal.SampleFormat::F32,
+    sample_format: F32,
   }
 }
 
@@ -194,7 +194,7 @@ pub fn InputConfig::stream_config(
 
 ///|
 fn InputConfig::with_f32_samples(self : InputConfig) -> InputConfig {
-  { ..self, sample_format: @moon_cpal.SampleFormat::F32 }
+  { ..self, sample_format: F32 }
 }
 
 ///|
@@ -203,8 +203,8 @@ pub fn InputConfig::supported_given(
   supported : @moon_cpal.SupportedStreamConfigRange,
 ) -> Bool {
   let buffer_ok = match self.buffer_size {
-    @moon_cpal.BufferSize::Default => true
-    @moon_cpal.BufferSize::Fixed(n_frames) =>
+    Default => true
+    Fixed(n_frames) =>
       supported.buffer_size().contains(n_frames * self.channel_count)
   }
 
@@ -255,7 +255,7 @@ fn collect_supported_input_configs(
   device : @moon_cpal.Device,
 ) -> Array[@moon_cpal.SupportedStreamConfigRange] raise MicrophoneError {
   let ranges = try device.supported_input_configs() catch {
-    err => raise MicrophoneError::SupportedInputConfigsError(err)
+    err => raise SupportedInputConfigsError(err)
   } noraise {
     xs => xs
   }
@@ -289,7 +289,7 @@ pub fn MicrophoneBuilder::default_device(
 ) -> MicrophoneBuilder raise MicrophoneError {
   let host = @moon_cpal.default_host()
   match host.default_input_device() {
-    None => raise MicrophoneError::NoDevice
+    None => raise NoDevice
     Some(device) => self.with_device_inner(device)
   }
 }
@@ -312,10 +312,8 @@ fn MicrophoneBuilder::check_config(
   self : MicrophoneBuilder,
   config : InputConfig,
 ) -> Unit raise MicrophoneError {
-  guard self.device is Some(_) else { raise MicrophoneError::NoDevice }
-  guard self.config_supported(config) else {
-    raise MicrophoneError::UnsupportedByDevice
-  }
+  guard self.device is Some(_) else { raise NoDevice }
+  guard self.config_supported(config) else { raise UnsupportedByDevice }
 }
 
 ///|
@@ -323,11 +321,11 @@ pub fn MicrophoneBuilder::default_config(
   self : MicrophoneBuilder,
 ) -> MicrophoneBuilder raise MicrophoneError {
   let device = match self.device {
-    None => raise MicrophoneError::NoDevice
+    None => raise NoDevice
     Some(device) => device
   }
   let default_config = try device.default_input_config() catch {
-    err => raise MicrophoneError::DefaultInputConfigError(err)
+    err => raise DefaultInputConfigError(err)
   } noraise {
     cfg => cfg
   }
@@ -363,7 +361,7 @@ pub fn MicrophoneBuilder::get_config(
   self : MicrophoneBuilder,
 ) -> InputConfig raise MicrophoneError {
   match self.config {
-    None => raise MicrophoneError::NoConfig
+    None => raise NoConfig
     Some(config) => config
   }
 }
@@ -620,13 +618,13 @@ fn microphone_push_raw_samples(
   let bytes = data.bytes()
 
   match format {
-    @moon_cpal.SampleFormat::I8 =>
+    I8 =>
       for i in 0..<len {
         let raw = bytes[i].to_int()
         let sample = sample_from_i8(if raw >= 128 { raw - 256 } else { raw })
         microphone_push_sample(queue, read_pos, max_buffered_samples, sample)
       }
-    @moon_cpal.SampleFormat::U8 =>
+    U8 =>
       for i in 0..<len {
         microphone_push_sample(
           queue,
@@ -635,7 +633,7 @@ fn microphone_push_raw_samples(
           sample_from_u8(bytes[i]),
         )
       }
-    @moon_cpal.SampleFormat::I16 =>
+    I16 =>
       for i in 0..<len {
         match read_u16_le(bytes, i * 2) {
           None => break
@@ -647,7 +645,7 @@ fn microphone_push_raw_samples(
           }
         }
       }
-    @moon_cpal.SampleFormat::U16 =>
+    U16 =>
       for i in 0..<len {
         match read_u16_le(bytes, i * 2) {
           None => break
@@ -660,7 +658,7 @@ fn microphone_push_raw_samples(
             )
         }
       }
-    @moon_cpal.SampleFormat::I24 =>
+    I24 =>
       for i in 0..<len {
         let offset = i * 3
         if offset + 3 > bytes.length() {
@@ -681,7 +679,7 @@ fn microphone_push_raw_samples(
           sample_from_i24(signed),
         )
       }
-    @moon_cpal.SampleFormat::U24 =>
+    U24 =>
       for i in 0..<len {
         let offset = i * 3
         if offset + 3 > bytes.length() {
@@ -697,7 +695,7 @@ fn microphone_push_raw_samples(
           sample_from_u24(u),
         )
       }
-    @moon_cpal.SampleFormat::I32 =>
+    I32 =>
       for i in 0..<len {
         match read_u32_le(bytes, i * 4) {
           None => break
@@ -709,7 +707,7 @@ fn microphone_push_raw_samples(
           }
         }
       }
-    @moon_cpal.SampleFormat::U32 =>
+    U32 =>
       for i in 0..<len {
         match read_u32_le(bytes, i * 4) {
           None => break
@@ -722,7 +720,7 @@ fn microphone_push_raw_samples(
             )
         }
       }
-    @moon_cpal.SampleFormat::F32 =>
+    F32 =>
       for i in 0..<len {
         match read_u32_le(bytes, i * 4) {
           None => break
@@ -734,7 +732,7 @@ fn microphone_push_raw_samples(
           }
         }
       }
-    @moon_cpal.SampleFormat::I64 =>
+    I64 =>
       for i in 0..<len {
         match read_u64_le(bytes, i * 8) {
           None => break
@@ -746,7 +744,7 @@ fn microphone_push_raw_samples(
           }
         }
       }
-    @moon_cpal.SampleFormat::U64 =>
+    U64 =>
       for i in 0..<len {
         match read_u64_le(bytes, i * 8) {
           None => break
@@ -759,7 +757,7 @@ fn microphone_push_raw_samples(
             )
         }
       }
-    @moon_cpal.SampleFormat::F64 =>
+    F64 =>
       for i in 0..<len {
         match read_u64_le(bytes, i * 8) {
           None => break
@@ -811,21 +809,10 @@ fn microphone_open(
   }
 
   let format_supported = match config.sample_format {
-    @moon_cpal.SampleFormat::I8
-    | @moon_cpal.SampleFormat::I16
-    | @moon_cpal.SampleFormat::I24
-    | @moon_cpal.SampleFormat::I32
-    | @moon_cpal.SampleFormat::I64
-    | @moon_cpal.SampleFormat::U8
-    | @moon_cpal.SampleFormat::U16
-    | @moon_cpal.SampleFormat::U24
-    | @moon_cpal.SampleFormat::U32
-    | @moon_cpal.SampleFormat::U64
-    | @moon_cpal.SampleFormat::F32
-    | @moon_cpal.SampleFormat::F64 => true
+    I8 | I16 | I24 | I32 | I64 | U8 | U16 | U24 | U32 | U64 | F32 | F64 => true
     _ => false
   }
-  guard format_supported else { raise MicrophoneError::UnsupportedSampleFormat }
+  guard format_supported else { raise UnsupportedSampleFormat }
 
   let stream = match config.sample_format {
     _ =>
@@ -842,14 +829,14 @@ fn microphone_open(
           None,
         )
       catch {
-        err => raise MicrophoneError::BuildStreamError(err)
+        err => raise BuildStreamError(err)
       } noraise {
         s => s
       }
   }
 
   stream.play() catch {
-    err => raise MicrophoneError::PlayStreamError(err)
+    err => raise PlayStreamError(err)
   }
 
   {
@@ -867,11 +854,11 @@ pub fn MicrophoneBuilder::open_stream(
   self : MicrophoneBuilder,
 ) -> Microphone raise MicrophoneError {
   let device = match self.device {
-    None => raise MicrophoneError::NoDevice
+    None => raise NoDevice
     Some(device) => device
   }
   let config = match self.config {
-    None => raise MicrophoneError::NoConfig
+    None => raise NoConfig
     Some(config) => config
   }
   microphone_open(device, config, self.error_callback)
@@ -895,34 +882,34 @@ pub fn Microphone::next(self : Microphone) -> Sample? {
 }
 
 ///|
-pub impl Source for Microphone with next(self : Microphone) {
+pub impl Source for Microphone with fn next(self : Microphone) {
   self.next()
 }
 
 ///|
-pub impl Source for Microphone with channels(self : Microphone) {
+pub impl Source for Microphone with fn channels(self : Microphone) {
   self.config.channel_count
 }
 
 ///|
-pub impl Source for Microphone with sample_rate(self : Microphone) {
+pub impl Source for Microphone with fn sample_rate(self : Microphone) {
   self.config.sample_rate
 }
 
 ///|
-pub impl Source for Microphone with current_span_len(_self : Microphone) {
+pub impl Source for Microphone with fn current_span_len(_self : Microphone) {
   None
 }
 
 ///|
-pub impl Source for Microphone with total_duration(_self : Microphone) {
+pub impl Source for Microphone with fn total_duration(_self : Microphone) {
   None
 }
 
 ///|
-pub impl Source for Microphone with try_seek(
+pub impl Source for Microphone with fn try_seek(
   _self : Microphone,
   _pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  raise SeekError::NotSupported
+  raise NotSupported
 }

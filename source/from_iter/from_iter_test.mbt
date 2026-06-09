@@ -18,10 +18,10 @@ test "rodio::source::from_iter::aliases" {
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [1.0, 2.0]),
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [3.0]),
   ])
-  assert_eq(fi.channels(), 1)
-  assert_eq(fi.sample_rate(), 8)
-  assert_eq(fi.next(), Some(1.0))
-  assert_eq(fi.next(), Some(2.0))
-  assert_eq(fi.next(), Some(3.0))
-  assert_eq(fi.next(), None)
+  @debug.assert_eq(fi.channels(), 1)
+  @debug.assert_eq(fi.sample_rate(), 8)
+  @debug.assert_eq(fi.next(), Some(1.0))
+  @debug.assert_eq(fi.next(), Some(2.0))
+  @debug.assert_eq(fi.next(), Some(3.0))
+  @debug.assert_eq(fi.next(), None)
 }

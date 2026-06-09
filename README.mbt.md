@@ -83,7 +83,7 @@ test "readme: in-memory playback chain" {
   let source = SamplesBuffer::new(1, 44_100, [0.0, 0.25, 0.0, -0.25])
 
   sink.append(source)
-  assert_eq(rx.next(), Some(0.0))
+  @debug.assert_eq(rx.next(), Some(0.0))
 }
 ```
 
@@ -98,8 +98,8 @@ test "readme: decoder builder" {
     .with_seekable(true)
     .build()
 
-  assert_eq(decoder.channels(), 1)
-  assert_eq(decoder.sample_rate(), 48_000)
+  @debug.assert_eq(decoder.channels(), 1)
+  @debug.assert_eq(decoder.sample_rate(), 48_000)
 }
 ```
 

@@ -17,7 +17,7 @@ test "rodio::source::buffered::aliases" {
   let b = buffered(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [1.0, 2.0, 3.0]),
   )
-  assert_eq(b.channels(), 1)
-  assert_eq(b.sample_rate(), 8)
-  assert_eq(b.next(), Some(1.0))
+  @debug.assert_eq(b.channels(), 1)
+  @debug.assert_eq(b.sample_rate(), 8)
+  @debug.assert_eq(b.next(), Some(1.0))
 }

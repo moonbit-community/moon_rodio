@@ -57,33 +57,33 @@ pub fn StaticSamplesBuffer::next(self : StaticSamplesBuffer) -> Sample? {
 }
 
 ///|
-pub impl Source for StaticSamplesBuffer with next(self : StaticSamplesBuffer) {
+pub impl Source for StaticSamplesBuffer with fn next(self : StaticSamplesBuffer) {
   self.next()
 }
 
 ///|
-pub impl Source for StaticSamplesBuffer with channels(
+pub impl Source for StaticSamplesBuffer with fn channels(
   self : StaticSamplesBuffer,
 ) {
   self.channels()
 }
 
 ///|
-pub impl Source for StaticSamplesBuffer with sample_rate(
+pub impl Source for StaticSamplesBuffer with fn sample_rate(
   self : StaticSamplesBuffer,
 ) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for StaticSamplesBuffer with current_span_len(
+pub impl Source for StaticSamplesBuffer with fn current_span_len(
   _self : StaticSamplesBuffer,
 ) {
   None
 }
 
 ///|
-pub impl Source for StaticSamplesBuffer with total_duration(
+pub impl Source for StaticSamplesBuffer with fn total_duration(
   self : StaticSamplesBuffer,
 ) {
   duration_from_sample_count(
@@ -94,11 +94,11 @@ pub impl Source for StaticSamplesBuffer with total_duration(
 }
 
 ///|
-pub impl Source for StaticSamplesBuffer with try_seek(
+pub impl Source for StaticSamplesBuffer with fn try_seek(
   _self : StaticSamplesBuffer,
   _pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
-  raise SeekError::NotSupported
+  raise NotSupported
 }
 
 ///|

@@ -21,12 +21,12 @@ pub enum SignalFunction {
 } derive(Debug, Eq)
 
 ///|
-pub impl Show for SignalFunction with output(self, logger) {
+pub impl Show for SignalFunction with fn output(self, logger) {
   match self {
-    Sine => logger.write_string("SignalFunction::Sine")
-    Square => logger.write_string("SignalFunction::Square")
-    Sawtooth => logger.write_string("SignalFunction::Sawtooth")
-    Triangle => logger.write_string("SignalFunction::Triangle")
+    Sine => logger.write_string("SignalSine")
+    Square => logger.write_string("SignalSquare")
+    Sawtooth => logger.write_string("SignalSawtooth")
+    Triangle => logger.write_string("SignalTriangle")
   }
 }
 
@@ -52,15 +52,10 @@ fn wrap_phase(phase : Double) -> Double {
 ///|
 fn signal_value(function : SignalFunction, phase : Double) -> Sample {
   match function {
-    SignalFunction::Sine => @math.sin(2.0 * @math.PI * phase)
-    SignalFunction::Square => if phase < 0.5 { 1.0 } else { -1.0 }
-    SignalFunction::Sawtooth => 2.0 * (phase - @math.floor(phase + 0.5))
-    SignalFunction::Triangle =>
-      if phase < 0.5 {
-        phase * 4.0 - 1.0
-      } else {
-        3.0 - phase * 4.0
-      }
+    Sine => @math.sin(2.0 * @math.PI * phase)
+    Square => if phase < 0.5 { 1.0 } else { -1.0 }
+    Sawtooth => 2.0 * (phase - @math.floor(phase + 0.5))
+    Triangle => if phase < 0.5 { phase * 4.0 - 1.0 } else { 3.0 - phase * 4.0 }
   }
 }
 
@@ -102,34 +97,36 @@ pub fn SignalGenerator::sample_rate(self : SignalGenerator) -> SampleRate {
 }
 
 ///|
-pub impl Source for SignalGenerator with next(self : SignalGenerator) {
+pub impl Source for SignalGenerator with fn next(self : SignalGenerator) {
   self.next()
 }
 
 ///|
-pub impl Source for SignalGenerator with channels(self : SignalGenerator) {
+pub impl Source for SignalGenerator with fn channels(self : SignalGenerator) {
   self.channels()
 }
 
 ///|
-pub impl Source for SignalGenerator with sample_rate(self : SignalGenerator) {
+pub impl Source for SignalGenerator with fn sample_rate(self : SignalGenerator) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for SignalGenerator with current_span_len(
+pub impl Source for SignalGenerator with fn current_span_len(
   _self : SignalGenerator,
 ) {
   source_default_current_span_len()
 }
 
 ///|
-pub impl Source for SignalGenerator with total_duration(_self : SignalGenerator) {
+pub impl Source for SignalGenerator with fn total_duration(
+  _self : SignalGenerator,
+) {
   source_default_total_duration()
 }
 
 ///|
-pub impl Source for SignalGenerator with try_seek(
+pub impl Source for SignalGenerator with fn try_seek(
   self : SignalGenerator,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -143,7 +140,7 @@ pub struct SineWave {
 
 ///|
 pub fn SineWave::new(freq : Double) -> SineWave {
-  { inner: SignalGenerator::new(48_000, freq, SignalFunction::Sine) }
+  { inner: SignalGenerator::new(48_000, freq, Sine) }
 }
 
 ///|
@@ -162,32 +159,32 @@ pub fn SineWave::sample_rate(self : SineWave) -> SampleRate {
 }
 
 ///|
-pub impl Source for SineWave with next(self : SineWave) {
+pub impl Source for SineWave with fn next(self : SineWave) {
   self.next()
 }
 
 ///|
-pub impl Source for SineWave with channels(self : SineWave) {
+pub impl Source for SineWave with fn channels(self : SineWave) {
   self.channels()
 }
 
 ///|
-pub impl Source for SineWave with sample_rate(self : SineWave) {
+pub impl Source for SineWave with fn sample_rate(self : SineWave) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for SineWave with current_span_len(_self : SineWave) {
+pub impl Source for SineWave with fn current_span_len(_self : SineWave) {
   source_default_current_span_len()
 }
 
 ///|
-pub impl Source for SineWave with total_duration(_self : SineWave) {
+pub impl Source for SineWave with fn total_duration(_self : SineWave) {
   source_default_total_duration()
 }
 
 ///|
-pub impl Source for SineWave with try_seek(
+pub impl Source for SineWave with fn try_seek(
   self : SineWave,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -201,7 +198,7 @@ pub struct SquareWave {
 
 ///|
 pub fn SquareWave::new(freq : Double) -> SquareWave {
-  { inner: SignalGenerator::new(48_000, freq, SignalFunction::Square) }
+  { inner: SignalGenerator::new(48_000, freq, Square) }
 }
 
 ///|
@@ -220,32 +217,32 @@ pub fn SquareWave::sample_rate(self : SquareWave) -> SampleRate {
 }
 
 ///|
-pub impl Source for SquareWave with next(self : SquareWave) {
+pub impl Source for SquareWave with fn next(self : SquareWave) {
   self.next()
 }
 
 ///|
-pub impl Source for SquareWave with channels(self : SquareWave) {
+pub impl Source for SquareWave with fn channels(self : SquareWave) {
   self.channels()
 }
 
 ///|
-pub impl Source for SquareWave with sample_rate(self : SquareWave) {
+pub impl Source for SquareWave with fn sample_rate(self : SquareWave) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for SquareWave with current_span_len(_self : SquareWave) {
+pub impl Source for SquareWave with fn current_span_len(_self : SquareWave) {
   source_default_current_span_len()
 }
 
 ///|
-pub impl Source for SquareWave with total_duration(_self : SquareWave) {
+pub impl Source for SquareWave with fn total_duration(_self : SquareWave) {
   source_default_total_duration()
 }
 
 ///|
-pub impl Source for SquareWave with try_seek(
+pub impl Source for SquareWave with fn try_seek(
   self : SquareWave,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -259,7 +256,7 @@ pub struct SawtoothWave {
 
 ///|
 pub fn SawtoothWave::new(freq : Double) -> SawtoothWave {
-  { inner: SignalGenerator::new(48_000, freq, SignalFunction::Sawtooth) }
+  { inner: SignalGenerator::new(48_000, freq, Sawtooth) }
 }
 
 ///|
@@ -278,32 +275,32 @@ pub fn SawtoothWave::sample_rate(self : SawtoothWave) -> SampleRate {
 }
 
 ///|
-pub impl Source for SawtoothWave with next(self : SawtoothWave) {
+pub impl Source for SawtoothWave with fn next(self : SawtoothWave) {
   self.next()
 }
 
 ///|
-pub impl Source for SawtoothWave with channels(self : SawtoothWave) {
+pub impl Source for SawtoothWave with fn channels(self : SawtoothWave) {
   self.channels()
 }
 
 ///|
-pub impl Source for SawtoothWave with sample_rate(self : SawtoothWave) {
+pub impl Source for SawtoothWave with fn sample_rate(self : SawtoothWave) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for SawtoothWave with current_span_len(_self : SawtoothWave) {
+pub impl Source for SawtoothWave with fn current_span_len(_self : SawtoothWave) {
   source_default_current_span_len()
 }
 
 ///|
-pub impl Source for SawtoothWave with total_duration(_self : SawtoothWave) {
+pub impl Source for SawtoothWave with fn total_duration(_self : SawtoothWave) {
   source_default_total_duration()
 }
 
 ///|
-pub impl Source for SawtoothWave with try_seek(
+pub impl Source for SawtoothWave with fn try_seek(
   self : SawtoothWave,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -317,7 +314,7 @@ pub struct TriangleWave {
 
 ///|
 pub fn TriangleWave::new(freq : Double) -> TriangleWave {
-  { inner: SignalGenerator::new(48_000, freq, SignalFunction::Triangle) }
+  { inner: SignalGenerator::new(48_000, freq, Triangle) }
 }
 
 ///|
@@ -336,32 +333,32 @@ pub fn TriangleWave::sample_rate(self : TriangleWave) -> SampleRate {
 }
 
 ///|
-pub impl Source for TriangleWave with next(self : TriangleWave) {
+pub impl Source for TriangleWave with fn next(self : TriangleWave) {
   self.next()
 }
 
 ///|
-pub impl Source for TriangleWave with channels(self : TriangleWave) {
+pub impl Source for TriangleWave with fn channels(self : TriangleWave) {
   self.channels()
 }
 
 ///|
-pub impl Source for TriangleWave with sample_rate(self : TriangleWave) {
+pub impl Source for TriangleWave with fn sample_rate(self : TriangleWave) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for TriangleWave with current_span_len(_self : TriangleWave) {
+pub impl Source for TriangleWave with fn current_span_len(_self : TriangleWave) {
   source_default_current_span_len()
 }
 
 ///|
-pub impl Source for TriangleWave with total_duration(_self : TriangleWave) {
+pub impl Source for TriangleWave with fn total_duration(_self : TriangleWave) {
   source_default_total_duration()
 }
 
 ///|
-pub impl Source for TriangleWave with try_seek(
+pub impl Source for TriangleWave with fn try_seek(
   self : TriangleWave,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {

@@ -59,7 +59,7 @@ fn TestNoiseRng::new(seed : UInt64) -> TestNoiseRng {
 }
 
 ///|
-impl NoiseRng for TestNoiseRng with next_u64(self : TestNoiseRng) {
+impl NoiseRng for TestNoiseRng with fn next_u64(self : TestNoiseRng) {
   self.inner.next_u64()
 }
 
@@ -81,7 +81,7 @@ fn ExternalSource::new(
 }
 
 ///|
-impl Source for ExternalSource with next(self : ExternalSource) {
+impl Source for ExternalSource with fn next(self : ExternalSource) {
   if self.cursor.val >= self.samples.length() {
     None
   } else {
@@ -92,28 +92,28 @@ impl Source for ExternalSource with next(self : ExternalSource) {
 }
 
 ///|
-impl Source for ExternalSource with channels(self : ExternalSource) {
+impl Source for ExternalSource with fn channels(self : ExternalSource) {
   self.channels
 }
 
 ///|
-impl Source for ExternalSource with sample_rate(self : ExternalSource) {
+impl Source for ExternalSource with fn sample_rate(self : ExternalSource) {
   self.sample_rate
 }
 
 ///|
-impl Source for ExternalSource with current_span_len(self : ExternalSource) {
+impl Source for ExternalSource with fn current_span_len(self : ExternalSource) {
   let remaining = self.samples.length() - self.cursor.val
   Some(if remaining < 0 { 0 } else { remaining })
 }
 
 ///|
-impl Source for ExternalSource with total_duration(_self : ExternalSource) {
+impl Source for ExternalSource with fn total_duration(_self : ExternalSource) {
   None
 }
 
 ///|
-impl Source for ExternalSource with try_seek(
+impl Source for ExternalSource with fn try_seek(
   _self : ExternalSource,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -144,11 +144,11 @@ fn skip_duration_samples_left(
 test "rodio::source::open_trait_impl_and_is_exhausted" {
   let src = ExternalSource::new([1.0, 2.0], 1, 4)
   assert_true(!is_exhausted(src))
-  assert_eq(src.next(), Some(1.0))
+  @debug.assert_eq(src.next(), Some(1.0))
   assert_true(!is_exhausted(src))
-  assert_eq(src.next(), Some(2.0))
+  @debug.assert_eq(src.next(), Some(2.0))
   assert_true(is_exhausted(src))
-  assert_eq(src.next(), None)
+  @debug.assert_eq(src.next(), None)
   assert_true(is_exhausted(src))
 }
 
@@ -156,22 +156,22 @@ test "rodio::source::open_trait_impl_and_is_exhausted" {
 test "rodio::source::record_and_record_source_alias" {
   let src = ExternalSource::new([1.0, -2.0, 3.0], 1, 8)
   let recorded = record(src)
-  assert_eq(recorded.channels(), 1)
-  assert_eq(recorded.sample_rate(), 8)
-  assert_eq(collect_n(recorded, 8), [1.0, -2.0, 3.0])
+  @debug.assert_eq(recorded.channels(), 1)
+  @debug.assert_eq(recorded.sample_rate(), 8)
+  @debug.assert_eq(collect_n(recorded, 8), [1.0, -2.0, 3.0])
 
   let src2 = ExternalSource::new([4.0, 5.0], 1, 16)
   let recorded2 = SamplesBuffer::record_source(src2)
-  assert_eq(recorded2.channels(), 1)
-  assert_eq(recorded2.sample_rate(), 16)
-  assert_eq(collect_n(recorded2, 8), [4.0, 5.0])
+  @debug.assert_eq(recorded2.channels(), 1)
+  @debug.assert_eq(recorded2.sample_rate(), 16)
+  @debug.assert_eq(collect_n(recorded2, 8), [4.0, 5.0])
 }
 
 ///|
 test "rodio::source::sine_wave" {
   let s = SineWave::new(440.0)
-  assert_eq(s.channels(), 1)
-  assert_eq(s.sample_rate(), 48_000)
+  @debug.assert_eq(s.channels(), 1)
+  @debug.assert_eq(s.sample_rate(), 48_000)
   assert_true(s.next().unwrap().abs() < 1.0e-12)
   let v1 = s.next().unwrap()
   assert_true(v1 > 0.05 && v1 < 0.06)
@@ -180,53 +180,53 @@ test "rodio::source::sine_wave" {
 ///|
 test "rodio::source::square_wave" {
   let s = SquareWave::new(440.0)
-  assert_eq(s.channels(), 1)
-  assert_eq(s.sample_rate(), 48_000)
-  assert_eq(s.next(), Some(1.0))
+  @debug.assert_eq(s.channels(), 1)
+  @debug.assert_eq(s.sample_rate(), 48_000)
+  @debug.assert_eq(s.next(), Some(1.0))
 }
 
 ///|
 test "rodio::source::sawtooth_wave" {
   let s = SawtoothWave::new(440.0)
-  assert_eq(s.next(), Some(0.0))
+  @debug.assert_eq(s.next(), Some(0.0))
   assert_true(s.next().unwrap() > 0.0)
 }
 
 ///|
 test "rodio::source::triangle_wave" {
   let s = TriangleWave::new(440.0)
-  assert_eq(s.next(), Some(-1.0))
+  @debug.assert_eq(s.next(), Some(-1.0))
   assert_true(s.next().unwrap() > -1.0)
 }
 
 ///|
 test "rodio::source::signal_generator_waveforms" {
   let square = SignalGenerator::from_function(2_000, 500.0, Function::square())
-  assert_eq(square.next(), Some(1.0))
-  assert_eq(square.next(), Some(1.0))
-  assert_eq(square.next(), Some(-1.0))
-  assert_eq(square.next(), Some(-1.0))
+  @debug.assert_eq(square.next(), Some(1.0))
+  @debug.assert_eq(square.next(), Some(1.0))
+  @debug.assert_eq(square.next(), Some(-1.0))
+  @debug.assert_eq(square.next(), Some(-1.0))
 
   let triangle = SignalGenerator::from_function(
     8_000,
     1_000.0,
     Function::triangle(),
   )
-  assert_eq(triangle.next(), Some(-1.0))
-  assert_eq(triangle.next(), Some(-0.5))
-  assert_eq(triangle.next(), Some(0.0))
-  assert_eq(triangle.next(), Some(0.5))
-  assert_eq(triangle.next(), Some(1.0))
-  assert_eq(triangle.next(), Some(0.5))
+  @debug.assert_eq(triangle.next(), Some(-1.0))
+  @debug.assert_eq(triangle.next(), Some(-0.5))
+  @debug.assert_eq(triangle.next(), Some(0.0))
+  @debug.assert_eq(triangle.next(), Some(0.5))
+  @debug.assert_eq(triangle.next(), Some(1.0))
+  @debug.assert_eq(triangle.next(), Some(0.5))
 
   let saw = SignalGenerator::from_function(200, 50.0, Function::sawtooth())
-  assert_eq(saw.next(), Some(0.0))
-  assert_eq(saw.next(), Some(0.5))
-  assert_eq(saw.next(), Some(-1.0))
-  assert_eq(saw.next(), Some(-0.5))
+  @debug.assert_eq(saw.next(), Some(0.0))
+  @debug.assert_eq(saw.next(), Some(0.5))
+  @debug.assert_eq(saw.next(), Some(-1.0))
+  @debug.assert_eq(saw.next(), Some(-0.5))
 
   let sine = SignalGenerator::from_function(1_000, 100.0, Function::sine())
-  assert_eq(sine.next(), Some(0.0))
+  @debug.assert_eq(sine.next(), Some(0.0))
   assert_true(sine.next().unwrap() > 0.58)
   assert_true(sine.next().unwrap() > 0.94)
 }
@@ -234,48 +234,48 @@ test "rodio::source::signal_generator_waveforms" {
 ///|
 test "rodio::source::empty_and_zero" {
   let e = empty(1, 44_100)
-  assert_eq(e.next(), None)
+  @debug.assert_eq(e.next(), None)
   let e_total = e.total_duration().unwrap()
-  assert_eq(e_total.secs, (0 : UInt64))
-  assert_eq(e_total.nanos, 0)
+  @debug.assert_eq(e_total.secs, (0 : UInt64))
+  @debug.assert_eq(e_total.nanos, 0)
 
   let z = zero(1, 44_100)
   z.try_seek(@moon_cpal.Duration::from_secs((123 : UInt64)))
-  assert_eq(collect_n(z, 4), [0.0, 0.0, 0.0, 0.0])
+  @debug.assert_eq(collect_n(z, 4), [0.0, 0.0, 0.0, 0.0])
 
   let zf = zero_samples(1, 44_100, 3)
-  assert_eq(zf.current_span_len(), Some(3))
+  @debug.assert_eq(zf.current_span_len(), Some(3))
   zf.try_seek(@moon_cpal.Duration::from_secs((99 : UInt64)))
-  assert_eq(collect_n(zf, 10), [0.0, 0.0, 0.0])
+  @debug.assert_eq(collect_n(zf, 10), [0.0, 0.0, 0.0])
 }
 
 ///|
 test "rodio::source::metadata_and_seek_on_samples_buffer" {
   let src = SamplesBuffer::new(2, 4, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
 
-  assert_eq(src.current_span_len(), Some(6))
+  @debug.assert_eq(src.current_span_len(), Some(6))
   let total = src.total_duration().unwrap()
-  assert_eq(total.secs, (0 : UInt64))
-  assert_eq(total.nanos, 750_000_000)
+  @debug.assert_eq(total.secs, (0 : UInt64))
+  @debug.assert_eq(total.nanos, 750_000_000)
 
   src.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
-  assert_eq(src.current_span_len(), Some(0))
-  assert_eq(src.next(), None)
+  @debug.assert_eq(src.current_span_len(), Some(0))
+  @debug.assert_eq(src.next(), None)
 
   src.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
-  assert_eq(src.current_span_len(), Some(6))
-  assert_eq(src.next(), Some(1.0))
+  @debug.assert_eq(src.current_span_len(), Some(6))
+  @debug.assert_eq(src.next(), Some(1.0))
 }
 
 ///|
 test "rodio::source::duration_precision_and_subsecond_seek" {
   let src = SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0])
   let total = src.total_duration().unwrap()
-  assert_eq(total.secs, (1 : UInt64))
-  assert_eq(total.nanos, 500_000_000)
+  @debug.assert_eq(total.secs, (1 : UInt64))
+  @debug.assert_eq(total.nanos, 500_000_000)
 
   src.try_seek(@moon_cpal.Duration::new((0 : UInt64), 500_000_000))
-  assert_eq(src.next(), Some(2.0))
+  @debug.assert_eq(src.next(), Some(2.0))
 }
 
 ///|
@@ -284,13 +284,13 @@ test "rodio::source::samples_buffer_seek_preserves_channel_order" {
     0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0,
   ])
   src.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
-  assert_eq(src.next(), Some(0.0))
-  assert_eq(src.next(), Some(1.0))
+  @debug.assert_eq(src.next(), Some(0.0))
+  @debug.assert_eq(src.next(), Some(1.0))
   // Consume one extra sample so current channel offset is odd.
-  assert_eq(src.next(), Some(2.0))
+  @debug.assert_eq(src.next(), Some(2.0))
 
   src.try_seek(@moon_cpal.Duration::new((0 : UInt64), 20_000_000))
-  assert_eq(src.next(), Some(3.0))
+  @debug.assert_eq(src.next(), Some(3.0))
 }
 
 ///|
@@ -302,7 +302,7 @@ test "rodio::source::samples_buffer_seek_channel_order_reference_regression" {
   let src = SamplesBuffer::new(2, 100, samples)
 
   src.try_seek(@moon_cpal.Duration::from_secs((5 : UInt64)))
-  assert_eq(src.next(), Some(1_000.0))
+  @debug.assert_eq(src.next(), Some(1_000.0))
   assert_true(src.next().map(fn(v) { v.to_int() % 2 == 1 }).unwrap_or(false))
   assert_true(src.next().map(fn(v) { v.to_int() % 2 == 0 }).unwrap_or(false))
 
@@ -317,7 +317,7 @@ test "rodio::source::default_try_seek_not_supported" {
     src.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
     false
   } catch {
-    SeekError::NotSupported => true
+    NotSupported => true
   }
   assert_true(got_not_supported)
 }
@@ -325,32 +325,32 @@ test "rodio::source::default_try_seek_not_supported" {
 ///|
 test "rodio::source::signal_generator_seek" {
   let src = SineWave::new(100.0)
-  assert_eq(src.next(), Some(0.0))
+  @debug.assert_eq(src.next(), Some(0.0))
   assert_true(src.next().unwrap() > 0.01)
   src.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
-  assert_eq(src.next(), Some(0.0))
+  @debug.assert_eq(src.next(), Some(0.0))
 
   let saw = SawtoothWave::new(50.0)
-  assert_eq(saw.next(), Some(0.0))
+  @debug.assert_eq(saw.next(), Some(0.0))
   saw.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
-  assert_eq(saw.next(), Some(0.0))
+  @debug.assert_eq(saw.next(), Some(0.0))
 }
 
 ///|
 test "rodio::source::to_dyn_preserves_seek_metadata" {
   let src = SamplesBuffer::new(1, 4, [1.0, 2.0, 3.0, 4.0])
   let dyn_src = to_dyn(src)
-  assert_eq(dyn_src.current_span_len(), Some(4))
+  @debug.assert_eq(dyn_src.current_span_len(), Some(4))
   dyn_src.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
-  assert_eq(dyn_src.next(), None)
+  @debug.assert_eq(dyn_src.next(), None)
 }
 
 ///|
 test "rodio::source::named_wrapper_forwards_seek" {
   let amp = Amplify::new(SamplesBuffer::new(1, 4, [1.0, 2.0, 3.0, 4.0]), 1.0)
-  assert_eq(amp.current_span_len(), Some(4))
+  @debug.assert_eq(amp.current_span_len(), Some(4))
   amp.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
-  assert_eq(amp.next(), None)
+  @debug.assert_eq(amp.next(), None)
 }
 
 ///|
@@ -358,7 +358,7 @@ test "rodio::source::amplify_take" {
   let src = SamplesBuffer::new(1, 44_100, [1.0, -2.0, 3.0, -4.0])
   let amp = amplify(src, 0.5)
   let t = take(amp, 3)
-  assert_eq(collect_n(t, 10), [0.5, -1.0, 1.5])
+  @debug.assert_eq(collect_n(t, 10), [0.5, -1.0, 1.5])
 }
 
 ///|
@@ -366,7 +366,7 @@ test "rodio::source::mix" {
   let a = SamplesBuffer::new(1, 44_100, [1.0, 2.0, 3.0])
   let b = SamplesBuffer::new(1, 44_100, [4.0, 5.0])
   let m = mix(a, b)
-  assert_eq(collect_n(m, 5), [5.0, 7.0, 3.0])
+  @debug.assert_eq(collect_n(m, 5), [5.0, 7.0, 3.0])
 }
 
 ///|
@@ -375,90 +375,90 @@ test "rodio::source::mix_metadata" {
   let right = SamplesBuffer::new(1, 2, [10.0, 20.0])
   let mixed = mix(left, right)
 
-  assert_eq(mixed.channels(), 1)
-  assert_eq(mixed.sample_rate(), 2)
-  assert_eq(mixed.current_span_len(), None)
+  @debug.assert_eq(mixed.channels(), 1)
+  @debug.assert_eq(mixed.sample_rate(), 2)
+  @debug.assert_eq(mixed.current_span_len(), None)
   let total = mixed.total_duration().unwrap()
-  assert_eq(total.secs, (2 : UInt64))
-  assert_eq(total.nanos, 0)
-  assert_eq(collect_n(mixed, 10), [11.0, 22.0, 3.0, 4.0])
+  @debug.assert_eq(total.secs, (2 : UInt64))
+  @debug.assert_eq(total.nanos, 0)
+  @debug.assert_eq(collect_n(mixed, 10), [11.0, 22.0, 3.0, 4.0])
 }
 
 ///|
 test "rodio::source::speed" {
   let a = SamplesBuffer::new(1, 44_100, [1.0, 2.0])
   let s = speed(a, 2.0)
-  assert_eq(s.channels(), 1)
-  assert_eq(s.sample_rate(), 88_200)
-  assert_eq(collect_n(s, 3), [1.0, 2.0])
+  @debug.assert_eq(s.channels(), 1)
+  @debug.assert_eq(s.sample_rate(), 88_200)
+  @debug.assert_eq(collect_n(s, 3), [1.0, 2.0])
 
   let s2 = speed(
     SamplesBuffer::new(1, 4, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]),
     2.0,
   )
   let total = s2.total_duration().unwrap()
-  assert_eq(total.secs, (1 : UInt64))
+  @debug.assert_eq(total.secs, (1 : UInt64))
   s2.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
-  assert_eq(s2.next(), None)
+  @debug.assert_eq(s2.next(), None)
 }
 
 ///|
 test "rodio::source::repeat_infinite" {
   let a = SamplesBuffer::new(1, 44_100, [2.0, -1.0])
   let r = a.repeat_infinite()
-  assert_eq(collect_n(r, 6), [2.0, -1.0, 2.0, -1.0, 2.0, -1.0])
+  @debug.assert_eq(collect_n(r, 6), [2.0, -1.0, 2.0, -1.0, 2.0, -1.0])
 }
 
 ///|
 test "rodio::source::repeat_infinite_seek_and_span" {
   let repeated = SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0, 4.0]).repeat_infinite()
-  assert_eq(repeated.current_span_len(), Some(4))
+  @debug.assert_eq(repeated.current_span_len(), Some(4))
   let seek_err = try {
     repeated.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
     false
   } catch {
-    SeekError::NotSupported => true
+    NotSupported => true
   }
   assert_true(seek_err)
-  assert_eq(repeated.next(), Some(1.0))
+  @debug.assert_eq(repeated.next(), Some(1.0))
 }
 
 ///|
 test "rodio::source::buffered_and_repeat_infinite_fn" {
   let src = SamplesBuffer::new(1, 44_100, [1.0, 2.0, 3.0])
   let b = buffered(src)
-  assert_eq(collect_n(b, 10), [1.0, 2.0, 3.0])
+  @debug.assert_eq(collect_n(b, 10), [1.0, 2.0, 3.0])
 
   let src2 = SamplesBuffer::new(1, 44_100, [2.0, -1.0])
   let r = repeat_infinite(src2)
-  assert_eq(collect_n(r, 6), [2.0, -1.0, 2.0, -1.0, 2.0, -1.0])
+  @debug.assert_eq(collect_n(r, 6), [2.0, -1.0, 2.0, -1.0, 2.0, -1.0])
 
   let src3 = SamplesBuffer::new(1, 44_100, [3.0])
-  assert_eq(collect_n(repeat(src3), 4), [3.0, 3.0, 3.0, 3.0])
+  @debug.assert_eq(collect_n(repeat(src3), 4), [3.0, 3.0, 3.0, 3.0])
 }
 
 ///|
 test "rodio::source::duration_filters" {
   let src = SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0, 4.0, 5.0])
   let t = take_duration(src, @moon_cpal.Duration::from_secs((2 : UInt64)))
-  assert_eq(collect_n(t, 10), [1.0, 2.0, 3.0, 4.0])
+  @debug.assert_eq(collect_n(t, 10), [1.0, 2.0, 3.0, 4.0])
 
   let src2 = SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0, 4.0, 5.0])
   let sk = skip_duration(src2, @moon_cpal.Duration::from_secs((1 : UInt64)))
-  assert_eq(collect_n(sk, 10), [3.0, 4.0, 5.0])
+  @debug.assert_eq(collect_n(sk, 10), [3.0, 4.0, 5.0])
 
   let src3 = SamplesBuffer::new(1, 2, [9.0, 8.0])
   let d = delay(src3, @moon_cpal.Duration::from_secs((1 : UInt64)))
-  assert_eq(collect_n(d, 6), [0.0, 0.0, 9.0, 8.0])
+  @debug.assert_eq(collect_n(d, 6), [0.0, 0.0, 9.0, 8.0])
 }
 
 ///|
 test "rodio::source::skip_duration_length_cases" {
-  assert_eq(skip_duration_samples_left(1, 44_100, 5, 3), 88_200)
-  assert_eq(skip_duration_samples_left(2, 44_100, 5, 3), 176_400)
-  assert_eq(skip_duration_samples_left(1, 44_100, 1, 5), 0)
-  assert_eq(skip_duration_samples_left(2, 44_100, 1, 1), 0)
-  assert_eq(skip_duration_samples_left(1, 96_000, 5, 0), 480_000)
+  @debug.assert_eq(skip_duration_samples_left(1, 44_100, 5, 3), 88_200)
+  @debug.assert_eq(skip_duration_samples_left(2, 44_100, 5, 3), 176_400)
+  @debug.assert_eq(skip_duration_samples_left(1, 44_100, 1, 5), 0)
+  @debug.assert_eq(skip_duration_samples_left(2, 44_100, 1, 1), 0)
+  @debug.assert_eq(skip_duration_samples_left(1, 96_000, 5, 0), 480_000)
 }
 
 ///|
@@ -467,34 +467,34 @@ test "rodio::source::duration_filters_metadata_and_seek" {
     SamplesBuffer::new(1, 4, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]),
     @moon_cpal.Duration::new((1 : UInt64), 500_000_000),
   )
-  assert_eq(td.current_span_len(), Some(6))
+  @debug.assert_eq(td.current_span_len(), Some(6))
   let td_total = td.total_duration().unwrap()
-  assert_eq(td_total.secs, (1 : UInt64))
-  assert_eq(td_total.nanos, 500_000_000)
+  @debug.assert_eq(td_total.secs, (1 : UInt64))
+  @debug.assert_eq(td_total.nanos, 500_000_000)
   td.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
-  assert_eq(td.next(), Some(5.0))
+  @debug.assert_eq(td.next(), Some(5.0))
 
   let dd = delay(
     SamplesBuffer::new(1, 2, [9.0, 8.0]),
     @moon_cpal.Duration::from_secs((1 : UInt64)),
   )
-  assert_eq(dd.current_span_len(), Some(4))
+  @debug.assert_eq(dd.current_span_len(), Some(4))
   let dd_total = dd.total_duration().unwrap()
-  assert_eq(dd_total.secs, (2 : UInt64))
-  assert_eq(dd_total.nanos, 0)
+  @debug.assert_eq(dd_total.secs, (2 : UInt64))
+  @debug.assert_eq(dd_total.nanos, 0)
   dd.try_seek(@moon_cpal.Duration::new((0 : UInt64), 500_000_000))
-  assert_eq(dd.next(), Some(0.0))
-  assert_eq(dd.next(), Some(9.0))
+  @debug.assert_eq(dd.next(), Some(0.0))
+  @debug.assert_eq(dd.next(), Some(9.0))
   dd.try_seek(@moon_cpal.Duration::new((1 : UInt64), 500_000_000))
-  assert_eq(dd.next(), Some(8.0))
+  @debug.assert_eq(dd.next(), Some(8.0))
 
   let sd = skip_duration(
     SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0, 4.0]),
     @moon_cpal.Duration::from_secs((1 : UInt64)),
   )
   let sd_total = sd.total_duration().unwrap()
-  assert_eq(sd_total.secs, (1 : UInt64))
-  assert_eq(sd_total.nanos, 0)
+  @debug.assert_eq(sd_total.secs, (1 : UInt64))
+  @debug.assert_eq(sd_total.nanos, 0)
 }
 
 ///|
@@ -506,7 +506,7 @@ test "rodio::source::amplify_db_and_normalized" {
 
   let b = SamplesBuffer::new(1, 44_100, [1.0])
   let n0 = amplify_normalized(b, 0.0)
-  assert_eq(n0.next(), Some(0.0))
+  @debug.assert_eq(n0.next(), Some(0.0))
 
   let c = SamplesBuffer::new(1, 44_100, [1.0])
   let n1 = amplify_normalized(c, 1.0)
@@ -516,15 +516,15 @@ test "rodio::source::amplify_db_and_normalized" {
 ///|
 test "rodio::source::track_position" {
   let t = track_position(SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0]))
-  assert_eq(t.inner().channels(), 1)
-  assert_eq(t.inner_mut().sample_rate(), 2)
-  assert_eq(t.into_inner().channels(), 1)
-  assert_eq(t.get_pos().secs, (0 : UInt64))
+  @debug.assert_eq(t.inner().channels(), 1)
+  @debug.assert_eq(t.inner_mut().sample_rate(), 2)
+  @debug.assert_eq(t.into_inner().channels(), 1)
+  @debug.assert_eq(t.get_pos().secs, (0 : UInt64))
   ignore(t.next())
   ignore(t.next())
-  assert_eq(t.get_pos().secs, (1 : UInt64))
+  @debug.assert_eq(t.get_pos().secs, (1 : UInt64))
   t.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
-  assert_eq(t.get_pos().secs, (1 : UInt64))
+  @debug.assert_eq(t.get_pos().secs, (1 : UInt64))
 }
 
 ///|
@@ -532,8 +532,8 @@ test "rodio::source::track_position_subsecond" {
   let t = track_position(SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0]))
   ignore(t.next())
   let pos = t.get_pos()
-  assert_eq(pos.secs, (0 : UInt64))
-  assert_eq(pos.nanos, 500_000_000)
+  @debug.assert_eq(pos.secs, (0 : UInt64))
+  @debug.assert_eq(pos.nanos, 500_000_000)
 }
 
 ///|
@@ -544,15 +544,15 @@ test "rodio::source::track_position_in_presence_of_speedup" {
       2.0,
     ),
   )
-  assert_eq(t.get_pos().secs, (0 : UInt64))
+  @debug.assert_eq(t.get_pos().secs, (0 : UInt64))
   ignore(t.next())
   let pos = t.get_pos()
-  assert_eq(pos.secs, (0 : UInt64))
-  assert_eq(pos.nanos, 500_000_000)
+  @debug.assert_eq(pos.secs, (0 : UInt64))
+  @debug.assert_eq(pos.nanos, 500_000_000)
   ignore(t.next())
-  assert_eq(t.get_pos().secs, (1 : UInt64))
+  @debug.assert_eq(t.get_pos().secs, (1 : UInt64))
   t.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
-  assert_eq(t.get_pos().secs, (1 : UInt64))
+  @debug.assert_eq(t.get_pos().secs, (1 : UInt64))
 }
 
 ///|
@@ -574,10 +574,10 @@ test "rodio::source::track_position_across_spans" {
   ignore(t.next())
   ignore(t.next())
   ignore(t.next())
-  assert_eq(t.sample_rate(), 2)
+  @debug.assert_eq(t.sample_rate(), 2)
   let pos = t.get_pos()
-  assert_eq(pos.secs, (2 : UInt64))
-  assert_eq(pos.nanos, 500_000_000)
+  @debug.assert_eq(pos.secs, (2 : UInt64))
+  @debug.assert_eq(pos.nanos, 500_000_000)
 }
 
 ///|
@@ -588,11 +588,11 @@ test "rodio::source::periodic_access" {
     2,
     fn() { call_count.val += 1 },
   )
-  assert_eq(p.inner().channels(), 1)
-  assert_eq(p.inner_mut().sample_rate(), 44_100)
-  assert_eq(p.into_inner().channels(), 1)
-  assert_eq(collect_n(p, 10), [1.0, 2.0, 3.0, 4.0, 5.0])
-  assert_eq(call_count.val, 3)
+  @debug.assert_eq(p.inner().channels(), 1)
+  @debug.assert_eq(p.inner_mut().sample_rate(), 44_100)
+  @debug.assert_eq(p.into_inner().channels(), 1)
+  @debug.assert_eq(collect_n(p, 10), [1.0, 2.0, 3.0, 4.0, 5.0])
+  @debug.assert_eq(call_count.val, 3)
 }
 
 ///|
@@ -603,8 +603,8 @@ test "rodio::source::periodic_alias" {
     @moon_cpal.Duration::from_secs((1 : UInt64)),
     fn() { calls.val += 1 },
   )
-  assert_eq(collect_n(p, 10), [1.0, 2.0, 3.0, 4.0])
-  assert_eq(calls.val, 2)
+  @debug.assert_eq(collect_n(p, 10), [1.0, 2.0, 3.0, 4.0])
+  @debug.assert_eq(calls.val, 2)
 }
 
 ///|
@@ -615,13 +615,13 @@ test "rodio::source::periodic_stereo_access" {
     @moon_cpal.Duration::from_secs((1 : UInt64)),
     fn() { calls.val += 1 },
   )
-  assert_eq(p.next(), Some(10.0))
-  assert_eq(p.next(), Some(-10.0))
-  assert_eq(p.next(), Some(10.0))
-  assert_eq(p.next(), Some(-10.0))
-  assert_eq(p.next(), Some(20.0))
-  assert_eq(p.next(), Some(-20.0))
-  assert_eq(calls.val, 3)
+  @debug.assert_eq(p.next(), Some(10.0))
+  @debug.assert_eq(p.next(), Some(-10.0))
+  @debug.assert_eq(p.next(), Some(10.0))
+  @debug.assert_eq(p.next(), Some(-10.0))
+  @debug.assert_eq(p.next(), Some(20.0))
+  @debug.assert_eq(p.next(), Some(-20.0))
+  @debug.assert_eq(calls.val, 3)
 }
 
 ///|
@@ -651,15 +651,15 @@ test "rodio::source::periodic_access_with_source" {
       )
     },
   )
-  assert_eq(collect_n(p, 8), [1.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0, 2.0])
+  @debug.assert_eq(collect_n(p, 8), [1.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0, 2.0])
 }
 
 ///|
 test "rodio::source::channel_volume" {
   let s = SamplesBuffer::new(2, 44_100, [2.0, 6.0, 4.0, 8.0])
   let out = channel_volume(s, [1.0, 0.5, 2.0])
-  assert_eq(out.channels(), 3)
-  assert_eq(collect_n(out, 10), [4.0, 2.0, 8.0, 6.0, 3.0, 12.0])
+  @debug.assert_eq(out.channels(), 3)
+  @debug.assert_eq(collect_n(out, 10), [4.0, 2.0, 8.0, 6.0, 3.0, 12.0])
 }
 
 ///|
@@ -672,20 +672,20 @@ test "rodio::source::linear_ramp_and_fades" {
     @moon_cpal.Duration::from_secs((2 : UInt64)),
   )
   let rv = collect_n(ramp, 10)
-  assert_eq(rv[0], 0.0)
+  @debug.assert_eq(rv[0], 0.0)
   assert_true(rv[1] > 0.49 && rv[1] < 0.51)
-  assert_eq(rv[2], 1.0)
+  @debug.assert_eq(rv[2], 1.0)
 
   let s2 = SamplesBuffer::new(1, 1, [1.0, 1.0, 1.0])
   let fin = fade_in(s2, @moon_cpal.Duration::from_secs((2 : UInt64)))
   let fv = collect_n(fin, 10)
-  assert_eq(fv[0], 0.0)
+  @debug.assert_eq(fv[0], 0.0)
   assert_true(fv[1] > 0.49 && fv[1] < 0.51)
-  assert_eq(fv[2], 1.0)
+  @debug.assert_eq(fv[2], 1.0)
 
   let s3 = SamplesBuffer::new(1, 1, [1.0, 1.0, 1.0, 1.0])
   let fout = fade_out(s3, @moon_cpal.Duration::from_secs((2 : UInt64)))
-  assert_eq(collect_n(fout, 10), [1.0, 0.5, 0.0, 0.0])
+  @debug.assert_eq(collect_n(fout, 10), [1.0, 0.5, 0.0, 0.0])
 
   let s4 = SamplesBuffer::new(1, 1, [1.0, 1.0, 1.0, 1.0])
   let unclamped = linear_gain_ramp_with_clamp(
@@ -695,16 +695,16 @@ test "rodio::source::linear_ramp_and_fades" {
     @moon_cpal.Duration::from_secs((2 : UInt64)),
     false,
   )
-  assert_eq(collect_n(unclamped, 10), [0.0, 0.5, 1.0, 1.0])
+  @debug.assert_eq(collect_n(unclamped, 10), [0.0, 0.5, 1.0, 1.0])
 
   let s5 = SamplesBuffer::new(1, 1, [1.0, 1.0])
-  assert_eq(
+  @debug.assert_eq(
     collect_n(fadein(s5, @moon_cpal.Duration::from_secs((1 : UInt64))), 10),
     [0.0, 1.0],
   )
 
   let s6 = SamplesBuffer::new(1, 1, [1.0, 1.0])
-  assert_eq(
+  @debug.assert_eq(
     collect_n(fadeout(s6, @moon_cpal.Duration::from_secs((1 : UInt64))), 10),
     [1.0, 0.0],
   )
@@ -717,7 +717,7 @@ test "rodio::source::linear_ramp_and_fades" {
     1.0,
     @moon_cpal.Duration::from_secs((10 : UInt64)),
   )
-  assert_eq(seek_ramp.next(), Some(0.0))
+  @debug.assert_eq(seek_ramp.next(), Some(0.0))
   let a1 = seek_ramp.next().unwrap()
   let a2 = seek_ramp.next().unwrap()
   assert_true(a1 > 0.039 && a1 < 0.041)
@@ -726,7 +726,7 @@ test "rodio::source::linear_ramp_and_fades" {
   seek_ramp.try_seek(@moon_cpal.Duration::from_secs((5 : UInt64)))
   let b0 = seek_ramp.next().unwrap()
   assert_true(b0 > 0.39 && b0 < 0.41)
-  assert_eq(seek_ramp.next(), Some(0.0))
+  @debug.assert_eq(seek_ramp.next(), Some(0.0))
   let b2 = seek_ramp.next().unwrap()
   assert_true(b2 > 0.27 && b2 < 0.29)
 
@@ -741,7 +741,7 @@ test "rodio::source::linear_ramp_and_fades" {
     @moon_cpal.Duration::from_secs((2 : UInt64)),
     false,
   )
-  assert_eq(collect_n(named_unclamped, 10), [0.0, 0.5, 1.0, 1.0])
+  @debug.assert_eq(collect_n(named_unclamped, 10), [0.0, 0.5, 1.0, 1.0])
 }
 
 ///|
@@ -758,16 +758,18 @@ test "rodio::source::limit_and_distortion" {
   )
   let lv = collect_n(l, 10)
   assert_true((lv[0] + 1.0).abs() < 1.0e-9)
-  assert_eq(lv[1], -0.5)
-  assert_eq(lv[2], 0.2)
+  @debug.assert_eq(lv[1], -0.5)
+  @debug.assert_eq(lv[2], 0.2)
   assert_true((lv[3] - 1.0).abs() < 1.0e-9)
 
   let b = SamplesBuffer::new(1, 44_100, [-2.0, -0.5, 0.2, 3.0])
   let d = distortion(b, 1.0, 0.4)
-  assert_eq(collect_n(d, 10), [-0.4, -0.4, 0.2, 0.4])
+  @debug.assert_eq(collect_n(d, 10), [-0.4, -0.4, 0.2, 0.4])
 
   let c = SamplesBuffer::new(1, 44_100, [0.25, 0.6, -0.8])
-  assert_eq(collect_n(distortion_threshold(c, 10.0), 10), [0.25, 0.6, -0.8])
+  @debug.assert_eq(collect_n(distortion_threshold(c, 10.0), 10), [
+    0.25, 0.6, -0.8,
+  ])
 }
 
 ///|
@@ -786,7 +788,7 @@ test "rodio::source::limit_passthrough_below_threshold" {
 
   let original_samples = collect_n(dry, 1_200)
   let limited_samples = collect_n(limited, 1_200)
-  assert_eq(original_samples.length(), limited_samples.length())
+  @debug.assert_eq(original_samples.length(), limited_samples.length())
   for i in 0..<original_samples.length() {
     let diff = (original_samples[i] - limited_samples[i]).abs()
     assert_true(diff < 0.01)
@@ -839,7 +841,7 @@ test "rodio::source::limit_specialized_wrappers_match_base_limit" {
     LimitMono::new(SamplesBuffer::new(1, 44_100, mono_samples), settings),
     16,
   )
-  assert_eq(mono_base, mono_wrapped)
+  @debug.assert_eq(mono_base, mono_wrapped)
 
   let stereo_samples : Array[Sample] = []
   for i in 0..<20 {
@@ -855,7 +857,7 @@ test "rodio::source::limit_specialized_wrappers_match_base_limit" {
     LimitStereo::new(SamplesBuffer::new(2, 44_100, stereo_samples), settings),
     200,
   )
-  assert_eq(stereo_base, stereo_wrapped)
+  @debug.assert_eq(stereo_base, stereo_wrapped)
 
   let multi_samples : Array[Sample] = []
   for i in 0..<20 {
@@ -872,12 +874,12 @@ test "rodio::source::limit_specialized_wrappers_match_base_limit" {
     LimitMulti::new(SamplesBuffer::new(3, 44_100, multi_samples), settings),
     300,
   )
-  assert_eq(multi_base, multi_wrapped)
+  @debug.assert_eq(multi_base, multi_wrapped)
 
   let mono_view = LimitMono::new(SamplesBuffer::new(1, 44_100, [0.0]), settings)
-  assert_eq(mono_view.inner().channels(), 1)
-  assert_eq(mono_view.inner_mut().sample_rate(), 44_100)
-  assert_eq(mono_view.into_inner().channels(), 1)
+  @debug.assert_eq(mono_view.inner().channels(), 1)
+  @debug.assert_eq(mono_view.inner_mut().sample_rate(), 44_100)
+  @debug.assert_eq(mono_view.into_inner().channels(), 1)
 }
 
 ///|
@@ -886,8 +888,8 @@ test "rodio::source::crossfade" {
   let b = zero(1, 1)
   let x = crossfade(a, b, @moon_cpal.Duration::new((5 : UInt64), 1))
   let v = collect_n(x, 10)
-  assert_eq(v.length(), 5)
-  assert_eq(v[0], 1.0)
+  @debug.assert_eq(v.length(), 5)
+  @debug.assert_eq(v[0], 1.0)
   assert_true(v[1] > 1.59 && v[1] < 1.61)
   assert_true(v[2] > 1.79 && v[2] < 1.81)
   assert_true(v[3] > 1.59 && v[3] < 1.61)
@@ -898,7 +900,7 @@ test "rodio::source::crossfade" {
     zero(1, 1),
     @moon_cpal.Duration::new((5 : UInt64), 1),
   )
-  assert_eq(collect_n(y, 10).length(), 5)
+  @debug.assert_eq(collect_n(y, 10).length(), 5)
 
   let self_mix = crossfade(
     SamplesBuffer::new(1, 1, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]),
@@ -906,7 +908,7 @@ test "rodio::source::crossfade" {
     @moon_cpal.Duration::new((5 : UInt64), 1),
   )
   let self_mix_out = collect_n(self_mix, 10)
-  assert_eq(self_mix_out.length(), 5)
+  @debug.assert_eq(self_mix_out.length(), 5)
   assert_true(self_mix_out[0] > 0.999999 && self_mix_out[0] < 1.000001)
   assert_true(self_mix_out[1] > 1.999999 && self_mix_out[1] < 2.000001)
   assert_true(self_mix_out[2] > 2.999999 && self_mix_out[2] < 3.000001)
@@ -917,10 +919,10 @@ test "rodio::source::crossfade" {
 ///|
 test "rodio::source::chirp" {
   let c = chirp(10, 10.0, 20.0, @moon_cpal.Duration::from_secs((1 : UInt64)))
-  assert_eq(c.channels(), 1)
-  assert_eq(c.sample_rate(), 10)
+  @debug.assert_eq(c.channels(), 1)
+  @debug.assert_eq(c.sample_rate(), 10)
   let out = collect_n(c, 20)
-  assert_eq(out.length(), 10)
+  @debug.assert_eq(out.length(), 10)
 }
 
 ///|
@@ -938,10 +940,10 @@ test "rodio::source::from_factory" {
     }
   })
 
-  assert_eq(src.channels(), 1)
-  assert_eq(src.sample_rate(), 44_100)
-  assert_eq(src.current_span_len(), Some(2))
-  assert_eq(collect_n(src, 10), [1.0, 2.0, 3.0])
+  @debug.assert_eq(src.channels(), 1)
+  @debug.assert_eq(src.sample_rate(), 44_100)
+  @debug.assert_eq(src.current_span_len(), Some(2))
+  @debug.assert_eq(collect_n(src, 10), [1.0, 2.0, 3.0])
 }
 
 ///|
@@ -959,62 +961,62 @@ test "rodio::source::from_factory_metadata_and_seek" {
     }
   })
 
-  assert_eq(src.current_span_len(), Some(4))
+  @debug.assert_eq(src.current_span_len(), Some(4))
   src.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
-  assert_eq(src.next(), Some(3.0))
-  assert_eq(collect_n(src, 10), [4.0, 5.0])
+  @debug.assert_eq(src.next(), Some(3.0))
+  @debug.assert_eq(collect_n(src, 10), [4.0, 5.0])
 }
 
 ///|
 test "rodio::source::done" {
   let signal = @ref.new(2)
   let d = Done::new(SamplesBuffer::new(1, 44_100, [1.0]), signal)
-  assert_eq(d.inner().channels(), 1)
-  assert_eq(d.inner_mut().sample_rate(), 44_100)
-  assert_eq(d.into_inner().channels(), 1)
-  assert_eq(d.next(), Some(1.0))
-  assert_eq(signal.val, 2)
-  assert_eq(d.next(), None)
-  assert_eq(signal.val, 1)
-  assert_eq(d.next(), None)
-  assert_eq(signal.val, 1)
+  @debug.assert_eq(d.inner().channels(), 1)
+  @debug.assert_eq(d.inner_mut().sample_rate(), 44_100)
+  @debug.assert_eq(d.into_inner().channels(), 1)
+  @debug.assert_eq(d.next(), Some(1.0))
+  @debug.assert_eq(signal.val, 2)
+  @debug.assert_eq(d.next(), None)
+  @debug.assert_eq(signal.val, 1)
+  @debug.assert_eq(d.next(), None)
+  @debug.assert_eq(signal.val, 1)
 }
 
 ///|
 test "rodio::source::done_metadata_and_seek_forwarding" {
   let d = Done::new(SamplesBuffer::new(1, 4, [1.0, 2.0, 3.0, 4.0]), @ref.new(1))
-  assert_eq(d.current_span_len(), Some(4))
+  @debug.assert_eq(d.current_span_len(), Some(4))
   let total = d.total_duration().unwrap()
-  assert_eq(total.secs, (1 : UInt64))
+  @debug.assert_eq(total.secs, (1 : UInt64))
   d.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
-  assert_eq(d.next(), None)
+  @debug.assert_eq(d.next(), None)
 }
 
 ///|
 test "rodio::source::empty_callback" {
   let calls = @ref.new(0)
   let e = EmptyCallback::new(fn() { calls.val += 1 })
-  assert_eq(e.next(), None)
-  assert_eq(e.next(), None)
-  assert_eq(calls.val, 2)
+  @debug.assert_eq(e.next(), None)
+  @debug.assert_eq(e.next(), None)
+  @debug.assert_eq(calls.val, 2)
   let total = e.total_duration().unwrap()
-  assert_eq(total.secs, (0 : UInt64))
-  assert_eq(total.nanos, 0)
+  @debug.assert_eq(total.secs, (0 : UInt64))
+  @debug.assert_eq(total.nanos, 0)
 }
 
 ///|
 test "rodio::source::uniform_source_iterator" {
   let s = SamplesBuffer::new(1, 2, [0.0, 2.0, 4.0])
   let u = UniformSourceIterator::new(s, 2, 4)
-  assert_eq(u.inner_mut().channels(), 2)
-  assert_eq(u.channels(), 2)
-  assert_eq(u.sample_rate(), 4)
-  assert_eq(u.current_span_len(), None)
+  @debug.assert_eq(u.inner_mut().channels(), 2)
+  @debug.assert_eq(u.channels(), 2)
+  @debug.assert_eq(u.sample_rate(), 4)
+  @debug.assert_eq(u.current_span_len(), None)
   let total = u.total_duration().unwrap()
-  assert_eq(total.secs, (1 : UInt64))
+  @debug.assert_eq(total.secs, (1 : UInt64))
   let vals = collect_n(u, 10)
-  assert_eq(vals[0], 0.0)
-  assert_eq(vals[1], 0.0)
+  @debug.assert_eq(vals[0], 0.0)
+  @debug.assert_eq(vals[1], 0.0)
   assert_true(vals[2] > 0.99 && vals[2] < 1.01)
 }
 
@@ -1023,9 +1025,9 @@ test "rodio::source::from_iter_sources" {
   let a = to_dyn(SamplesBuffer::new(1, 44_100, [1.0, 2.0]))
   let b = to_dyn(SamplesBuffer::new(1, 44_100, [3.0]))
   let it = from_iter([a, b])
-  assert_eq(it.channels(), 1)
-  assert_eq(it.sample_rate(), 44_100)
-  assert_eq(collect_n(it, 10), [1.0, 2.0, 3.0])
+  @debug.assert_eq(it.channels(), 1)
+  @debug.assert_eq(it.sample_rate(), 44_100)
+  @debug.assert_eq(collect_n(it, 10), [1.0, 2.0, 3.0])
 }
 
 ///|
@@ -1034,28 +1036,28 @@ test "rodio::source::from_iter_generic_sources" {
     SamplesBuffer::new(1, 44_100, [0.25, 0.5]),
     SamplesBuffer::new(1, 44_100, [0.75]),
   ])
-  assert_eq(it.channels(), 1)
-  assert_eq(it.sample_rate(), 44_100)
-  assert_eq(collect_n(it, 10), [0.25, 0.5, 0.75])
+  @debug.assert_eq(it.channels(), 1)
+  @debug.assert_eq(it.sample_rate(), 44_100)
+  @debug.assert_eq(collect_n(it, 10), [0.25, 0.5, 0.75])
 }
 
 ///|
 test "rodio::source::from_iter_metadata_and_seek" {
   let it = from_iter([SamplesBuffer::new(1, 4, [1.0, 2.0, 3.0, 4.0])])
-  assert_eq(it.current_span_len(), Some(4))
+  @debug.assert_eq(it.current_span_len(), Some(4))
   it.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
-  assert_eq(it.next(), None)
+  @debug.assert_eq(it.next(), None)
 }
 
 ///|
 test "rodio::queue::current_span_len_behavior" {
   let (tx, rx) = queue(true)
-  assert_eq(rx.current_span_len(), Some(512))
+  @debug.assert_eq(rx.current_span_len(), Some(512))
 
   tx.append(SamplesBuffer::new(1, 44_100, [1.0, 2.0, 3.0]))
   let span = rx.current_span_len().unwrap()
   assert_true(span > 0)
-  assert_eq(span, 3)
+  @debug.assert_eq(span, 3)
 }
 
 ///|
@@ -1065,28 +1067,28 @@ test "rodio::source::function_chain" {
     delay(amplify(src, 2.0), @moon_cpal.Duration::from_secs((1 : UInt64))),
     @moon_cpal.Duration::from_secs((2 : UInt64)),
   )
-  assert_eq(collect_n(out, 10), [0.0, 0.0, 2.0, 4.0])
+  @debug.assert_eq(collect_n(out, 10), [0.0, 0.0, 2.0, 4.0])
 }
 
 ///|
 test "rodio::source::named_wrappers_basic" {
   let a = Amplify::new(SamplesBuffer::new(1, 1, [1.0, 2.0]), 0.5)
-  assert_eq(a.inner().channels(), 1)
+  @debug.assert_eq(a.inner().channels(), 1)
   a.set_factor(2.0)
-  assert_eq(a.next(), Some(2.0))
+  @debug.assert_eq(a.next(), Some(2.0))
   a.set_log_factor(6.0206)
   let next_amp = a.next().unwrap()
   assert_true(next_amp > 3.98 && next_amp < 4.02)
-  assert_eq(a.next(), None)
+  @debug.assert_eq(a.next(), None)
 
   let a2 = Amplify::new(SamplesBuffer::new(1, 1, [1.0, 2.0]), 0.5)
-  assert_eq(collect_n(a2, 10), [0.5, 1.0])
+  @debug.assert_eq(collect_n(a2, 10), [0.5, 1.0])
 
   let z = Zero::new(1, 44_100)
-  assert_eq(z.inner_mut().sample_rate(), 44_100)
-  assert_eq(collect_n(z, 3), [0.0, 0.0, 0.0])
+  @debug.assert_eq(z.inner_mut().sample_rate(), 44_100)
+  @debug.assert_eq(collect_n(z, 3), [0.0, 0.0, 0.0])
   let zf = Zero::new_samples(1, 44_100, 2)
-  assert_eq(collect_n(zf, 10), [0.0, 0.0])
+  @debug.assert_eq(collect_n(zf, 10), [0.0, 0.0])
 
   let l = Limit::new(
     SamplesBuffer::new(1, 1, [-2.0, 0.5, 3.0]),
@@ -1172,7 +1174,7 @@ test "rodio::source::named_wrappers_basic" {
   )
   dg.set_threshold(0.7)
   dg.set_gain(1.0)
-  assert_eq(collect_n(dg, 10), [0.5, -0.7])
+  @debug.assert_eq(collect_n(dg, 10), [0.5, -0.7])
 
   let cv = ChannelVolume::new(
     SamplesBuffer::new(2, 44_100, [2.0, 6.0, 4.0, 8.0]),
@@ -1180,35 +1182,35 @@ test "rodio::source::named_wrappers_basic" {
   )
   cv.set_volume(1, 0.5)
   cv.set_volume(2, 2.0)
-  assert_eq(cv.channels(), 3)
-  assert_eq(collect_n(cv, 10), [4.0, 2.0, 8.0, 6.0, 3.0, 12.0])
+  @debug.assert_eq(cv.channels(), 3)
+  @debug.assert_eq(collect_n(cv, 10), [4.0, 2.0, 8.0, 6.0, 3.0, 12.0])
 
   let sp = Speed::new(
     SamplesBuffer::new(1, 4, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]),
     2.0,
   )
-  assert_eq(sp.sample_rate(), 8)
+  @debug.assert_eq(sp.sample_rate(), 8)
   let total_sp = sp.total_duration().unwrap()
-  assert_eq(total_sp.secs, (1 : UInt64))
+  @debug.assert_eq(total_sp.secs, (1 : UInt64))
   sp.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
-  assert_eq(sp.next(), None)
+  @debug.assert_eq(sp.next(), None)
   sp.set_factor(0.5)
-  assert_eq(sp.sample_rate(), 2)
+  @debug.assert_eq(sp.sample_rate(), 2)
 }
 
 ///|
 test "rodio::source::named_wrappers_signal_and_spatial" {
   let g = SignalGenerator::from_function(48_000, 440.0, Function::sine())
-  assert_eq(g.channels(), 1)
+  @debug.assert_eq(g.channels(), 1)
   let g2 = SignalGenerator::with_function(48_000, 440.0, Function::triangle())
-  assert_eq(g2.sample_rate(), 48_000)
+  @debug.assert_eq(g2.sample_rate(), 48_000)
 
   let custom = SignalGenerator::with_generator(
     48_000,
     440.0,
-    GeneratorFunction::new(fn(_phase) { 0.25 }),
+    GeneratorFunction::new(fn(_phase : Double) { 0.25 }),
   )
-  assert_eq(custom.next(), Some(0.25))
+  @debug.assert_eq(custom.next(), Some(0.25))
 
   let s = Spatial::new(
     SamplesBuffer::new(1, 44_100, [1.0, 1.0]),
@@ -1216,22 +1218,22 @@ test "rodio::source::named_wrappers_signal_and_spatial" {
     [-1.0, 0.0, 0.0],
     [1.0, 0.0, 0.0],
   )
-  assert_eq(s.inner().sample_rate(), 44_100)
-  assert_eq(s.inner_mut().channels(), 2)
-  assert_eq(s.into_inner().sample_rate(), 44_100)
-  assert_eq(s.channels(), 2)
-  assert_eq(s.sample_rate(), 44_100)
+  @debug.assert_eq(s.inner().sample_rate(), 44_100)
+  @debug.assert_eq(s.inner_mut().channels(), 2)
+  @debug.assert_eq(s.into_inner().sample_rate(), 44_100)
+  @debug.assert_eq(s.channels(), 2)
+  @debug.assert_eq(s.sample_rate(), 44_100)
 }
 
 ///|
 test "rodio::source::named_wrappers_inner_accessors" {
   let buf = Buffered::new(SamplesBuffer::new(1, 1, [1.0, 2.0]))
-  assert_eq(buf.inner().channels(), 1)
+  @debug.assert_eq(buf.inner().channels(), 1)
   let buf_seek_err = try {
     buf.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
     false
   } catch {
-    SeekError::NotSupported => true
+    NotSupported => true
   }
   assert_true(buf_seek_err)
 
@@ -1239,14 +1241,14 @@ test "rodio::source::named_wrappers_inner_accessors" {
     SamplesBuffer::new(1, 1, [1.0]),
     @moon_cpal.Duration::from_secs((1 : UInt64)),
   )
-  assert_eq(d.inner().channels(), 1)
-  assert_eq(d.inner_mut().sample_rate(), 1)
-  assert_eq(d.into_inner().channels(), 1)
+  @debug.assert_eq(d.inner().channels(), 1)
+  @debug.assert_eq(d.inner_mut().sample_rate(), 1)
+  @debug.assert_eq(d.into_inner().channels(), 1)
 
   let r = Repeat::new(SamplesBuffer::new(1, 1, [1.0]))
-  assert_eq(r.inner().channels(), 1)
-  assert_eq(r.inner_mut().sample_rate(), 1)
-  assert_eq(r.into_inner().channels(), 1)
+  @debug.assert_eq(r.inner().channels(), 1)
+  @debug.assert_eq(r.inner_mut().sample_rate(), 1)
+  @debug.assert_eq(r.into_inner().channels(), 1)
 
   let td = TakeDuration::new(
     SamplesBuffer::new(1, 1, [1.0, 2.0]),
@@ -1254,26 +1256,26 @@ test "rodio::source::named_wrappers_inner_accessors" {
   )
   td.set_filter_fadeout()
   td.clear_filter()
-  assert_eq(td.inner().channels(), 1)
-  assert_eq(td.inner_mut().sample_rate(), 1)
-  assert_eq(td.into_inner().channels(), 1)
+  @debug.assert_eq(td.inner().channels(), 1)
+  @debug.assert_eq(td.inner_mut().sample_rate(), 1)
+  @debug.assert_eq(td.into_inner().channels(), 1)
 
   let m = Mix::new(
     SamplesBuffer::new(1, 1, [1.0]),
     SamplesBuffer::new(1, 1, [2.0]),
   )
-  assert_eq(m.inner().channels(), 1)
-  assert_eq(m.inner_mut().sample_rate(), 1)
-  assert_eq(m.into_inner().channels(), 1)
+  @debug.assert_eq(m.inner().channels(), 1)
+  @debug.assert_eq(m.inner_mut().sample_rate(), 1)
+  @debug.assert_eq(m.into_inner().channels(), 1)
 
   let c = Crossfade::new(
     SamplesBuffer::new(1, 1, [1.0]),
     SamplesBuffer::new(1, 1, [2.0]),
     @moon_cpal.Duration::from_secs((1 : UInt64)),
   )
-  assert_eq(c.inner().channels(), 1)
-  assert_eq(c.inner_mut().sample_rate(), 1)
-  assert_eq(c.into_inner().channels(), 1)
+  @debug.assert_eq(c.inner().channels(), 1)
+  @debug.assert_eq(c.inner_mut().sample_rate(), 1)
+  @debug.assert_eq(c.into_inner().channels(), 1)
 }
 
 ///|
@@ -1284,8 +1286,8 @@ test "rodio::source::named_takeduration_filter_and_seek" {
   )
   td.set_filter_fadeout()
   let vals = collect_n(td, 10)
-  assert_eq(vals.length(), 3)
-  assert_eq(vals[0], 1.0)
+  @debug.assert_eq(vals.length(), 3)
+  @debug.assert_eq(vals[0], 1.0)
   assert_true(vals[1] > 0.66 && vals[1] < 0.67)
   assert_true(vals[2] > 0.33 && vals[2] < 0.34)
 
@@ -1295,14 +1297,14 @@ test "rodio::source::named_takeduration_filter_and_seek" {
   )
   td2.set_filter_fadeout()
   td2.clear_filter()
-  assert_eq(collect_n(td2, 10), [1.0, 1.0, 1.0])
+  @debug.assert_eq(collect_n(td2, 10), [1.0, 1.0, 1.0])
 
   let td3 = TakeDuration::new(
     SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0, 4.0]),
     @moon_cpal.Duration::from_secs((2 : UInt64)),
   )
   td3.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
-  assert_eq(collect_n(td3, 10), [3.0, 4.0])
+  @debug.assert_eq(collect_n(td3, 10), [3.0, 4.0])
 }
 
 ///|
@@ -1332,24 +1334,24 @@ test "rodio::source::agc_controls" {
   assert_true(ctrl.val)
   agc.set_enabled(false)
   assert_true(!ctrl.val)
-  assert_eq(agc.next(), Some(0.1))
+  @debug.assert_eq(agc.next(), Some(0.1))
   agc.set_enabled(true)
   assert_true(agc.next().unwrap() > 0.1)
   assert_true(agc.get_target_level().val > 0.9)
   assert_true(agc.get_absolute_max_gain().val > 9.9)
-  assert_eq(agc.inner().channels(), 1)
-  assert_eq(agc.inner_mut().sample_rate(), 10)
+  @debug.assert_eq(agc.inner().channels(), 1)
+  @debug.assert_eq(agc.inner_mut().sample_rate(), 10)
 }
 
 ///|
 test "rodio::source::agc_settings_and_floor" {
   let defaults = AutomaticGainControlSettings::default()
-  assert_eq(defaults.target_level, 1.0)
-  assert_eq(defaults.attack_time.secs, (4 : UInt64))
-  assert_eq(defaults.attack_time.nanos, 0)
-  assert_eq(defaults.release_time.secs, (0 : UInt64))
-  assert_eq(defaults.release_time.nanos, 0)
-  assert_eq(defaults.absolute_max_gain, 7.0)
+  @debug.assert_eq(defaults.target_level, 1.0)
+  @debug.assert_eq(defaults.attack_time.secs, (4 : UInt64))
+  @debug.assert_eq(defaults.attack_time.nanos, 0)
+  @debug.assert_eq(defaults.release_time.secs, (0 : UInt64))
+  @debug.assert_eq(defaults.release_time.nanos, 0)
+  @debug.assert_eq(defaults.absolute_max_gain, 7.0)
 
   let settings = AutomaticGainControlSettings::new()
     .with_target_level(0.0)
@@ -1383,10 +1385,10 @@ test "rodio::source::blt_filter_smoke" {
     0.7,
   )
   let hp = high_pass(SamplesBuffer::new(1, 48_000, [1.0, 0.0, 0.0, 0.0]), 1_000)
-  assert_eq(lp.channels(), 1)
-  assert_eq(hp.sample_rate(), 48_000)
-  assert_eq(lp.inner().channels(), 1)
-  assert_eq(hp.inner_mut().sample_rate(), 48_000)
+  @debug.assert_eq(lp.channels(), 1)
+  @debug.assert_eq(hp.sample_rate(), 48_000)
+  @debug.assert_eq(lp.inner().channels(), 1)
+  @debug.assert_eq(hp.inner_mut().sample_rate(), 48_000)
   assert_true(lp.next() is Some(_))
   assert_true(hp.next() is Some(_))
 }
@@ -1398,8 +1400,8 @@ test "rodio::source::noise_white_and_pink" {
 
   let wv = collect_n(w, 8)
   let pv = collect_n(p, 8)
-  assert_eq(wv.length(), 8)
-  assert_eq(pv.length(), 8)
+  @debug.assert_eq(wv.length(), 8)
+  @debug.assert_eq(pv.length(), 8)
   for x in wv {
     assert_true(x >= -1.0 && x <= 1.0)
   }
@@ -1409,18 +1411,18 @@ test "rodio::source::noise_white_and_pink" {
 test "rodio::source::distortion_with_gain" {
   let s = SamplesBuffer::new(1, 44_100, [0.25, 0.6, -0.8])
   let d0 = distortion(s, 2.0, 0.9)
-  assert_eq(collect_n(d0, 10), [0.5, 0.9, -0.9])
+  @debug.assert_eq(collect_n(d0, 10), [0.5, 0.9, -0.9])
 
   let s = SamplesBuffer::new(1, 44_100, [0.25, 0.6, -0.8])
   let d = distortion_with_gain(s, 2.0, 0.9)
-  assert_eq(collect_n(d, 10), [0.5, 0.9, -0.9])
+  @debug.assert_eq(collect_n(d, 10), [0.5, 0.9, -0.9])
 }
 
 ///|
 test "rodio::source::reverb" {
   let src = SamplesBuffer::new(1, 1, [1.0, 0.0, 0.0, 0.0])
   let out = reverb(src, @moon_cpal.Duration::from_secs((1 : UInt64)), 0.5)
-  assert_eq(collect_n(out, 10), [1.0, 0.5, 0.0, 0.0, 0.0])
+  @debug.assert_eq(collect_n(out, 10), [1.0, 0.5, 0.0, 0.0, 0.0])
 
   let pulls = @ref.new(0)
   let streaming = DynSource::new(
@@ -1441,8 +1443,8 @@ test "rodio::source::reverb" {
     0.5,
   )
   // Ensure reverb no longer pre-buffers all input on construction.
-  assert_eq(pulls.val, 0)
-  assert_eq(collect_n(streaming_reverb, 10), [1.0, 1.5, 1.5, 0.5])
+  @debug.assert_eq(pulls.val, 0)
+  @debug.assert_eq(collect_n(streaming_reverb, 10), [1.0, 1.5, 1.5, 0.5])
 }
 
 ///|
@@ -1463,13 +1465,13 @@ test "rodio::source::noise_extended" {
   let brown_v = collect_n(brown, 64)
   let red_v = collect_n(red, 64)
 
-  assert_eq(tri_v.length(), 64)
-  assert_eq(gauss_v.length(), 64)
-  assert_eq(velvet_v.length(), 64)
-  assert_eq(blue_v.length(), 64)
-  assert_eq(violet_v.length(), 64)
-  assert_eq(brown_v.length(), 64)
-  assert_eq(red_v.length(), 64)
+  @debug.assert_eq(tri_v.length(), 64)
+  @debug.assert_eq(gauss_v.length(), 64)
+  @debug.assert_eq(velvet_v.length(), 64)
+  @debug.assert_eq(blue_v.length(), 64)
+  @debug.assert_eq(violet_v.length(), 64)
+  @debug.assert_eq(brown_v.length(), 64)
+  @debug.assert_eq(red_v.length(), 64)
 
   for x in tri_v {
     assert_true(x >= -1.0 && x <= 1.0)
@@ -1500,8 +1502,8 @@ test "rodio::source::noise_extended" {
 
   let old_white = white(44_100)
   let old_pink = pink(44_100)
-  assert_eq(old_white.sample_rate(), 44_100)
-  assert_eq(old_pink.sample_rate(), 44_100)
+  @debug.assert_eq(old_white.sample_rate(), 44_100)
+  @debug.assert_eq(old_pink.sample_rate(), 44_100)
 }
 
 ///|
@@ -1519,10 +1521,10 @@ test "rodio::source::noise_generators_trait_and_seek_parity" {
   ]
 
   for source in sources {
-    assert_eq(source.channels(), 1)
-    assert_eq(source.sample_rate(), 44_100)
-    assert_eq(source.total_duration(), None)
-    assert_eq(source.current_span_len(), None)
+    @debug.assert_eq(source.channels(), 1)
+    @debug.assert_eq(source.sample_rate(), 44_100)
+    @debug.assert_eq(source.total_duration(), None)
+    @debug.assert_eq(source.current_span_len(), None)
     source.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
   }
 }
@@ -1530,7 +1532,7 @@ test "rodio::source::noise_generators_trait_and_seek_parity" {
 ///|
 test "rodio::source::gaussian_noise_properties" {
   let generator = WhiteGaussian::new(44_100)
-  assert_eq(generator.mean(), 0.0)
+  @debug.assert_eq(generator.mean(), 0.0)
   assert_true((generator.std_dev() - 0.6).abs() < 1.0e-12)
 
   let samples = collect_n(generator, 1_000)
@@ -1698,43 +1700,43 @@ test "rodio::source::velvet_custom_density" {
 test "rodio::source::noise_seeded_generators_repeatability" {
   let seed = (0x1234_5678_9ABC_DEF0 : UInt64)
 
-  assert_eq(
+  @debug.assert_eq(
     collect_n(WhiteUniform::new_with_seed(44_100, seed), 64),
     collect_n(WhiteUniform::new_with_seed(44_100, seed), 64),
   )
-  assert_eq(
+  @debug.assert_eq(
     collect_n(WhiteTriangular::new_with_seed(44_100, seed), 64),
     collect_n(WhiteTriangular::new_with_seed(44_100, seed), 64),
   )
-  assert_eq(
+  @debug.assert_eq(
     collect_n(WhiteGaussian::new_with_seed(44_100, seed), 64),
     collect_n(WhiteGaussian::new_with_seed(44_100, seed), 64),
   )
-  assert_eq(
+  @debug.assert_eq(
     collect_n(Pink::new_with_seed(44_100, seed), 64),
     collect_n(Pink::new_with_seed(44_100, seed), 64),
   )
-  assert_eq(
+  @debug.assert_eq(
     collect_n(Blue::new_with_seed(44_100, seed), 64),
     collect_n(Blue::new_with_seed(44_100, seed), 64),
   )
-  assert_eq(
+  @debug.assert_eq(
     collect_n(Violet::new_with_seed(44_100, seed), 64),
     collect_n(Violet::new_with_seed(44_100, seed), 64),
   )
-  assert_eq(
+  @debug.assert_eq(
     collect_n(Brownian::new_with_seed(44_100, seed), 64),
     collect_n(Brownian::new_with_seed(44_100, seed), 64),
   )
-  assert_eq(
+  @debug.assert_eq(
     collect_n(Red::new_with_seed(44_100, seed), 64),
     collect_n(Red::new_with_seed(44_100, seed), 64),
   )
-  assert_eq(
+  @debug.assert_eq(
     collect_n(Velvet::new_with_seed(44_100, seed), 64),
     collect_n(Velvet::new_with_seed(44_100, seed), 64),
   )
-  assert_eq(
+  @debug.assert_eq(
     collect_n(Velvet::new_with_density_and_seed(44_100, 1_000.0, seed), 64),
     collect_n(Velvet::new_with_density_and_seed(44_100, 1_000.0, seed), 64),
   )
@@ -1743,11 +1745,11 @@ test "rodio::source::noise_seeded_generators_repeatability" {
 ///|
 test "rodio::source::noise_rng_generators_repeatability" {
   let seed = (0xCAFE_BABE_1234_5678 : UInt64)
-  assert_eq(
+  @debug.assert_eq(
     collect_n(WhiteUniform::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
     collect_n(WhiteUniform::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
   )
-  assert_eq(
+  @debug.assert_eq(
     collect_n(
       WhiteTriangular::new_with_rng(44_100, TestNoiseRng::new(seed)),
       64,
@@ -1757,19 +1759,19 @@ test "rodio::source::noise_rng_generators_repeatability" {
       64,
     ),
   )
-  assert_eq(
+  @debug.assert_eq(
     collect_n(WhiteGaussian::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
     collect_n(WhiteGaussian::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
   )
-  assert_eq(
+  @debug.assert_eq(
     collect_n(Pink::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
     collect_n(Pink::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
   )
-  assert_eq(
+  @debug.assert_eq(
     collect_n(Velvet::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
     collect_n(Velvet::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
   )
-  assert_eq(
+  @debug.assert_eq(
     collect_n(
       Velvet::new_with_density_and_rng(44_100, 1_000.0, TestNoiseRng::new(seed)),
       64,
@@ -1779,19 +1781,19 @@ test "rodio::source::noise_rng_generators_repeatability" {
       64,
     ),
   )
-  assert_eq(
+  @debug.assert_eq(
     collect_n(Blue::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
     collect_n(Blue::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
   )
-  assert_eq(
+  @debug.assert_eq(
     collect_n(Violet::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
     collect_n(Violet::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
   )
-  assert_eq(
+  @debug.assert_eq(
     collect_n(Brownian::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
     collect_n(Brownian::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
   )
-  assert_eq(
+  @debug.assert_eq(
     collect_n(Red::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
     collect_n(Red::new_with_rng(44_100, TestNoiseRng::new(seed)), 64),
   )

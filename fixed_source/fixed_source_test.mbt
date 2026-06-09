@@ -16,9 +16,9 @@
 test "rodio::fixed_source::adapter_aliases" {
   let fixed = new_samples_buffer(1, 2, [1.0, 2.0])
   let adapted = adapt(fixed)
-  assert_eq(adapted.channels(), 1)
-  assert_eq(adapted.sample_rate(), 2)
-  assert_eq(adapted.next(), Some(1.0))
-  assert_eq(adapted.next(), Some(2.0))
-  assert_eq(adapted.next(), None)
+  @debug.assert_eq(adapted.channels(), 1)
+  @debug.assert_eq(adapted.sample_rate(), 2)
+  @debug.assert_eq(adapted.next(), Some(1.0))
+  @debug.assert_eq(adapted.next(), Some(2.0))
+  @debug.assert_eq(adapted.next(), None)
 }

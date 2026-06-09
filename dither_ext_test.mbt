@@ -15,13 +15,13 @@
 ///|
 test "rodio::source::dither::bit_depth_new" {
   let b16 = BitDepth::new(16)
-  assert_eq(b16.get(), 16)
+  @debug.assert_eq(b16.get(), 16)
 
   let invalid = try {
     ignore(BitDepth::new(0))
     false
   } catch {
-    BitDepthError::OutOfRange(0) => true
+    OutOfRange(0) => true
     _ => false
   }
   assert_true(invalid)
@@ -56,15 +56,15 @@ test "rodio::source::dither::algorithm_switch_and_forwarding" {
     bits,
     DitherAlgorithm::tpdf(),
   )
-  assert_eq(d.algorithm(), DitherAlgorithm::tpdf())
+  @debug.assert_eq(d.algorithm(), DitherAlgorithm::tpdf())
   d.set_algorithm(DitherAlgorithm::high_pass())
-  assert_eq(d.algorithm(), DitherAlgorithm::high_pass())
+  @debug.assert_eq(d.algorithm(), DitherAlgorithm::high_pass())
 
-  assert_eq(d.channels(), 2)
-  assert_eq(d.sample_rate(), 2)
+  @debug.assert_eq(d.channels(), 2)
+  @debug.assert_eq(d.sample_rate(), 2)
   let dur = d.total_duration().unwrap()
-  assert_eq(dur.secs, (1 : UInt64))
-  assert_eq(dur.nanos, 0)
+  @debug.assert_eq(dur.secs, (1 : UInt64))
+  @debug.assert_eq(dur.nanos, 0)
 }
 
 ///|
@@ -76,7 +76,7 @@ test "rodio::source::dither::seek_forwarding" {
     DitherAlgorithm::gpdf(),
   )
   d.try_seek(@moon_cpal.Duration::new((3 : UInt64), 0))
-  assert_eq(d.next(), None)
+  @debug.assert_eq(d.next(), None)
 }
 
 ///|

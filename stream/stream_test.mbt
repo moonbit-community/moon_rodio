@@ -20,8 +20,8 @@ test "rodio::stream::builder_aliases" {
   let cfg = builder.config()
   let _ : DeviceSinkConfig = cfg
   let _ : @Milky2018/moon_rodio.OutputStreamConfig = cfg
-  assert_eq(cfg.channel_count, 1)
-  assert_eq(cfg.sample_rate, 22_050)
+  @debug.assert_eq(cfg.channel_count, 1)
+  @debug.assert_eq(cfg.sample_rate, 22_050)
 }
 
 ///|

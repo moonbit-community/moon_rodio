@@ -20,8 +20,8 @@ test "rodio::source::linear_ramp::aliases" {
     1.0,
     @moon_cpal.Duration::from_secs((1 : UInt64)),
   )
-  assert_eq(a.channels(), 1)
-  assert_eq(a.sample_rate(), 8)
+  @debug.assert_eq(a.channels(), 1)
+  @debug.assert_eq(a.sample_rate(), 8)
   assert_true(a.next() != None)
 
   let b = linear_gain_ramp_with_clamp(
@@ -31,6 +31,6 @@ test "rodio::source::linear_ramp::aliases" {
     @moon_cpal.Duration::from_secs((1 : UInt64)),
     true,
   )
-  assert_eq(b.channels(), 1)
+  @debug.assert_eq(b.channels(), 1)
   assert_true(b.next() != None)
 }

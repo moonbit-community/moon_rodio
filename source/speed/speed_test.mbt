@@ -18,7 +18,7 @@ test "rodio::source::speed::aliases" {
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [1.0, 2.0, 3.0]),
     1.25,
   )
-  assert_eq(s.channels(), 1)
-  assert_eq(s.sample_rate(), 10)
+  @debug.assert_eq(s.channels(), 1)
+  @debug.assert_eq(s.sample_rate(), 10)
   assert_true(s.next() != None)
 }

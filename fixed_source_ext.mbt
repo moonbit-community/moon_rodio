@@ -17,10 +17,10 @@
 ///
 /// Unlike `Source`, a `FixedSource` never changes channel count and sample rate.
 pub(open) trait FixedSource {
-  next(Self) -> Sample?
-  channels(Self) -> ChannelCount
-  sample_rate(Self) -> SampleRate
-  total_duration(Self) -> @moon_cpal.Duration?
+  fn next(Self) -> Sample?
+  fn channels(Self) -> ChannelCount
+  fn sample_rate(Self) -> SampleRate
+  fn total_duration(Self) -> @moon_cpal.Duration?
 }
 
 ///|
@@ -39,7 +39,7 @@ pub fn[S : FixedSource] FixedSourceAdapter::new(
       source.sample_rate(),
       current_span_len=source_default_current_span_len,
       total_duration=fn() { source.total_duration() },
-      try_seek=fn(_pos : @moon_cpal.Duration) { Err(SeekError::NotSupported) },
+      try_seek=fn(_pos : @moon_cpal.Duration) { Err(NotSupported) },
     ),
   }
 }
@@ -65,38 +65,40 @@ pub fn FixedSourceAdapter::sample_rate(self : FixedSourceAdapter) -> SampleRate 
 }
 
 ///|
-pub impl Source for FixedSourceAdapter with next(self : FixedSourceAdapter) {
+pub impl Source for FixedSourceAdapter with fn next(self : FixedSourceAdapter) {
   self.next()
 }
 
 ///|
-pub impl Source for FixedSourceAdapter with channels(self : FixedSourceAdapter) {
+pub impl Source for FixedSourceAdapter with fn channels(
+  self : FixedSourceAdapter,
+) {
   self.channels()
 }
 
 ///|
-pub impl Source for FixedSourceAdapter with sample_rate(
+pub impl Source for FixedSourceAdapter with fn sample_rate(
   self : FixedSourceAdapter,
 ) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for FixedSourceAdapter with current_span_len(
+pub impl Source for FixedSourceAdapter with fn current_span_len(
   _self : FixedSourceAdapter,
 ) {
   None
 }
 
 ///|
-pub impl Source for FixedSourceAdapter with total_duration(
+pub impl Source for FixedSourceAdapter with fn total_duration(
   _self : FixedSourceAdapter,
 ) {
   _self.inner.total_duration()
 }
 
 ///|
-pub impl Source for FixedSourceAdapter with try_seek(
+pub impl Source for FixedSourceAdapter with fn try_seek(
   _self : FixedSourceAdapter,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -129,7 +131,9 @@ pub fn FixedSamplesBuffer::new(
 }
 
 ///|
-pub impl FixedSource for FixedSamplesBuffer with next(self : FixedSamplesBuffer) {
+pub impl FixedSource for FixedSamplesBuffer with fn next(
+  self : FixedSamplesBuffer,
+) {
   if self.cursor.val >= self.samples.length() {
     None
   } else {
@@ -140,21 +144,21 @@ pub impl FixedSource for FixedSamplesBuffer with next(self : FixedSamplesBuffer)
 }
 
 ///|
-pub impl FixedSource for FixedSamplesBuffer with channels(
+pub impl FixedSource for FixedSamplesBuffer with fn channels(
   self : FixedSamplesBuffer,
 ) {
   self.channels
 }
 
 ///|
-pub impl FixedSource for FixedSamplesBuffer with sample_rate(
+pub impl FixedSource for FixedSamplesBuffer with fn sample_rate(
   self : FixedSamplesBuffer,
 ) {
   self.sample_rate
 }
 
 ///|
-pub impl FixedSource for FixedSamplesBuffer with total_duration(
+pub impl FixedSource for FixedSamplesBuffer with fn total_duration(
   self : FixedSamplesBuffer,
 ) {
   self.duration

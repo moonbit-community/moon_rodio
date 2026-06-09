@@ -17,9 +17,9 @@ test "rodio::speakers::config::default_alias" {
   let cfg0 = default()
   let cfg1 : OutputConfig = cfg0
   let cfg2 : @Milky2018/moon_rodio.OutputConfig = cfg1
-  assert_eq(cfg2.channel_count, 1)
-  assert_eq(cfg2.sample_rate, 44_100)
+  @debug.assert_eq(cfg2.channel_count, 1)
+  @debug.assert_eq(cfg2.sample_rate, 44_100)
   let cfg3 = cfg2.with_channel_count(2).with_sample_rate(48_000)
-  assert_eq(cfg3.channel_count, 2)
-  assert_eq(cfg3.sample_rate, 48_000)
+  @debug.assert_eq(cfg3.channel_count, 2)
+  @debug.assert_eq(cfg3.sample_rate, 48_000)
 }

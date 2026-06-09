@@ -14,9 +14,9 @@
 
 ///|
 test "rodio::math::lerp" {
-  assert_eq(lerp(0.0, 10.0, 0, 10), 0.0)
-  assert_eq(lerp(0.0, 10.0, 5, 10), 5.0)
-  assert_eq(lerp(0.0, 10.0, 10, 10), 10.0)
+  @debug.assert_eq(lerp(0.0, 10.0, 0, 10), 0.0)
+  @debug.assert_eq(lerp(0.0, 10.0, 5, 10), 5.0)
+  @debug.assert_eq(lerp(0.0, 10.0, 10, 10), 10.0)
 }
 
 ///|

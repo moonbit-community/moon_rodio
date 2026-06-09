@@ -18,7 +18,7 @@
 /// Current focus:
 /// - native backend (`preferred-target: native`)
 /// - broad `source::*` parity (filters, wrappers, controls, noise generators)
-/// - `queue`/`mixer`/`sink`/`stream` playback chain via `Milky2018/moon_cpal`
+/// - `queue`/`mixer`/`sink`/`stream` playback chain via `moonbit-community/moon_cpal`
 /// - decoder/play path for WAV/MP3/FLAC/Vorbis bytes input
 ///
 /// Known gaps versus upstream rodio:

@@ -18,14 +18,14 @@ test "rodio::source::fadeout::aliases" {
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [0.1, 0.2]),
     @moon_cpal.Duration::from_secs((1 : UInt64)),
   )
-  assert_eq(a.channels(), 1)
-  assert_eq(a.sample_rate(), 8)
+  @debug.assert_eq(a.channels(), 1)
+  @debug.assert_eq(a.sample_rate(), 8)
   assert_true(a.next() != None)
 
   let b = fade_out(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [0.1, 0.2]),
     @moon_cpal.Duration::from_secs((1 : UInt64)),
   )
-  assert_eq(b.channels(), 1)
+  @debug.assert_eq(b.channels(), 1)
   assert_true(b.next() != None)
 }

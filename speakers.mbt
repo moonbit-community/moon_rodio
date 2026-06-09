@@ -15,10 +15,10 @@
 ///|
 pub suberror SpeakersListError {
   DevicesError(@moon_cpal.DevicesError)
-} derive(Eq)
+} derive(Debug, Eq)
 
 ///|
-pub impl Show for SpeakersListError with output(self, logger) {
+pub impl Show for SpeakersListError with fn output(self, logger) {
   match self {
     DevicesError(err) =>
       logger.write_string("SpeakersListError::DevicesError(\{err})")
@@ -33,10 +33,10 @@ pub suberror SpeakersError {
   SupportedOutputConfigsError(@moon_cpal.SupportedStreamConfigsError)
   UnsupportedByDevice
   DeviceSinkError(DeviceSinkError)
-} derive(Eq)
+} derive(Debug, Eq)
 
 ///|
-pub impl Show for SpeakersError with output(self, logger) {
+pub impl Show for SpeakersError with fn output(self, logger) {
   match self {
     NoDevice => logger.write_string("SpeakersError::NoDevice")
     NoConfig => logger.write_string("SpeakersError::NoConfig")
@@ -56,21 +56,16 @@ pub suberror SpeakersPlayError {
   WrongChannelCount(ChannelCount, ChannelCount)
   WrongSampleRate(SampleRate, SampleRate)
   BuilderError(SpeakersError)
-} derive(Eq)
+} derive(Debug, Eq)
 
 ///|
-pub impl Show for SpeakersPlayError with output(self, logger) {
+pub impl Show for SpeakersPlayError with fn output(self, logger) {
   match self {
     WrongChannelCount(expected, actual) =>
-      logger.write_string(
-        "SpeakersPlayError::WrongChannelCount(\{expected}, \{actual})",
-      )
+      logger.write_string("SpeakersWrongChannelCount(\{expected}, \{actual})")
     WrongSampleRate(expected, actual) =>
-      logger.write_string(
-        "SpeakersPlayError::WrongSampleRate(\{expected}, \{actual})",
-      )
-    BuilderError(err) =>
-      logger.write_string("SpeakersPlayError::BuilderError(\{err})")
+      logger.write_string("SpeakersWrongSampleRate(\{expected}, \{actual})")
+    BuilderError(err) => logger.write_string("SpeakersBuilderError(\{err})")
   }
 }
 
@@ -107,7 +102,7 @@ pub fn available_outputs() -> Array[Output] raise SpeakersListError {
     Some(device) => Some(device.id()) catch { _ => None }
   }
   let devices = try host.output_devices() catch {
-    err => raise SpeakersListError::DevicesError(err)
+    err => raise DevicesError(err)
   } noraise {
     xs => xs
   }
@@ -135,10 +130,10 @@ pub struct OutputConfig {
   sample_rate : SampleRate
   buffer_size : @moon_cpal.BufferSize
   sample_format : @moon_cpal.SampleFormat
-} derive(Eq)
+} derive(Debug, Eq)
 
 ///|
-pub impl Show for OutputConfig with output(self, logger) {
+pub impl Show for OutputConfig with fn output(self, logger) {
   logger.write_string(
     "OutputConfig::{ channel_count: \{self.channel_count}, sample_rate: \{self.sample_rate}, buffer_size: \{self.buffer_size}, sample_format: \{self.sample_format} }",
   )
@@ -150,7 +145,7 @@ pub fn OutputConfig::default() -> OutputConfig {
     channel_count: 1,
     sample_rate: hz_44100,
     buffer_size: @moon_cpal.BufferSize::default(),
-    sample_format: @moon_cpal.SampleFormat::F32,
+    sample_format: F32,
   }
 }
 
@@ -220,7 +215,7 @@ pub fn OutputConfig::with_sample_format(
 
 ///|
 fn OutputConfig::with_f32_samples(self : OutputConfig) -> OutputConfig {
-  { ..self, sample_format: @moon_cpal.SampleFormat::F32 }
+  { ..self, sample_format: F32 }
 }
 
 ///|
@@ -229,8 +224,8 @@ pub fn OutputConfig::supported_given(
   supported : @moon_cpal.SupportedStreamConfigRange,
 ) -> Bool {
   let buffer_ok = match self.buffer_size {
-    @moon_cpal.BufferSize::Default => true
-    @moon_cpal.BufferSize::Fixed(n_frames) =>
+    Default => true
+    Fixed(n_frames) =>
       supported.buffer_size().contains(n_frames * self.channel_count)
   }
 
@@ -281,7 +276,7 @@ fn collect_supported_output_configs(
   device : @moon_cpal.Device,
 ) -> Array[@moon_cpal.SupportedStreamConfigRange] raise SpeakersError {
   let ranges = try device.supported_output_configs() catch {
-    err => raise SpeakersError::SupportedOutputConfigsError(err)
+    err => raise SupportedOutputConfigsError(err)
   } noraise {
     xs => xs
   }
@@ -315,7 +310,7 @@ pub fn SpeakersBuilder::default_device(
 ) -> SpeakersBuilder raise SpeakersError {
   let host = @moon_cpal.default_host()
   match host.default_output_device() {
-    None => raise SpeakersError::NoDevice
+    None => raise NoDevice
     Some(device) => self.with_device_inner(device)
   }
 }
@@ -338,10 +333,8 @@ fn SpeakersBuilder::check_config(
   self : SpeakersBuilder,
   config : OutputConfig,
 ) -> Unit raise SpeakersError {
-  guard self.device is Some(_) else { raise SpeakersError::NoDevice }
-  guard self.config_supported(config) else {
-    raise SpeakersError::UnsupportedByDevice
-  }
+  guard self.device is Some(_) else { raise NoDevice }
+  guard self.config_supported(config) else { raise UnsupportedByDevice }
 }
 
 ///|
@@ -349,11 +342,11 @@ pub fn SpeakersBuilder::default_config(
   self : SpeakersBuilder,
 ) -> SpeakersBuilder raise SpeakersError {
   let device = match self.device {
-    None => raise SpeakersError::NoDevice
+    None => raise NoDevice
     Some(device) => device
   }
   let default_config = try device.default_output_config() catch {
-    err => raise SpeakersError::DefaultOutputConfigError(err)
+    err => raise DefaultOutputConfigError(err)
   } noraise {
     cfg => cfg
   }
@@ -389,7 +382,7 @@ pub fn SpeakersBuilder::get_config(
   self : SpeakersBuilder,
 ) -> OutputConfig raise SpeakersError {
   match self.config {
-    None => raise SpeakersError::NoConfig
+    None => raise NoConfig
     Some(config) => config
   }
 }
@@ -504,11 +497,11 @@ pub fn SpeakersBuilder::open_mixer(
   self : SpeakersBuilder,
 ) -> MixerDeviceSink raise SpeakersError {
   let device = match self.device {
-    None => raise SpeakersError::NoDevice
+    None => raise NoDevice
     Some(device) => device
   }
   let config = match self.config {
-    None => raise SpeakersError::NoConfig
+    None => raise NoConfig
     Some(config) => config
   }
 
@@ -521,7 +514,7 @@ pub fn SpeakersBuilder::open_mixer(
     .with_error_callback(self.error_callback)
 
   try builder.open_stream() catch {
-    err => raise SpeakersError::DeviceSinkError(err)
+    err => raise DeviceSinkError(err)
   } noraise {
     sink => sink
   }
@@ -538,25 +531,19 @@ pub fn[S : FixedSource] SpeakersBuilder::play(
   source : S,
 ) -> SinkHandle raise SpeakersPlayError {
   let config = match self.config {
-    None => raise SpeakersPlayError::BuilderError(SpeakersError::NoConfig)
+    None => raise BuilderError(NoConfig)
     Some(config) => config
   }
 
   if config.channel_count != source.channels() {
-    raise SpeakersPlayError::WrongChannelCount(
-      config.channel_count,
-      source.channels(),
-    )
+    raise WrongChannelCount(config.channel_count, source.channels())
   }
   if config.sample_rate != source.sample_rate() {
-    raise SpeakersPlayError::WrongSampleRate(
-      config.sample_rate,
-      source.sample_rate(),
-    )
+    raise WrongSampleRate(config.sample_rate, source.sample_rate())
   }
 
   let sink = try self.open_mixer() catch {
-    err => raise SpeakersPlayError::BuilderError(err)
+    err => raise BuilderError(err)
   } noraise {
     device_sink => device_sink
   }

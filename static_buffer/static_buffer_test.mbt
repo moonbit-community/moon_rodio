@@ -15,16 +15,16 @@
 ///|
 test "rodio::static_buffer::aliases" {
   let s = new(1, 2, [1.0, 2.0])
-  assert_eq(s.channels(), 1)
-  assert_eq(s.sample_rate(), 2)
-  assert_eq(s.next(), Some(1.0))
-  assert_eq(s.next(), Some(2.0))
-  assert_eq(s.next(), None)
+  @debug.assert_eq(s.channels(), 1)
+  @debug.assert_eq(s.sample_rate(), 2)
+  @debug.assert_eq(s.next(), Some(1.0))
+  @debug.assert_eq(s.next(), Some(2.0))
+  @debug.assert_eq(s.next(), None)
 
   let b = buffer_from_iter(1, 8, [3.0, 4.0])
-  assert_eq(b.channels(), 1)
-  assert_eq(b.sample_rate(), 8)
-  assert_eq(b.next(), Some(3.0))
-  assert_eq(b.next(), Some(4.0))
-  assert_eq(b.next(), None)
+  @debug.assert_eq(b.channels(), 1)
+  @debug.assert_eq(b.sample_rate(), 8)
+  @debug.assert_eq(b.next(), Some(3.0))
+  @debug.assert_eq(b.next(), Some(4.0))
+  @debug.assert_eq(b.next(), None)
 }

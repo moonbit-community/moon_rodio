@@ -22,9 +22,9 @@ test "rodio::microphone::alias_error_types" {
   let root_open_err : @Milky2018/moon_rodio.MicrophoneError? = open_err
   let root_list_err : @Milky2018/moon_rodio.MicrophoneListError? = list_err
 
-  assert_eq(root_err, None)
-  assert_eq(root_open_err, None)
-  assert_eq(root_list_err, None)
+  @debug.assert_eq(root_err, None)
+  @debug.assert_eq(root_open_err, None)
+  @debug.assert_eq(root_list_err, None)
 }
 
 ///|

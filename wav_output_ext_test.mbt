@@ -75,7 +75,7 @@ fn WavBytesCollector::to_bytes(self : WavBytesCollector) -> Bytes {
 }
 
 ///|
-impl WavWriter for WavBytesCollector with write_all(
+impl WavWriter for WavBytesCollector with fn write_all(
   self : WavBytesCollector,
   bytes : Bytes,
 ) -> Unit raise ToWavError {
@@ -101,12 +101,12 @@ test "rodio::wav_output::output_to_wav" {
   assert_true(bytes_eq4(bytes, 12, 0x66, 0x6d, 0x74, 0x20))
   assert_true(bytes_eq4(bytes, 36, 0x64, 0x61, 0x74, 0x61))
 
-  assert_eq(read_u16_le(bytes, 20), 3)
-  assert_eq(read_u16_le(bytes, 22), 1)
-  assert_eq(read_u32_le(bytes, 24), 48_000)
-  assert_eq(read_u16_le(bytes, 34), 32)
-  assert_eq(read_u32_le(bytes, 40), 16)
-  assert_eq(bytes.length(), 60)
+  @debug.assert_eq(read_u16_le(bytes, 20), 3)
+  @debug.assert_eq(read_u16_le(bytes, 22), 1)
+  @debug.assert_eq(read_u32_le(bytes, 24), 48_000)
+  @debug.assert_eq(read_u16_le(bytes, 34), 32)
+  @debug.assert_eq(read_u32_le(bytes, 40), 16)
+  @debug.assert_eq(bytes.length(), 60)
 
   wav_test_remove_file_if_exists(path)
 }
@@ -122,16 +122,16 @@ test "rodio::wav_output::wav_to_file_alias_and_writer" {
   }
   let file_bytes = wav_test_read_file_bytes(path)
   assert_true(bytes_eq4(file_bytes, 0, 0x52, 0x49, 0x46, 0x46))
-  assert_eq(read_u16_le(file_bytes, 22), 2)
-  assert_eq(read_u32_le(file_bytes, 24), 22_050)
+  @debug.assert_eq(read_u16_le(file_bytes, 22), 2)
+  @debug.assert_eq(read_u32_le(file_bytes, 24), 22_050)
 
-  let writer = @buffer.new()
+  let writer = Buffer()
   let source_for_writer = SamplesBuffer::new(2, 22_050, [0.0, 0.25, -0.25, 1.0])
   wav_to_writer(source_for_writer, writer) catch {
     _ => panic()
   }
   let writer_bytes = writer.to_bytes()
-  assert_eq(writer_bytes, file_bytes)
+  @debug.assert_eq(writer_bytes, file_bytes)
 
   let collector = WavBytesCollector::new()
   let source_for_collector = SamplesBuffer::new(2, 22_050, [
@@ -140,23 +140,23 @@ test "rodio::wav_output::wav_to_file_alias_and_writer" {
   wav_to_writer(source_for_collector, collector) catch {
     _ => panic()
   }
-  assert_eq(collector.to_bytes(), file_bytes)
+  @debug.assert_eq(collector.to_bytes(), file_bytes)
 
   wav_test_remove_file_if_exists(path)
 }
 
 ///|
 test "rodio::wav_output::writer_drops_partial_tail_frame" {
-  let writer = @buffer.new()
+  let writer = Buffer()
   let source = SamplesBuffer::new(2, 48_000, [0.0, 0.5, -0.5])
   wav_to_writer(source, writer) catch {
     _ => panic()
   }
   let bytes = writer.to_bytes()
 
-  assert_eq(read_u16_le(bytes, 22), 2)
-  assert_eq(read_u32_le(bytes, 40), 8)
-  assert_eq(bytes.length(), 52)
+  @debug.assert_eq(read_u16_le(bytes, 22), 2)
+  @debug.assert_eq(read_u32_le(bytes, 40), 8)
+  @debug.assert_eq(bytes.length(), 52)
   assert_true(bytes_eq4(bytes, 44, 0, 0, 0, 0))
   assert_true(bytes_eq4(bytes, 48, 0, 0, 0, 63))
 }

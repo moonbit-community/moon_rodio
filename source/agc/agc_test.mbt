@@ -20,8 +20,8 @@ test "rodio::source::agc::aliases" {
     src,
     AutomaticGainControlSettings::default().with_target_level(0.7),
   )
-  assert_eq(agc.channels(), 1)
-  assert_eq(agc.sample_rate(), 8)
+  @debug.assert_eq(agc.channels(), 1)
+  @debug.assert_eq(agc.sample_rate(), 8)
   assert_true(agc.next() != None)
 
   let agc2 = automatic_gain_control_with_params(
@@ -31,7 +31,7 @@ test "rodio::source::agc::aliases" {
     @moon_cpal.Duration::from_secs((1 : UInt64)),
     3.0,
   )
-  assert_eq(agc2.channels(), 1)
-  assert_eq(agc2.sample_rate(), 8)
+  @debug.assert_eq(agc2.channels(), 1)
+  @debug.assert_eq(agc2.sample_rate(), 8)
   assert_true(agc2.next() != None)
 }

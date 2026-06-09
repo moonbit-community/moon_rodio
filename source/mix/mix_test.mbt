@@ -18,7 +18,7 @@ test "rodio::source::mix::aliases" {
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [1.0, 1.0]),
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [0.5, 0.5]),
   )
-  assert_eq(m.channels(), 1)
-  assert_eq(m.sample_rate(), 8)
+  @debug.assert_eq(m.channels(), 1)
+  @debug.assert_eq(m.sample_rate(), 8)
   assert_true(m.next() != None)
 }

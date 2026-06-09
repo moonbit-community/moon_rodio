@@ -18,36 +18,36 @@ test "rodio::conversions::aliases" {
     1.0, 2.0, 3.0, 4.0,
   ])
   let cc = new_channel_count_converter(source1, 1, 2)
-  assert_eq(cc.channels(), 2)
-  assert_eq(cc.sample_rate(), 4)
+  @debug.assert_eq(cc.channels(), 2)
+  @debug.assert_eq(cc.sample_rate(), 4)
   assert_true(cc.next() != None)
 
   let source2 = @Milky2018/moon_rodio.SamplesBuffer::new(1, 4, [
     1.0, 2.0, 3.0, 4.0,
   ])
   let sr = new_sample_rate_converter(source2, 4, 8, 1)
-  assert_eq(sr.channels(), 1)
-  assert_eq(sr.sample_rate(), 8)
+  @debug.assert_eq(sr.channels(), 1)
+  @debug.assert_eq(sr.sample_rate(), 8)
   assert_true(sr.next() != None)
 
   let source3 = @Milky2018/moon_rodio.SamplesBuffer::new(1, 4, [1.0, 2.0])
   let st = new_sample_type_converter(source3)
-  assert_eq(st.channels(), 1)
-  assert_eq(st.sample_rate(), 4)
+  @debug.assert_eq(st.channels(), 1)
+  @debug.assert_eq(st.sample_rate(), 4)
   assert_true(st.next() != None)
 
   let source4 = @Milky2018/moon_rodio.SamplesBuffer::new(1, 4, [1.0, 2.0])
   let d1 = convert_channels(source4, 2)
-  assert_eq(d1.channels(), 2)
-  assert_eq(d1.sample_rate(), 4)
+  @debug.assert_eq(d1.channels(), 2)
+  @debug.assert_eq(d1.sample_rate(), 4)
 
   let source5 = @Milky2018/moon_rodio.SamplesBuffer::new(1, 4, [1.0, 2.0])
   let d2 = convert_sample_rate(source5, 8)
-  assert_eq(d2.channels(), 1)
-  assert_eq(d2.sample_rate(), 8)
+  @debug.assert_eq(d2.channels(), 1)
+  @debug.assert_eq(d2.sample_rate(), 8)
 
   let source6 = @Milky2018/moon_rodio.SamplesBuffer::new(1, 4, [1.0, 2.0])
   let d3 = uniform(source6, 2, 8)
-  assert_eq(d3.channels(), 2)
-  assert_eq(d3.sample_rate(), 8)
+  @debug.assert_eq(d3.channels(), 2)
+  @debug.assert_eq(d3.sample_rate(), 8)
 }

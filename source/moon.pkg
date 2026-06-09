@@ -1,5 +1,6 @@
 import {
-  "Milky2018/moon_cpal",
+  "moonbitlang/core/debug",
+  "moonbit-community/moon_cpal",
   "Milky2018/moon_rodio",
   "moonbitlang/core/ref",
 }

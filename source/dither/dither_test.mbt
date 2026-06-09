@@ -17,8 +17,8 @@ test "rodio::source::dither::aliases" {
   let bits = BitDepth::new(16) catch { _ => panic() }
   let algorithm = DitherAlgorithm::high_pass()
   let d = dither(@Milky2018/moon_rodio.zero(1, 8), bits, algorithm)
-  assert_eq(d.channels(), 1)
-  assert_eq(d.sample_rate(), 8)
-  assert_eq(d.algorithm(), algorithm)
+  @debug.assert_eq(d.channels(), 1)
+  @debug.assert_eq(d.sample_rate(), 8)
+  @debug.assert_eq(d.algorithm(), algorithm)
   assert_true(d.next() != None)
 }

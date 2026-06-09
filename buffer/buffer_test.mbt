@@ -15,16 +15,16 @@
 ///|
 test "rodio::buffer::new_and_record_source_aliases" {
   let b = new(2, 4, [1.0, 2.0, 3.0, 4.0])
-  assert_eq(b.channels(), 2)
-  assert_eq(b.sample_rate(), 4)
-  assert_eq(b.next(), Some(1.0))
+  @debug.assert_eq(b.channels(), 2)
+  @debug.assert_eq(b.sample_rate(), 4)
+  @debug.assert_eq(b.next(), Some(1.0))
 
   let recorded = record_source(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [9.0, 8.0]),
   )
-  assert_eq(recorded.channels(), 1)
-  assert_eq(recorded.sample_rate(), 8)
-  assert_eq(recorded.next(), Some(9.0))
-  assert_eq(recorded.next(), Some(8.0))
-  assert_eq(recorded.next(), None)
+  @debug.assert_eq(recorded.channels(), 1)
+  @debug.assert_eq(recorded.sample_rate(), 8)
+  @debug.assert_eq(recorded.next(), Some(9.0))
+  @debug.assert_eq(recorded.next(), Some(8.0))
+  @debug.assert_eq(recorded.next(), None)
 }

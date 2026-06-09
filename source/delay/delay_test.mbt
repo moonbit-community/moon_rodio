@@ -18,7 +18,7 @@ test "rodio::source::delay::aliases" {
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [1.0, 2.0]),
     @moon_cpal.Duration::from_secs((1 : UInt64)),
   )
-  assert_eq(d.channels(), 1)
-  assert_eq(d.sample_rate(), 8)
+  @debug.assert_eq(d.channels(), 1)
+  @debug.assert_eq(d.sample_rate(), 8)
   assert_true(d.next() != None)
 }

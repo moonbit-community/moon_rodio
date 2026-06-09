@@ -15,14 +15,14 @@
 ///|
 test "rodio::source::repeat::aliases" {
   let r = repeat(@Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [1.0]))
-  assert_eq(r.channels(), 1)
-  assert_eq(r.sample_rate(), 8)
-  assert_eq(r.next(), Some(1.0))
-  assert_eq(r.next(), Some(1.0))
+  @debug.assert_eq(r.channels(), 1)
+  @debug.assert_eq(r.sample_rate(), 8)
+  @debug.assert_eq(r.next(), Some(1.0))
+  @debug.assert_eq(r.next(), Some(1.0))
 
   let ri = repeat_infinite(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [2.0]),
   )
-  assert_eq(ri.channels(), 1)
-  assert_eq(ri.next(), Some(2.0))
+  @debug.assert_eq(ri.channels(), 1)
+  @debug.assert_eq(ri.next(), Some(2.0))
 }

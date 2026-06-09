@@ -20,7 +20,7 @@ test "rodio::source::chirp::aliases" {
     200.0,
     @moon_cpal.Duration::from_secs((1 : UInt64)),
   )
-  assert_eq(c.channels(), 1)
-  assert_eq(c.sample_rate(), 8_000)
+  @debug.assert_eq(c.channels(), 1)
+  @debug.assert_eq(c.sample_rate(), 8_000)
   assert_true(c.next() != None)
 }

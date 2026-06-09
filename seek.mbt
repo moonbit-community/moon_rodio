@@ -18,7 +18,7 @@ pub suberror SeekError {
 } derive(Debug, Eq)
 
 ///|
-pub impl Show for SeekError with output(self, logger) {
+pub impl Show for SeekError with fn output(self, logger) {
   match self {
     NotSupported => logger.write_string("SeekError::NotSupported")
   }
@@ -27,6 +27,6 @@ pub impl Show for SeekError with output(self, logger) {
 ///|
 pub fn SeekError::source_intact(self : SeekError) -> Bool {
   match self {
-    SeekError::NotSupported => true
+    NotSupported => true
   }
 }

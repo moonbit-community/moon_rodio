@@ -19,9 +19,9 @@ test "rodio::source::done::aliases" {
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [1.0]),
     counter,
   )
-  assert_eq(d.channels(), 1)
-  assert_eq(d.sample_rate(), 8)
-  assert_eq(d.next(), Some(1.0))
-  assert_eq(d.next(), None)
+  @debug.assert_eq(d.channels(), 1)
+  @debug.assert_eq(d.sample_rate(), 8)
+  @debug.assert_eq(d.next(), Some(1.0))
+  @debug.assert_eq(d.next(), None)
   assert_true(counter.val != 0)
 }

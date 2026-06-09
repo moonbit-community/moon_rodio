@@ -19,7 +19,7 @@ test "rodio::source::uniform::aliases" {
     2,
     16_000,
   )
-  assert_eq(u.channels(), 2)
-  assert_eq(u.sample_rate(), 16_000)
+  @debug.assert_eq(u.channels(), 2)
+  @debug.assert_eq(u.sample_rate(), 16_000)
   assert_true(u.next() != None)
 }

@@ -14,7 +14,7 @@
 
 ///|
 test "rodio::math::aliases" {
-  assert_eq(lerp(0.0, 1.0, 1, 2), 0.5)
+  @debug.assert_eq(lerp(0.0, 1.0, 1, 2), 0.5)
   assert_true((db_to_linear(0.0) - 1.0).abs() < 1.0e-12)
   assert_true(linear_to_db(1.0).abs() < 1.0e-12)
 }

@@ -18,10 +18,10 @@ pub struct OutputStreamConfig {
   sample_rate : SampleRate
   buffer_size : @moon_cpal.BufferSize
   sample_format : @moon_cpal.SampleFormat
-} derive(Eq)
+} derive(Debug, Eq)
 
 ///|
-pub impl Show for OutputStreamConfig with output(self, logger) {
+pub impl Show for OutputStreamConfig with fn output(self, logger) {
   logger.write_string(
     "OutputStreamConfig::{ channel_count: \{self.channel_count}, sample_rate: \{self.sample_rate}, buffer_size: \{self.buffer_size}, sample_format: \{self.sample_format} }",
   )
@@ -33,7 +33,7 @@ pub fn OutputStreamConfig::default() -> OutputStreamConfig {
     channel_count: 2,
     sample_rate: hz_44100,
     buffer_size: @moon_cpal.BufferSize::default(),
-    sample_format: @moon_cpal.SampleFormat::F32,
+    sample_format: F32,
   }
 }
 
@@ -71,10 +71,10 @@ pub suberror StreamError {
   SupportedStreamConfigsError(@moon_cpal.SupportedStreamConfigsError)
   NoDevice
   UnsupportedSampleFormat
-} derive(Eq)
+} derive(Debug, Eq)
 
 ///|
-pub impl Show for StreamError with output(self, logger) {
+pub impl Show for StreamError with fn output(self, logger) {
   match self {
     PlayStreamError(err) =>
       logger.write_string("StreamError::PlayStreamError(\{err})")
@@ -139,7 +139,7 @@ pub fn OutputStreamBuilder::from_device(
   device : @moon_cpal.Device,
 ) -> OutputStreamBuilder raise StreamError {
   let supported = try device.default_output_config() catch {
-    err => raise StreamError::DefaultStreamConfigError(err)
+    err => raise DefaultStreamConfigError(err)
   } noraise {
     cfg => cfg
   }
@@ -152,7 +152,7 @@ pub fn OutputStreamBuilder::from_device(
 pub fn OutputStreamBuilder::from_default_device() -> OutputStreamBuilder raise StreamError {
   let host = @moon_cpal.default_host()
   match host.default_output_device() {
-    None => raise StreamError::NoDevice
+    None => raise NoDevice
     Some(device) => OutputStreamBuilder::from_device(device)
   }
 }
@@ -276,7 +276,7 @@ pub fn OutputStreamBuilder::open_stream(
   self : OutputStreamBuilder,
 ) -> OutputStream raise StreamError {
   match self.device {
-    None => raise StreamError::NoDevice
+    None => raise NoDevice
     Some(device) => OutputStream::open(device, self.config, self.error_callback)
   }
 }
@@ -288,7 +288,7 @@ pub fn OutputStreamBuilder::open_stream_or_fallback(
   try self.open_stream() catch {
     original_err => {
       let device = match self.device {
-        None => raise StreamError::NoDevice
+        None => raise NoDevice
         Some(d) => d
       }
       let configs = supported_output_configs(device)
@@ -407,84 +407,84 @@ fn next_or_silence(samples : MixerSource) -> Sample {
 fn fill_raw_output_data(data : @spec.Data, samples : MixerSource) -> Unit {
   let len = data.len()
   match data.sample_format() {
-    @moon_cpal.SampleFormat::I8 => {
+    I8 => {
       let out = Array::make(len, 0)
       for i in 0..<len {
         out[i] = sample_to_i8(next_or_silence(samples))
       }
       ignore(data.write_i8(out))
     }
-    @moon_cpal.SampleFormat::I16 => {
+    I16 => {
       let out = Array::make(len, Int16::from_int(0))
       for i in 0..<len {
         out[i] = sample_to_i16(next_or_silence(samples))
       }
       ignore(data.write_i16(out))
     }
-    @moon_cpal.SampleFormat::I24 => {
+    I24 => {
       let out = Array::make(len, @moon_cpal.I24::new(0))
       for i in 0..<len {
         out[i] = sample_to_i24(next_or_silence(samples))
       }
       ignore(data.write_i24(out))
     }
-    @moon_cpal.SampleFormat::I32 => {
+    I32 => {
       let out = Array::make(len, 0)
       for i in 0..<len {
         out[i] = sample_to_i32(next_or_silence(samples))
       }
       ignore(data.write_i32(out))
     }
-    @moon_cpal.SampleFormat::I64 => {
+    I64 => {
       let out = Array::make(len, 0L)
       for i in 0..<len {
         out[i] = sample_to_i64(next_or_silence(samples))
       }
       ignore(data.write_i64(out))
     }
-    @moon_cpal.SampleFormat::U8 => {
+    U8 => {
       let out = Array::make(len, (0 : Int).to_byte())
       for i in 0..<len {
         out[i] = sample_to_u8(next_or_silence(samples))
       }
       ignore(data.write_u8(out))
     }
-    @moon_cpal.SampleFormat::U16 => {
+    U16 => {
       let out = Array::make(len, (0 : Int).to_uint16())
       for i in 0..<len {
         out[i] = sample_to_u16(next_or_silence(samples))
       }
       ignore(data.write_u16(out))
     }
-    @moon_cpal.SampleFormat::U24 => {
+    U24 => {
       let out = Array::make(len, @moon_cpal.U24::new(0))
       for i in 0..<len {
         out[i] = sample_to_u24(next_or_silence(samples))
       }
       ignore(data.write_u24(out))
     }
-    @moon_cpal.SampleFormat::U32 => {
+    U32 => {
       let out = Array::make(len, 0.0.to_uint())
       for i in 0..<len {
         out[i] = sample_to_u32(next_or_silence(samples))
       }
       ignore(data.write_u32(out))
     }
-    @moon_cpal.SampleFormat::U64 => {
+    U64 => {
       let out = Array::make(len, 0UL)
       for i in 0..<len {
         out[i] = sample_to_u64(next_or_silence(samples))
       }
       ignore(data.write_u64(out))
     }
-    @moon_cpal.SampleFormat::F32 => {
+    F32 => {
       let out = Array::make(len, Float::from_double(0.0))
       for i in 0..<len {
         out[i] = Float::from_double(sample_clamped(next_or_silence(samples)))
       }
       ignore(data.write_f32(out))
     }
-    @moon_cpal.SampleFormat::F64 => {
+    F64 => {
       let out = Array::make(len, 0.0)
       for i in 0..<len {
         out[i] = sample_clamped(next_or_silence(samples))
@@ -509,7 +509,7 @@ fn build_output_stream(
   )
 
   match config.sample_format {
-    @moon_cpal.SampleFormat::F32 =>
+    F32 =>
       try
         device.build_output_stream_f32(
           stream_config,
@@ -522,11 +522,11 @@ fn build_output_stream(
           None,
         )
       catch {
-        err => raise StreamError::BuildStreamError(err)
+        err => raise BuildStreamError(err)
       } noraise {
         stream => stream
       }
-    @moon_cpal.SampleFormat::I16 =>
+    I16 =>
       try
         device.build_output_stream_i16(
           stream_config,
@@ -539,11 +539,11 @@ fn build_output_stream(
           None,
         )
       catch {
-        err => raise StreamError::BuildStreamError(err)
+        err => raise BuildStreamError(err)
       } noraise {
         stream => stream
       }
-    @moon_cpal.SampleFormat::U16 =>
+    U16 =>
       try
         device.build_output_stream_u16(
           stream_config,
@@ -556,11 +556,11 @@ fn build_output_stream(
           None,
         )
       catch {
-        err => raise StreamError::BuildStreamError(err)
+        err => raise BuildStreamError(err)
       } noraise {
         stream => stream
       }
-    @moon_cpal.SampleFormat::U8 =>
+    U8 =>
       try
         device.build_output_stream_u8(
           stream_config,
@@ -573,18 +573,11 @@ fn build_output_stream(
           None,
         )
       catch {
-        err => raise StreamError::BuildStreamError(err)
+        err => raise BuildStreamError(err)
       } noraise {
         stream => stream
       }
-    @moon_cpal.SampleFormat::I8
-    | @moon_cpal.SampleFormat::I24
-    | @moon_cpal.SampleFormat::I32
-    | @moon_cpal.SampleFormat::I64
-    | @moon_cpal.SampleFormat::U24
-    | @moon_cpal.SampleFormat::U32
-    | @moon_cpal.SampleFormat::U64
-    | @moon_cpal.SampleFormat::F64 =>
+    I8 | I24 | I32 | I64 | U24 | U32 | U64 | F64 =>
       try
         device.build_output_stream_raw(
           stream_config,
@@ -594,11 +587,11 @@ fn build_output_stream(
           None,
         )
       catch {
-        err => raise StreamError::BuildStreamError(err)
+        err => raise BuildStreamError(err)
       } noraise {
         stream => stream
       }
-    _ => raise StreamError::UnsupportedSampleFormat
+    _ => raise UnsupportedSampleFormat
   }
 }
 
@@ -607,8 +600,8 @@ fn validate_output_stream_config(config : OutputStreamConfig) -> Unit {
   guard config.sample_rate > 0 else { panic() }
   guard config.channel_count > 0 else { panic() }
   match config.buffer_size {
-    @moon_cpal.BufferSize::Default => ()
-    @moon_cpal.BufferSize::Fixed(n) => if n <= 0 { panic() }
+    Default => ()
+    Fixed(n) => if n <= 0 { panic() }
   }
 }
 
@@ -622,7 +615,7 @@ pub fn OutputStream::open(
   let (controller, source) = mixer(config.channel_count, config.sample_rate)
   let stream = build_output_stream(device, config, source, error_callback)
   stream.play() catch {
-    err => raise StreamError::PlayStreamError(err)
+    err => raise PlayStreamError(err)
   }
   { config, mixer: controller, _stream: stream, log_on_drop: @ref.new(true) }
 }
@@ -632,7 +625,7 @@ pub fn supported_output_configs(
   device : @moon_cpal.Device,
 ) -> Array[@moon_cpal.SupportedStreamConfig] raise StreamError {
   let ranges = try device.supported_output_configs() catch {
-    err => raise StreamError::SupportedStreamConfigsError(err)
+    err => raise SupportedStreamConfigsError(err)
   } noraise {
     xs => xs
   }

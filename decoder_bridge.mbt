@@ -19,7 +19,7 @@ pub suberror DecoderError {
 } derive(Debug, Eq)
 
 ///|
-pub impl Show for DecoderError with output(self, logger) {
+pub impl Show for DecoderError with fn output(self, logger) {
   match self {
     Backend(err) => logger.write_string("DecoderError::Backend(\{err})")
     UnrecognizedFormat =>
@@ -33,7 +33,7 @@ pub suberror PlayError {
 } derive(Debug, Eq)
 
 ///|
-pub impl Show for PlayError with output(self, logger) {
+pub impl Show for PlayError with fn output(self, logger) {
   match self {
     DecoderError(err) => logger.write_string("PlayError::DecoderError(\{err})")
   }
@@ -67,9 +67,9 @@ pub struct Settings {
 } derive(Debug, Eq)
 
 ///|
-pub impl Show for Settings with output(self, logger) {
+pub impl Show for Settings with fn output(self, logger) {
   logger.write_string(
-    "Settings::{ byte_len: \{self.byte_len}, coarse_seek: \{self.coarse_seek}, gapless: \{self.gapless}, hint: \{self.hint}, mime_type: \{self.mime_type}, is_seekable: \{self.is_seekable} }",
+    "Settings::{ byte_len: \{@debug.to_string(self.byte_len)}, coarse_seek: \{self.coarse_seek}, gapless: \{self.gapless}, hint: \{@debug.to_string(self.hint)}, mime_type: \{@debug.to_string(self.mime_type)}, is_seekable: \{self.is_seekable} }",
   )
 }
 
@@ -103,8 +103,8 @@ pub fn Reader::from_bytes(bytes : Bytes) -> Reader {
 
 ///|
 pub fn Reader::from_file(path : StringView) -> Reader raise PlayError {
-  let bytes = try @fs.read_file_to_bytes(path.to_string()) catch {
-    _ => raise PlayError::DecoderError(DecoderError::UnrecognizedFormat)
+  let bytes = try @fs.read_file_to_bytes(path.to_owned()) catch {
+    _ => raise DecoderError(UnrecognizedFormat)
   } noraise {
     bs => bs
   }
@@ -162,7 +162,7 @@ pub fn DecoderBuilder::with_hint(
   self : DecoderBuilder,
   hint : StringView,
 ) -> DecoderBuilder {
-  { ..self, settings: { ..self.settings, hint: Some(hint.to_string()) } }
+  { ..self, settings: { ..self.settings, hint: Some(hint.to_owned()) } }
 }
 
 ///|
@@ -172,7 +172,7 @@ pub fn DecoderBuilder::with_mime_type(
 ) -> DecoderBuilder {
   {
     ..self,
-    settings: { ..self.settings, mime_type: Some(mime_type.to_string()) },
+    settings: { ..self.settings, mime_type: Some(mime_type.to_owned()) },
   }
 }
 
@@ -229,7 +229,7 @@ fn DecoderBuilder::decoder_builder_build(
   self : DecoderBuilder,
 ) -> Decoder raise DecoderError {
   let data = match self.data {
-    None => raise DecoderError::UnrecognizedFormat
+    None => raise UnrecognizedFormat
     Some(data) => data
   }
 
@@ -255,7 +255,7 @@ fn DecoderBuilder::decoder_builder_build(
     false
   } else {
     match decoded.kind {
-      DecoderKind::Mp3 => self.settings.byte_len is Some(_)
+      Mp3 => self.settings.byte_len is Some(_)
       _ => true
     }
   }
@@ -315,22 +315,22 @@ pub fn LoopedDecoder::sample_rate(self : LoopedDecoder) -> SampleRate {
 }
 
 ///|
-pub impl Source for LoopedDecoder with next(self : LoopedDecoder) {
+pub impl Source for LoopedDecoder with fn next(self : LoopedDecoder) {
   self.next()
 }
 
 ///|
-pub impl Source for LoopedDecoder with channels(self : LoopedDecoder) {
+pub impl Source for LoopedDecoder with fn channels(self : LoopedDecoder) {
   self.channels()
 }
 
 ///|
-pub impl Source for LoopedDecoder with sample_rate(self : LoopedDecoder) {
+pub impl Source for LoopedDecoder with fn sample_rate(self : LoopedDecoder) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for LoopedDecoder with current_span_len(self : LoopedDecoder) {
+pub impl Source for LoopedDecoder with fn current_span_len(self : LoopedDecoder) {
   if self.samples.is_empty() {
     None
   } else {
@@ -339,21 +339,21 @@ pub impl Source for LoopedDecoder with current_span_len(self : LoopedDecoder) {
 }
 
 ///|
-pub impl Source for LoopedDecoder with total_duration(self : LoopedDecoder) {
+pub impl Source for LoopedDecoder with fn total_duration(self : LoopedDecoder) {
   ignore(self)
   None
 }
 
 ///|
-pub impl Source for LoopedDecoder with try_seek(
+pub impl Source for LoopedDecoder with fn try_seek(
   self : LoopedDecoder,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
   if !self.seekable {
-    raise SeekError::NotSupported
+    raise NotSupported
   }
   if self.samples.is_empty() {
-    raise SeekError::NotSupported
+    raise NotSupported
   }
   let max_index = self.samples.length() - 1
   let target = sample_index_from_duration(
@@ -430,81 +430,56 @@ fn looks_like_mp4a(bytes : Bytes) -> Bool {
 ///|
 fn decode_wav_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
   let decoded = try @decoder.decode_wav_bytes(bytes) catch {
-    err => raise DecoderError::Backend(err)
+    err => raise Backend(err)
   } noraise {
     src => src
   }
-  {
-    inner: decoded,
-    seekable: true,
-    allow_backward_seek: true,
-    kind: DecoderKind::Wav,
-  }
+  { inner: decoded, seekable: true, allow_backward_seek: true, kind: Wav }
 }
 
 ///|
 fn decode_flac_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
   let decoded = try @decoder.decode_flac_bytes(bytes) catch {
-    err => raise DecoderError::Backend(err)
+    err => raise Backend(err)
   } noraise {
     src => src
   }
-  {
-    inner: decoded,
-    seekable: true,
-    allow_backward_seek: true,
-    kind: DecoderKind::Flac,
-  }
+  { inner: decoded, seekable: true, allow_backward_seek: true, kind: Flac }
 }
 
 ///|
 fn decode_vorbis_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
   let decoded = try @decoder.decode_vorbis_bytes(bytes) catch {
-    err => raise DecoderError::Backend(err)
+    err => raise Backend(err)
   } noraise {
     src => src
   }
-  {
-    inner: decoded,
-    seekable: true,
-    allow_backward_seek: true,
-    kind: DecoderKind::Vorbis,
-  }
+  { inner: decoded, seekable: true, allow_backward_seek: true, kind: Vorbis }
 }
 
 ///|
 fn decode_mp3_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
   let decoded = try @decoder.decode_mp3_bytes(bytes) catch {
-    err => raise DecoderError::Backend(err)
+    err => raise Backend(err)
   } noraise {
     src => src
   }
-  {
-    inner: decoded,
-    seekable: true,
-    allow_backward_seek: true,
-    kind: DecoderKind::Mp3,
-  }
+  { inner: decoded, seekable: true, allow_backward_seek: true, kind: Mp3 }
 }
 
 ///|
 fn decode_mp4a_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
   let decoded = try @decoder.decode_mp4a_bytes(bytes) catch {
-    err => raise DecoderError::Backend(err)
+    err => raise Backend(err)
   } noraise {
     src => src
   }
-  {
-    inner: decoded,
-    seekable: true,
-    allow_backward_seek: true,
-    kind: DecoderKind::Mp4a,
-  }
+  { inner: decoded, seekable: true, allow_backward_seek: true, kind: Mp4a }
 }
 
 ///|
 pub fn Decoder::new(bytes : Bytes) -> Decoder raise DecoderError {
-  guard bytes.length() > 0 else { raise DecoderError::UnrecognizedFormat }
+  guard bytes.length() > 0 else { raise UnrecognizedFormat }
 
   if looks_like_wav(bytes) {
     return decode_wav_or_raise(bytes)
@@ -549,7 +524,7 @@ pub fn Decoder::new(bytes : Bytes) -> Decoder raise DecoderError {
   let try_mp4a = Some(decode_mp4a_or_raise(bytes)) catch { _ => None }
   match try_mp4a {
     Some(decoder) => return decoder
-    None => raise DecoderError::UnrecognizedFormat
+    None => raise UnrecognizedFormat
   }
 }
 
@@ -565,8 +540,8 @@ pub fn Decoder::new_looped(bytes : Bytes) -> LoopedDecoder raise DecoderError {
 
 ///|
 pub fn Decoder::try_from_file(path : StringView) -> Decoder raise DecoderError {
-  let bytes = try @fs.read_file_to_bytes(path.to_string()) catch {
-    _ => raise DecoderError::UnrecognizedFormat
+  let bytes = try @fs.read_file_to_bytes(path.to_owned()) catch {
+    _ => raise UnrecognizedFormat
   } noraise {
     bs => bs
   }
@@ -577,8 +552,8 @@ pub fn Decoder::try_from_file(path : StringView) -> Decoder raise DecoderError {
 pub fn Decoder::try_from_file_looped(
   path : StringView,
 ) -> LoopedDecoder raise DecoderError {
-  let bytes = try @fs.read_file_to_bytes(path.to_string()) catch {
-    _ => raise DecoderError::UnrecognizedFormat
+  let bytes = try @fs.read_file_to_bytes(path.to_owned()) catch {
+    _ => raise UnrecognizedFormat
   } noraise {
     bs => bs
   }
@@ -636,22 +611,22 @@ pub fn Decoder::sample_rate(self : Decoder) -> SampleRate {
 }
 
 ///|
-pub impl Source for Decoder with next(self : Decoder) {
+pub impl Source for Decoder with fn next(self : Decoder) {
   self.next()
 }
 
 ///|
-pub impl Source for Decoder with channels(self : Decoder) {
+pub impl Source for Decoder with fn channels(self : Decoder) {
   self.channels()
 }
 
 ///|
-pub impl Source for Decoder with sample_rate(self : Decoder) {
+pub impl Source for Decoder with fn sample_rate(self : Decoder) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for Decoder with current_span_len(self : Decoder) {
+pub impl Source for Decoder with fn current_span_len(self : Decoder) {
   let remaining = self.inner.len() - self.inner.position()
   if remaining <= 0 {
     Some(0)
@@ -661,7 +636,7 @@ pub impl Source for Decoder with current_span_len(self : Decoder) {
 }
 
 ///|
-pub impl Source for Decoder with total_duration(self : Decoder) {
+pub impl Source for Decoder with fn total_duration(self : Decoder) {
   duration_from_sample_count(
     self.inner.len(),
     self.channels(),
@@ -670,12 +645,12 @@ pub impl Source for Decoder with total_duration(self : Decoder) {
 }
 
 ///|
-pub impl Source for Decoder with try_seek(
+pub impl Source for Decoder with fn try_seek(
   self : Decoder,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
   if !self.seekable {
-    raise SeekError::NotSupported
+    raise NotSupported
   }
   let channel_count = self.channels()
   let current_channel = if channel_count > 0 {
@@ -718,7 +693,7 @@ pub impl Source for Decoder with try_seek(
   }
 
   if !self.allow_backward_seek && final_target < self.inner.position() {
-    raise SeekError::NotSupported
+    raise NotSupported
   }
   self.inner.seek_to(final_target)
 }
@@ -731,7 +706,7 @@ pub fn play(mixer : Mixer, reader : Reader) -> Player raise PlayError {
 ///|
 pub fn play_bytes(mixer : Mixer, bytes : Bytes) -> Player raise PlayError {
   let source = try Decoder::new(bytes) catch {
-    err => raise PlayError::DecoderError(err)
+    err => raise DecoderError(err)
   } noraise {
     src => src
   }

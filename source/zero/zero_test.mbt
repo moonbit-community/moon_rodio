@@ -15,12 +15,12 @@
 ///|
 test "rodio::source::zero::aliases" {
   let z = zero(1, 8)
-  assert_eq(z.channels(), 1)
-  assert_eq(z.sample_rate(), 8)
-  assert_eq(z.next(), Some(0.0))
+  @debug.assert_eq(z.channels(), 1)
+  @debug.assert_eq(z.sample_rate(), 8)
+  @debug.assert_eq(z.next(), Some(0.0))
 
   let zs = zero_samples(1, 8, 2)
-  assert_eq(zs.channels(), 1)
-  assert_eq(zs.sample_rate(), 8)
-  assert_eq(zs.next(), Some(0.0))
+  @debug.assert_eq(zs.channels(), 1)
+  @debug.assert_eq(zs.sample_rate(), 8)
+  @debug.assert_eq(zs.next(), Some(0.0))
 }

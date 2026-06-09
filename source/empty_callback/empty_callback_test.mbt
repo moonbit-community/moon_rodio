@@ -16,8 +16,8 @@
 test "rodio::source::empty_callback::aliases" {
   let called = @ref.new(false)
   let e = EmptyCallback::new(fn() { called.val = true })
-  assert_eq(e.channels(), 1)
+  @debug.assert_eq(e.channels(), 1)
   assert_true(e.sample_rate() > 0)
-  assert_eq(e.next(), None)
+  @debug.assert_eq(e.next(), None)
   assert_true(called.val)
 }

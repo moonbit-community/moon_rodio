@@ -34,7 +34,7 @@ fn vorbis_read_i16_le(bytes : Bytes, offset : Int) -> Int {
 ///|
 pub fn decode_vorbis_bytes(bytes : Bytes) -> DecodedSamples raise DecoderError {
   guard bytes.length() > 0 else {
-    raise DecoderError::InvalidFormat("vorbis bytes are empty")
+    raise InvalidFormat("vorbis bytes are empty")
   }
 
   let out_meta = FixedArray::make(3, (0 : UInt))
@@ -47,21 +47,17 @@ pub fn decode_vorbis_bytes(bytes : Bytes) -> DecodedSamples raise DecoderError {
 
   let status = out_meta[0].reinterpret_as_int()
   guard status == 0 else {
-    raise DecoderError::InvalidFormat(
-      "vorbis decode failed (stb_vorbis status \{status})",
-    )
+    raise InvalidFormat("vorbis decode failed (stb_vorbis status \{status})")
   }
 
   let channels = out_meta[1].reinterpret_as_int()
   let sample_rate = out_meta[2].reinterpret_as_int()
   guard channels > 0 && sample_rate > 0 else {
-    raise DecoderError::InvalidFormat("invalid decoded vorbis stream metadata")
+    raise InvalidFormat("invalid decoded vorbis stream metadata")
   }
 
   guard pcm.length() % 2 == 0 else {
-    raise DecoderError::InvalidFormat(
-      "decoded vorbis pcm bytes must be i16-aligned",
-    )
+    raise InvalidFormat("decoded vorbis pcm bytes must be i16-aligned")
   }
 
   let sample_count = pcm.length() / 2

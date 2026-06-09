@@ -30,7 +30,9 @@ fn ExternalFixedSource::new(
 }
 
 ///|
-impl FixedSource for ExternalFixedSource with next(self : ExternalFixedSource) {
+impl FixedSource for ExternalFixedSource with fn next(
+  self : ExternalFixedSource,
+) {
   if self.cursor.val >= self.samples.length() {
     None
   } else {
@@ -41,21 +43,21 @@ impl FixedSource for ExternalFixedSource with next(self : ExternalFixedSource) {
 }
 
 ///|
-impl FixedSource for ExternalFixedSource with channels(
+impl FixedSource for ExternalFixedSource with fn channels(
   self : ExternalFixedSource,
 ) {
   self.channels
 }
 
 ///|
-impl FixedSource for ExternalFixedSource with sample_rate(
+impl FixedSource for ExternalFixedSource with fn sample_rate(
   self : ExternalFixedSource,
 ) {
   self.sample_rate
 }
 
 ///|
-impl FixedSource for ExternalFixedSource with total_duration(
+impl FixedSource for ExternalFixedSource with fn total_duration(
   _self : ExternalFixedSource,
 ) {
   None
@@ -66,12 +68,12 @@ test "rodio::fixed_source::adapter_from_samples_buffer" {
   let adapted = FixedSourceAdapter::new(
     FixedSamplesBuffer::new(1, 48_000, [1.0, 2.0, 3.0]),
   )
-  assert_eq(adapted.channels(), 1)
-  assert_eq(adapted.sample_rate(), 48_000)
-  assert_eq(adapted.next(), Some(1.0))
-  assert_eq(adapted.next(), Some(2.0))
-  assert_eq(adapted.next(), Some(3.0))
-  assert_eq(adapted.next(), None)
+  @debug.assert_eq(adapted.channels(), 1)
+  @debug.assert_eq(adapted.sample_rate(), 48_000)
+  @debug.assert_eq(adapted.next(), Some(1.0))
+  @debug.assert_eq(adapted.next(), Some(2.0))
+  @debug.assert_eq(adapted.next(), Some(3.0))
+  @debug.assert_eq(adapted.next(), None)
 }
 
 ///|
@@ -80,8 +82,8 @@ test "rodio::fixed_source::adapter_uses_inner_duration" {
     FixedSamplesBuffer::new(2, 2, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]),
   )
   let d = adapted.total_duration().unwrap()
-  assert_eq(d.secs, (1 : UInt64))
-  assert_eq(d.nanos, 500_000_000)
+  @debug.assert_eq(d.secs, (1 : UInt64))
+  @debug.assert_eq(d.nanos, 500_000_000)
 }
 
 ///|
@@ -93,7 +95,7 @@ test "rodio::fixed_source::adapter_seek_not_supported" {
     adapted.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
     false
   } catch {
-    SeekError::NotSupported => true
+    NotSupported => true
   }
   assert_true(got_not_supported)
 }
@@ -103,9 +105,9 @@ test "rodio::fixed_source::open_trait_impl_external_type" {
   let adapted = FixedSourceAdapter::new(
     ExternalFixedSource::new(1, 48_000, [7.0, 8.0]),
   )
-  assert_eq(adapted.channels(), 1)
-  assert_eq(adapted.sample_rate(), 48_000)
-  assert_eq(adapted.next(), Some(7.0))
-  assert_eq(adapted.next(), Some(8.0))
-  assert_eq(adapted.next(), None)
+  @debug.assert_eq(adapted.channels(), 1)
+  @debug.assert_eq(adapted.sample_rate(), 48_000)
+  @debug.assert_eq(adapted.next(), Some(7.0))
+  @debug.assert_eq(adapted.next(), Some(8.0))
+  @debug.assert_eq(adapted.next(), None)
 }
