@@ -4,7 +4,7 @@ version = "0.3.2"
 
 import {
   "moonbitlang/x@0.4.40",
-  "moonbit-community/moon_cpal@0.11.6",
+  "Milky2018/moon_cpal@0.11.7",
 }
 
 readme = "README.mbt.md"

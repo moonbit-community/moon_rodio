@@ -1,8 +1,8 @@
 import {
   "moonbitlang/core/debug",
-  "moonbit-community/moon_cpal",
-  "moonbit-community/moon_cpal/core",
-  "moonbit-community/moon_cpal/spec",
+  "Milky2018/moon_cpal",
+  "Milky2018/moon_cpal/core",
+  "Milky2018/moon_cpal/spec",
   "Milky2018/moon_rodio/decoder",
   "moonbitlang/x/fs",
   "moonbitlang/core/buffer",
