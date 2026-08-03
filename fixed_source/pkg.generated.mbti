@@ -22,4 +22,3 @@ pub using @moon_rodio {type FixedSourceAdapter}
 pub using @moon_rodio {trait FixedSource}
 
 // Traits
-

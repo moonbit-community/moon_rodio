@@ -117,32 +117,34 @@ pub fn TrackPosition::get_pos(self : TrackPosition) -> @moon_cpal.Duration {
 }
 
 ///|
-pub impl Source for TrackPosition with next(self : TrackPosition) {
+pub impl Source for TrackPosition with fn next(self : TrackPosition) {
   self.next()
 }
 
 ///|
-pub impl Source for TrackPosition with channels(self : TrackPosition) {
+pub impl Source for TrackPosition with fn channels(self : TrackPosition) {
   self.channels()
 }
 
 ///|
-pub impl Source for TrackPosition with sample_rate(self : TrackPosition) {
+pub impl Source for TrackPosition with fn sample_rate(self : TrackPosition) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for TrackPosition with current_span_len(_self : TrackPosition) {
+pub impl Source for TrackPosition with fn current_span_len(
+  _self : TrackPosition,
+) {
   _self.input.current_span_len()
 }
 
 ///|
-pub impl Source for TrackPosition with total_duration(_self : TrackPosition) {
+pub impl Source for TrackPosition with fn total_duration(_self : TrackPosition) {
   _self.input.total_duration()
 }
 
 ///|
-pub impl Source for TrackPosition with try_seek(
+pub impl Source for TrackPosition with fn try_seek(
   self : TrackPosition,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -258,32 +260,36 @@ pub fn PeriodicAccess::sample_rate(self : PeriodicAccess) -> SampleRate {
 }
 
 ///|
-pub impl Source for PeriodicAccess with next(self : PeriodicAccess) {
+pub impl Source for PeriodicAccess with fn next(self : PeriodicAccess) {
   self.next()
 }
 
 ///|
-pub impl Source for PeriodicAccess with channels(self : PeriodicAccess) {
+pub impl Source for PeriodicAccess with fn channels(self : PeriodicAccess) {
   self.channels()
 }
 
 ///|
-pub impl Source for PeriodicAccess with sample_rate(self : PeriodicAccess) {
+pub impl Source for PeriodicAccess with fn sample_rate(self : PeriodicAccess) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for PeriodicAccess with current_span_len(_self : PeriodicAccess) {
+pub impl Source for PeriodicAccess with fn current_span_len(
+  _self : PeriodicAccess,
+) {
   _self.input.current_span_len()
 }
 
 ///|
-pub impl Source for PeriodicAccess with total_duration(_self : PeriodicAccess) {
+pub impl Source for PeriodicAccess with fn total_duration(
+  _self : PeriodicAccess,
+) {
   _self.input.total_duration()
 }
 
 ///|
-pub impl Source for PeriodicAccess with try_seek(
+pub impl Source for PeriodicAccess with fn try_seek(
   self : PeriodicAccess,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {

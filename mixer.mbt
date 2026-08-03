@@ -123,32 +123,32 @@ pub fn MixerSource::sample_rate(self : MixerSource) -> SampleRate {
 }
 
 ///|
-pub impl Source for MixerSource with next(self : MixerSource) {
+pub impl Source for MixerSource with fn next(self : MixerSource) {
   self.next()
 }
 
 ///|
-pub impl Source for MixerSource with channels(self : MixerSource) {
+pub impl Source for MixerSource with fn channels(self : MixerSource) {
   self.channels()
 }
 
 ///|
-pub impl Source for MixerSource with sample_rate(self : MixerSource) {
+pub impl Source for MixerSource with fn sample_rate(self : MixerSource) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for MixerSource with current_span_len(_self : MixerSource) {
+pub impl Source for MixerSource with fn current_span_len(_self : MixerSource) {
   source_default_current_span_len()
 }
 
 ///|
-pub impl Source for MixerSource with total_duration(_self : MixerSource) {
+pub impl Source for MixerSource with fn total_duration(_self : MixerSource) {
   source_default_total_duration()
 }
 
 ///|
-pub impl Source for MixerSource with try_seek(
+pub impl Source for MixerSource with fn try_seek(
   _self : MixerSource,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {

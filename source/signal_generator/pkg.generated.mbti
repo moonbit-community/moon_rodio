@@ -30,4 +30,3 @@ pub using @moon_rodio {type SquareWave}
 pub using @moon_rodio {type TriangleWave}
 
 // Traits
-

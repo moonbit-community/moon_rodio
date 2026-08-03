@@ -16,4 +16,3 @@ pub fn default() -> @moon_rodio.OutputConfig
 pub using @moon_rodio {type OutputConfig}
 
 // Traits
-

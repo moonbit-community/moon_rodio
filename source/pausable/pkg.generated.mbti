@@ -16,4 +16,3 @@ pub fn[S : @moon_rodio.Source] pausable(S, Bool) -> @moon_rodio.Pausable
 pub using @moon_rodio {type Pausable}
 
 // Traits
-

@@ -16,4 +16,3 @@ pub fn[S : @moon_rodio.Source] track_position(S) -> @moon_rodio.TrackPosition
 pub using @moon_rodio {type TrackPosition}
 
 // Traits
-

@@ -60,32 +60,35 @@ pub fn Done::sample_rate(self : Done) -> SampleRate {
 }
 
 ///|
-pub impl Source for Done with next(self : Done) {
+pub impl Source for Done with fn next(self : Done) {
   self.next()
 }
 
 ///|
-pub impl Source for Done with channels(self : Done) {
+pub impl Source for Done with fn channels(self : Done) {
   self.channels()
 }
 
 ///|
-pub impl Source for Done with sample_rate(self : Done) {
+pub impl Source for Done with fn sample_rate(self : Done) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for Done with current_span_len(_self : Done) {
+pub impl Source for Done with fn current_span_len(_self : Done) {
   _self.input.current_span_len()
 }
 
 ///|
-pub impl Source for Done with total_duration(_self : Done) {
+pub impl Source for Done with fn total_duration(_self : Done) {
   _self.input.total_duration()
 }
 
 ///|
-pub impl Source for Done with try_seek(_self : Done, pos : @moon_cpal.Duration) -> Unit raise SeekError {
+pub impl Source for Done with fn try_seek(
+  _self : Done,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
   _self.input.try_seek(pos)
 }
 
@@ -116,32 +119,34 @@ pub fn EmptyCallback::sample_rate(_self : EmptyCallback) -> SampleRate {
 }
 
 ///|
-pub impl Source for EmptyCallback with next(self : EmptyCallback) {
+pub impl Source for EmptyCallback with fn next(self : EmptyCallback) {
   self.next()
 }
 
 ///|
-pub impl Source for EmptyCallback with channels(self : EmptyCallback) {
+pub impl Source for EmptyCallback with fn channels(self : EmptyCallback) {
   self.channels()
 }
 
 ///|
-pub impl Source for EmptyCallback with sample_rate(self : EmptyCallback) {
+pub impl Source for EmptyCallback with fn sample_rate(self : EmptyCallback) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for EmptyCallback with current_span_len(_self : EmptyCallback) {
+pub impl Source for EmptyCallback with fn current_span_len(
+  _self : EmptyCallback,
+) {
   source_default_current_span_len()
 }
 
 ///|
-pub impl Source for EmptyCallback with total_duration(_self : EmptyCallback) {
+pub impl Source for EmptyCallback with fn total_duration(_self : EmptyCallback) {
   Some(@moon_cpal.Duration::from_secs((0 : UInt64)))
 }
 
 ///|
-pub impl Source for EmptyCallback with try_seek(
+pub impl Source for EmptyCallback with fn try_seek(
   _self : EmptyCallback,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -200,42 +205,42 @@ pub fn UniformSourceIterator::sample_rate(
 }
 
 ///|
-pub impl Source for UniformSourceIterator with next(
+pub impl Source for UniformSourceIterator with fn next(
   self : UniformSourceIterator,
 ) {
   self.next()
 }
 
 ///|
-pub impl Source for UniformSourceIterator with channels(
+pub impl Source for UniformSourceIterator with fn channels(
   self : UniformSourceIterator,
 ) {
   self.channels()
 }
 
 ///|
-pub impl Source for UniformSourceIterator with sample_rate(
+pub impl Source for UniformSourceIterator with fn sample_rate(
   self : UniformSourceIterator,
 ) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for UniformSourceIterator with current_span_len(
+pub impl Source for UniformSourceIterator with fn current_span_len(
   _self : UniformSourceIterator,
 ) {
   source_default_current_span_len()
 }
 
 ///|
-pub impl Source for UniformSourceIterator with total_duration(
+pub impl Source for UniformSourceIterator with fn total_duration(
   self : UniformSourceIterator,
 ) {
   self.total_duration
 }
 
 ///|
-pub impl Source for UniformSourceIterator with try_seek(
+pub impl Source for UniformSourceIterator with fn try_seek(
   self : UniformSourceIterator,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -328,22 +333,22 @@ pub fn FromIter::sample_rate(self : FromIter) -> SampleRate {
 }
 
 ///|
-pub impl Source for FromIter with next(self : FromIter) {
+pub impl Source for FromIter with fn next(self : FromIter) {
   self.next()
 }
 
 ///|
-pub impl Source for FromIter with channels(self : FromIter) {
+pub impl Source for FromIter with fn channels(self : FromIter) {
   self.channels()
 }
 
 ///|
-pub impl Source for FromIter with sample_rate(self : FromIter) {
+pub impl Source for FromIter with fn sample_rate(self : FromIter) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for FromIter with current_span_len(_self : FromIter) {
+pub impl Source for FromIter with fn current_span_len(_self : FromIter) {
   if _self.has_current.val {
     match _self.current.val.current_span_len() {
       Some(v) => if v != 0 { return Some(v) }
@@ -354,12 +359,12 @@ pub impl Source for FromIter with current_span_len(_self : FromIter) {
 }
 
 ///|
-pub impl Source for FromIter with total_duration(_self : FromIter) {
+pub impl Source for FromIter with fn total_duration(_self : FromIter) {
   source_default_total_duration()
 }
 
 ///|
-pub impl Source for FromIter with try_seek(
+pub impl Source for FromIter with fn try_seek(
   self : FromIter,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {

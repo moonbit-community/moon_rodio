@@ -18,4 +18,3 @@ pub fn[S : @moon_rodio.Source] record_source(S) -> @moon_rodio.SamplesBuffer
 pub using @moon_rodio {type SamplesBuffer}
 
 // Traits
-

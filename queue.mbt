@@ -280,24 +280,26 @@ pub fn SourcesQueueOutput::sample_rate(self : SourcesQueueOutput) -> SampleRate 
 }
 
 ///|
-pub impl Source for SourcesQueueOutput with next(self : SourcesQueueOutput) {
+pub impl Source for SourcesQueueOutput with fn next(self : SourcesQueueOutput) {
   self.next()
 }
 
 ///|
-pub impl Source for SourcesQueueOutput with channels(self : SourcesQueueOutput) {
+pub impl Source for SourcesQueueOutput with fn channels(
+  self : SourcesQueueOutput,
+) {
   self.channels()
 }
 
 ///|
-pub impl Source for SourcesQueueOutput with sample_rate(
+pub impl Source for SourcesQueueOutput with fn sample_rate(
   self : SourcesQueueOutput,
 ) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for SourcesQueueOutput with current_span_len(
+pub impl Source for SourcesQueueOutput with fn current_span_len(
   self : SourcesQueueOutput,
 ) {
   if !self.input.next_sounds.val.is_empty() &&
@@ -329,14 +331,14 @@ pub impl Source for SourcesQueueOutput with current_span_len(
 }
 
 ///|
-pub impl Source for SourcesQueueOutput with total_duration(
+pub impl Source for SourcesQueueOutput with fn total_duration(
   _self : SourcesQueueOutput,
 ) {
   source_default_total_duration()
 }
 
 ///|
-pub impl Source for SourcesQueueOutput with try_seek(
+pub impl Source for SourcesQueueOutput with fn try_seek(
   self : SourcesQueueOutput,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {

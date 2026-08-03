@@ -175,42 +175,42 @@ pub fn ControlledQueueSource::sample_rate(
 }
 
 ///|
-pub impl Source for ControlledQueueSource with next(
+pub impl Source for ControlledQueueSource with fn next(
   self : ControlledQueueSource,
 ) {
   self.next()
 }
 
 ///|
-pub impl Source for ControlledQueueSource with channels(
+pub impl Source for ControlledQueueSource with fn channels(
   self : ControlledQueueSource,
 ) {
   self.channels()
 }
 
 ///|
-pub impl Source for ControlledQueueSource with sample_rate(
+pub impl Source for ControlledQueueSource with fn sample_rate(
   self : ControlledQueueSource,
 ) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for ControlledQueueSource with current_span_len(
+pub impl Source for ControlledQueueSource with fn current_span_len(
   self : ControlledQueueSource,
 ) {
   self.inner.current_span_len()
 }
 
 ///|
-pub impl Source for ControlledQueueSource with total_duration(
+pub impl Source for ControlledQueueSource with fn total_duration(
   self : ControlledQueueSource,
 ) {
   self.inner.total_duration()
 }
 
 ///|
-pub impl Source for ControlledQueueSource with try_seek(
+pub impl Source for ControlledQueueSource with fn try_seek(
   self : ControlledQueueSource,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {

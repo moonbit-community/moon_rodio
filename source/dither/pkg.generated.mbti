@@ -20,4 +20,3 @@ pub using @moon_rodio {type Dither}
 pub using @moon_rodio {type DitherAlgorithm}
 
 // Traits
-

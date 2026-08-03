@@ -46,42 +46,42 @@ pub fn ChannelCountConverter::into_inner(
 }
 
 ///|
-pub impl Source for ChannelCountConverter with next(
+pub impl Source for ChannelCountConverter with fn next(
   self : ChannelCountConverter,
 ) {
   self.inner.next()
 }
 
 ///|
-pub impl Source for ChannelCountConverter with channels(
+pub impl Source for ChannelCountConverter with fn channels(
   self : ChannelCountConverter,
 ) {
   self.to
 }
 
 ///|
-pub impl Source for ChannelCountConverter with sample_rate(
+pub impl Source for ChannelCountConverter with fn sample_rate(
   self : ChannelCountConverter,
 ) {
   self.inner.sample_rate()
 }
 
 ///|
-pub impl Source for ChannelCountConverter with current_span_len(
+pub impl Source for ChannelCountConverter with fn current_span_len(
   _self : ChannelCountConverter,
 ) {
   _self.inner.current_span_len()
 }
 
 ///|
-pub impl Source for ChannelCountConverter with total_duration(
+pub impl Source for ChannelCountConverter with fn total_duration(
   _self : ChannelCountConverter,
 ) {
   _self.inner.total_duration()
 }
 
 ///|
-pub impl Source for ChannelCountConverter with try_seek(
+pub impl Source for ChannelCountConverter with fn try_seek(
   _self : ChannelCountConverter,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -122,40 +122,40 @@ pub fn SampleRateConverter::into_inner(self : SampleRateConverter) -> DynSource 
 }
 
 ///|
-pub impl Source for SampleRateConverter with next(self : SampleRateConverter) {
+pub impl Source for SampleRateConverter with fn next(self : SampleRateConverter) {
   self.inner.next()
 }
 
 ///|
-pub impl Source for SampleRateConverter with channels(
+pub impl Source for SampleRateConverter with fn channels(
   self : SampleRateConverter,
 ) {
   self.channels
 }
 
 ///|
-pub impl Source for SampleRateConverter with sample_rate(
+pub impl Source for SampleRateConverter with fn sample_rate(
   self : SampleRateConverter,
 ) {
   self.to
 }
 
 ///|
-pub impl Source for SampleRateConverter with current_span_len(
+pub impl Source for SampleRateConverter with fn current_span_len(
   _self : SampleRateConverter,
 ) {
   _self.inner.current_span_len()
 }
 
 ///|
-pub impl Source for SampleRateConverter with total_duration(
+pub impl Source for SampleRateConverter with fn total_duration(
   _self : SampleRateConverter,
 ) {
   _self.inner.total_duration()
 }
 
 ///|
-pub impl Source for SampleRateConverter with try_seek(
+pub impl Source for SampleRateConverter with fn try_seek(
   _self : SampleRateConverter,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -183,40 +183,40 @@ pub fn SampleTypeConverter::into_inner(self : SampleTypeConverter) -> DynSource 
 }
 
 ///|
-pub impl Source for SampleTypeConverter with next(self : SampleTypeConverter) {
+pub impl Source for SampleTypeConverter with fn next(self : SampleTypeConverter) {
   self.inner.next()
 }
 
 ///|
-pub impl Source for SampleTypeConverter with channels(
+pub impl Source for SampleTypeConverter with fn channels(
   self : SampleTypeConverter,
 ) {
   self.inner.channels()
 }
 
 ///|
-pub impl Source for SampleTypeConverter with sample_rate(
+pub impl Source for SampleTypeConverter with fn sample_rate(
   self : SampleTypeConverter,
 ) {
   self.inner.sample_rate()
 }
 
 ///|
-pub impl Source for SampleTypeConverter with current_span_len(
+pub impl Source for SampleTypeConverter with fn current_span_len(
   _self : SampleTypeConverter,
 ) {
   _self.inner.current_span_len()
 }
 
 ///|
-pub impl Source for SampleTypeConverter with total_duration(
+pub impl Source for SampleTypeConverter with fn total_duration(
   _self : SampleTypeConverter,
 ) {
   _self.inner.total_duration()
 }
 
 ///|
-pub impl Source for SampleTypeConverter with try_seek(
+pub impl Source for SampleTypeConverter with fn try_seek(
   _self : SampleTypeConverter,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {

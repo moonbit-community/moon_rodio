@@ -21,4 +21,3 @@ pub using @moon_rodio {type AutomaticGainControl}
 pub using @moon_rodio {type AutomaticGainControlSettings}
 
 // Traits
-

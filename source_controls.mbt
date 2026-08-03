@@ -91,32 +91,32 @@ pub fn Pausable::sample_rate(self : Pausable) -> SampleRate {
 }
 
 ///|
-pub impl Source for Pausable with next(self : Pausable) {
+pub impl Source for Pausable with fn next(self : Pausable) {
   self.next()
 }
 
 ///|
-pub impl Source for Pausable with channels(self : Pausable) {
+pub impl Source for Pausable with fn channels(self : Pausable) {
   self.channels()
 }
 
 ///|
-pub impl Source for Pausable with sample_rate(self : Pausable) {
+pub impl Source for Pausable with fn sample_rate(self : Pausable) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for Pausable with current_span_len(_self : Pausable) {
+pub impl Source for Pausable with fn current_span_len(_self : Pausable) {
   _self.input.current_span_len()
 }
 
 ///|
-pub impl Source for Pausable with total_duration(_self : Pausable) {
+pub impl Source for Pausable with fn total_duration(_self : Pausable) {
   _self.input.total_duration()
 }
 
 ///|
-pub impl Source for Pausable with try_seek(
+pub impl Source for Pausable with fn try_seek(
   _self : Pausable,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -174,32 +174,32 @@ pub fn Stoppable::sample_rate(self : Stoppable) -> SampleRate {
 }
 
 ///|
-pub impl Source for Stoppable with next(self : Stoppable) {
+pub impl Source for Stoppable with fn next(self : Stoppable) {
   self.next()
 }
 
 ///|
-pub impl Source for Stoppable with channels(self : Stoppable) {
+pub impl Source for Stoppable with fn channels(self : Stoppable) {
   self.channels()
 }
 
 ///|
-pub impl Source for Stoppable with sample_rate(self : Stoppable) {
+pub impl Source for Stoppable with fn sample_rate(self : Stoppable) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for Stoppable with current_span_len(_self : Stoppable) {
+pub impl Source for Stoppable with fn current_span_len(_self : Stoppable) {
   _self.input.current_span_len()
 }
 
 ///|
-pub impl Source for Stoppable with total_duration(_self : Stoppable) {
+pub impl Source for Stoppable with fn total_duration(_self : Stoppable) {
   _self.input.total_duration()
 }
 
 ///|
-pub impl Source for Stoppable with try_seek(
+pub impl Source for Stoppable with fn try_seek(
   _self : Stoppable,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -257,32 +257,32 @@ pub fn Skippable::sample_rate(self : Skippable) -> SampleRate {
 }
 
 ///|
-pub impl Source for Skippable with next(self : Skippable) {
+pub impl Source for Skippable with fn next(self : Skippable) {
   self.next()
 }
 
 ///|
-pub impl Source for Skippable with channels(self : Skippable) {
+pub impl Source for Skippable with fn channels(self : Skippable) {
   self.channels()
 }
 
 ///|
-pub impl Source for Skippable with sample_rate(self : Skippable) {
+pub impl Source for Skippable with fn sample_rate(self : Skippable) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for Skippable with current_span_len(_self : Skippable) {
+pub impl Source for Skippable with fn current_span_len(_self : Skippable) {
   _self.input.current_span_len()
 }
 
 ///|
-pub impl Source for Skippable with total_duration(_self : Skippable) {
+pub impl Source for Skippable with fn total_duration(_self : Skippable) {
   _self.input.total_duration()
 }
 
 ///|
-pub impl Source for Skippable with try_seek(
+pub impl Source for Skippable with fn try_seek(
   _self : Skippable,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {

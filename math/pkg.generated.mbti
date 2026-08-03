@@ -15,4 +15,3 @@ pub fn linear_to_db(Double) -> Double
 // Type aliases
 
 // Traits
-

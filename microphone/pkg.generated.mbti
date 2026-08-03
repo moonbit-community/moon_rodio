@@ -38,4 +38,3 @@ pub using @moon_rodio {type MicrophoneError as OpenError}
 pub using @moon_rodio {type Microphone as Stream}
 
 // Traits
-

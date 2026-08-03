@@ -196,32 +196,32 @@ pub fn SpatialSource::sample_rate(self : SpatialSource) -> SampleRate {
 }
 
 ///|
-pub impl Source for SpatialSource with next(self : SpatialSource) {
+pub impl Source for SpatialSource with fn next(self : SpatialSource) {
   self.next()
 }
 
 ///|
-pub impl Source for SpatialSource with channels(self : SpatialSource) {
+pub impl Source for SpatialSource with fn channels(self : SpatialSource) {
   self.channels()
 }
 
 ///|
-pub impl Source for SpatialSource with sample_rate(self : SpatialSource) {
+pub impl Source for SpatialSource with fn sample_rate(self : SpatialSource) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for SpatialSource with current_span_len(self : SpatialSource) {
+pub impl Source for SpatialSource with fn current_span_len(self : SpatialSource) {
   self.input.current_span_len()
 }
 
 ///|
-pub impl Source for SpatialSource with total_duration(self : SpatialSource) {
+pub impl Source for SpatialSource with fn total_duration(self : SpatialSource) {
   self.input.total_duration()
 }
 
 ///|
-pub impl Source for SpatialSource with try_seek(
+pub impl Source for SpatialSource with fn try_seek(
   self : SpatialSource,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
@@ -267,34 +267,36 @@ fn SpatialSinkSource::next(self : SpatialSinkSource) -> Sample? {
 }
 
 ///|
-impl Source for SpatialSinkSource with next(self : SpatialSinkSource) {
+impl Source for SpatialSinkSource with fn next(self : SpatialSinkSource) {
   self.next()
 }
 
 ///|
-impl Source for SpatialSinkSource with channels(self : SpatialSinkSource) {
+impl Source for SpatialSinkSource with fn channels(self : SpatialSinkSource) {
   self.inner.channels()
 }
 
 ///|
-impl Source for SpatialSinkSource with sample_rate(self : SpatialSinkSource) {
+impl Source for SpatialSinkSource with fn sample_rate(self : SpatialSinkSource) {
   self.inner.sample_rate()
 }
 
 ///|
-impl Source for SpatialSinkSource with current_span_len(
+impl Source for SpatialSinkSource with fn current_span_len(
   self : SpatialSinkSource,
 ) {
   self.inner.current_span_len()
 }
 
 ///|
-impl Source for SpatialSinkSource with total_duration(self : SpatialSinkSource) {
+impl Source for SpatialSinkSource with fn total_duration(
+  self : SpatialSinkSource,
+) {
   self.inner.total_duration()
 }
 
 ///|
-impl Source for SpatialSinkSource with try_seek(
+impl Source for SpatialSinkSource with fn try_seek(
   self : SpatialSinkSource,
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {

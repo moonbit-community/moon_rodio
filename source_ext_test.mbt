@@ -144,11 +144,11 @@ fn skip_duration_samples_left(
 test "rodio::source::open_trait_impl_and_is_exhausted" {
   let src = ExternalSource::new([1.0, 2.0], 1, 4)
   assert_true(!is_exhausted(src))
-  @debug.assert_eq(src.next(), Some(1.0))
+  @debug.assert_eq(Source::next(src), Some(1.0))
   assert_true(!is_exhausted(src))
-  @debug.assert_eq(src.next(), Some(2.0))
+  @debug.assert_eq(Source::next(src), Some(2.0))
   assert_true(is_exhausted(src))
-  @debug.assert_eq(src.next(), None)
+  @debug.assert_eq(Source::next(src), None)
   assert_true(is_exhausted(src))
 }
 

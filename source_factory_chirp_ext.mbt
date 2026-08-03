@@ -80,22 +80,22 @@ pub fn Chirp::sample_rate(self : Chirp) -> SampleRate {
 }
 
 ///|
-pub impl Source for Chirp with next(self : Chirp) {
+pub impl Source for Chirp with fn next(self : Chirp) {
   self.next()
 }
 
 ///|
-pub impl Source for Chirp with channels(self : Chirp) {
+pub impl Source for Chirp with fn channels(self : Chirp) {
   self.channels()
 }
 
 ///|
-pub impl Source for Chirp with sample_rate(self : Chirp) {
+pub impl Source for Chirp with fn sample_rate(self : Chirp) {
   self.sample_rate()
 }
 
 ///|
-pub impl Source for Chirp with current_span_len(self : Chirp) {
+pub impl Source for Chirp with fn current_span_len(self : Chirp) {
   let remaining = self.total_samples - self.elapsed_samples.val
   if remaining <= 0 {
     Some(0)
@@ -105,7 +105,7 @@ pub impl Source for Chirp with current_span_len(self : Chirp) {
 }
 
 ///|
-pub impl Source for Chirp with total_duration(self : Chirp) {
+pub impl Source for Chirp with fn total_duration(self : Chirp) {
   duration_from_sample_count(
     self.total_samples,
     self.channels(),
@@ -114,7 +114,10 @@ pub impl Source for Chirp with total_duration(self : Chirp) {
 }
 
 ///|
-pub impl Source for Chirp with try_seek(self : Chirp, pos : @moon_cpal.Duration) -> Unit raise SeekError {
+pub impl Source for Chirp with fn try_seek(
+  self : Chirp,
+  pos : @moon_cpal.Duration,
+) -> Unit raise SeekError {
   let target = sample_index_from_duration(
     pos,
     self.channels(),
@@ -196,28 +199,28 @@ pub fn[S] FromFactoryIter::sample_rate(self : FromFactoryIter[S]) -> SampleRate 
 }
 
 ///|
-pub impl[S : Source] Source for FromFactoryIter[S] with next(
+pub impl[S : Source] Source for FromFactoryIter[S] with fn next(
   self : FromFactoryIter[S],
 ) {
   self.next()
 }
 
 ///|
-pub impl[S : Source] Source for FromFactoryIter[S] with channels(
+pub impl[S : Source] Source for FromFactoryIter[S] with fn channels(
   self : FromFactoryIter[S],
 ) {
   self.channels()
 }
 
 ///|
-pub impl[S : Source] Source for FromFactoryIter[S] with sample_rate(
+pub impl[S : Source] Source for FromFactoryIter[S] with fn sample_rate(
   self : FromFactoryIter[S],
 ) {
   self.sample_rate()
 }
 
 ///|
-pub impl[S : Source] Source for FromFactoryIter[S] with current_span_len(
+pub impl[S : Source] Source for FromFactoryIter[S] with fn current_span_len(
   self : FromFactoryIter[S],
 ) {
   if self.current.val is Some(current) {
@@ -230,14 +233,14 @@ pub impl[S : Source] Source for FromFactoryIter[S] with current_span_len(
 }
 
 ///|
-pub impl[S : Source] Source for FromFactoryIter[S] with total_duration(
+pub impl[S : Source] Source for FromFactoryIter[S] with fn total_duration(
   _self : FromFactoryIter[S],
 ) {
   source_default_total_duration()
 }
 
 ///|
-pub impl[S : Source] Source for FromFactoryIter[S] with try_seek(
+pub impl[S : Source] Source for FromFactoryIter[S] with fn try_seek(
   self : FromFactoryIter[S],
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {

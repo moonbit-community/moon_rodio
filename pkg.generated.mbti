@@ -1510,4 +1510,3 @@ pub(open) trait WavWriter {
   fn write_all(Self, Bytes) -> Unit raise ToWavError
 }
 pub impl WavWriter for @buffer.Buffer
-

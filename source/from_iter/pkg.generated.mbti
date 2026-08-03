@@ -16,4 +16,3 @@ pub fn[S : @moon_rodio.Source] from_iter(Array[S]) -> @moon_rodio.FromIter
 pub using @moon_rodio {type FromIter}
 
 // Traits
-

@@ -22,4 +22,3 @@ pub fn[S : @moon_rodio.Source] low_pass_with_q(S, Int, Double) -> @moon_rodio.Bl
 pub using @moon_rodio {type BltFilter}
 
 // Traits
-
