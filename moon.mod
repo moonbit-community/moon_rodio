@@ -3,8 +3,8 @@ name = "Milky2018/moon_rodio"
 version = "0.3.3"
 
 import {
-  "moonbitlang/x@0.4.40",
-  "Milky2018/moon_cpal@0.11.7",
+  "moonbitlang/x@0.4.47",
+  "Milky2018/moon_cpal@0.11.8",
 }
 
 readme = "README.mbt.md"
