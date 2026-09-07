@@ -1,9 +1,9 @@
 name = "Milky2018/moon_rodio"
 
-version = "0.3.4"
+version = "0.3.5"
 
 import {
-  "moonbitlang/x@0.4.47",
+  "moonbitlang/x@0.5.1",
   "Milky2018/moon_cpal@0.11.8",
 }
 
@@ -20,6 +20,5 @@ description = "Native-only MoonBit port of Rust rodio with playback pipeline, so
 preferred_target = "native"
 
 options(
-  exclude: [ "test_assets" ],
   "--moonbit-unstable-prebuild": "build.js",
 )

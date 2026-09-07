@@ -119,7 +119,7 @@ pub fn available_outputs() -> Array[Output] raise SpeakersListError {
         }
       }
     }
-    out.push({ inner: device, default: is_default })
+    out.push({ inner: device, default: is_default, })
   }
   out
 }
@@ -158,7 +158,7 @@ pub fn OutputConfig::new(
 ) -> OutputConfig {
   guard channel_count > 0 else { panic() }
   guard sample_rate > 0 else { panic() }
-  { channel_count, sample_rate, buffer_size, sample_format }
+  { channel_count, sample_rate, buffer_size, sample_format, }
 }
 
 ///|
@@ -215,7 +215,7 @@ pub fn OutputConfig::with_sample_format(
 
 ///|
 fn OutputConfig::with_f32_samples(self : OutputConfig) -> OutputConfig {
-  { ..self, sample_format: F32 }
+  { ..self, sample_format: F32, }
 }
 
 ///|
@@ -293,7 +293,7 @@ fn SpeakersBuilder::with_device_inner(
   device : @moon_cpal.Device,
 ) -> SpeakersBuilder raise SpeakersError {
   let supported_configs = collect_supported_output_configs(device)
-  { ..self, device: Some(device), supported_configs, config: None }
+  { ..self, device: Some(device), supported_configs, config: None, }
 }
 
 ///|
@@ -357,7 +357,7 @@ pub fn SpeakersBuilder::default_config(
   } else {
     config
   }
-  { ..self, config: Some(selected) }
+  { ..self, config: Some(selected), }
 }
 
 ///|
@@ -366,7 +366,7 @@ pub fn SpeakersBuilder::config(
   config : OutputConfig,
 ) -> SpeakersBuilder raise SpeakersError {
   self.check_config(config)
-  { ..self, config: Some(config) }
+  { ..self, config: Some(config), }
 }
 
 ///|
@@ -374,7 +374,7 @@ pub fn SpeakersBuilder::with_error_callback(
   self : SpeakersBuilder,
   callback : (@moon_cpal.StreamError) -> Unit,
 ) -> SpeakersBuilder {
-  { ..self, error_callback: callback }
+  { ..self, error_callback: callback, }
 }
 
 ///|
@@ -395,7 +395,7 @@ pub fn SpeakersBuilder::try_sample_rate(
   let current = self.get_config()
   let next = { ..current, sample_rate, }
   self.check_config(next)
-  { ..self, config: Some(next) }
+  { ..self, config: Some(next), }
 }
 
 ///|
@@ -416,7 +416,7 @@ pub fn SpeakersBuilder::prefer_sample_rates(
       break
     }
   }
-  { ..self, config: Some(selected) }
+  { ..self, config: Some(selected), }
 }
 
 ///|
@@ -427,7 +427,7 @@ pub fn SpeakersBuilder::try_channels(
   let current = self.get_config()
   let next = { ..current, channel_count, }
   self.check_config(next)
-  { ..self, config: Some(next) }
+  { ..self, config: Some(next), }
 }
 
 ///|
@@ -448,7 +448,7 @@ pub fn SpeakersBuilder::prefer_channel_counts(
       break
     }
   }
-  { ..self, config: Some(selected) }
+  { ..self, config: Some(selected), }
 }
 
 ///|
@@ -462,7 +462,7 @@ pub fn SpeakersBuilder::try_buffer_size(
     buffer_size: @moon_cpal.BufferSize::fixed(buffer_size),
   }
   self.check_config(next)
-  { ..self, config: Some(next) }
+  { ..self, config: Some(next), }
 }
 
 ///|
@@ -489,7 +489,7 @@ pub fn SpeakersBuilder::prefer_buffer_sizes(
       break
     }
   }
-  { ..self, config: Some(selected) }
+  { ..self, config: Some(selected), }
 }
 
 ///|
@@ -548,5 +548,41 @@ pub fn[S : FixedSource] SpeakersBuilder::play(
     device_sink => device_sink
   }
   sink.mixer().add(FixedSourceAdapter::new(source))
-  { _sink: sink }
+  { _sink: sink, }
 }
+
+///|
+pub extend OutputConfig with Debug::{to_repr}
+
+///|
+pub extend OutputConfig with Eq::{not_equal, equal}
+
+///|
+pub extend OutputConfig with Show::{to_string, output}
+
+///|
+pub extend SpeakersError with Debug::{to_repr}
+
+///|
+pub extend SpeakersError with Eq::{not_equal, equal}
+
+///|
+pub extend SpeakersError with Show::{to_string, output}
+
+///|
+pub extend SpeakersListError with Debug::{to_repr}
+
+///|
+pub extend SpeakersListError with Eq::{not_equal, equal}
+
+///|
+pub extend SpeakersListError with Show::{to_string, output}
+
+///|
+pub extend SpeakersPlayError with Debug::{to_repr}
+
+///|
+pub extend SpeakersPlayError with Eq::{not_equal, equal}
+
+///|
+pub extend SpeakersPlayError with Show::{to_string, output}

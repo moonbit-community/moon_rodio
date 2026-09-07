@@ -160,32 +160,8 @@ pub fn OutputStreamBuilder::from_default_device() -> OutputStreamBuilder raise S
 ///|
 pub fn OutputStreamBuilder::open_default_stream() -> OutputStream raise StreamError {
   let builder = OutputStreamBuilder::from_default_device()
-  try builder.open_stream() catch {
-    original_err => {
-      let host = @moon_cpal.default_host()
-      let devices = try host.output_devices() catch {
-        _ => raise original_err
-      } noraise {
-        xs => xs
-      }
-
-      for device in devices {
-        let maybe_stream = try {
-          let next_builder = OutputStreamBuilder::from_device(device)
-          Some(next_builder.open_stream_or_fallback())
-        } catch {
-          _ => None
-        }
-        match maybe_stream {
-          Some(stream) => return stream
-          None => ()
-        }
-      }
-
-      raise original_err
-    }
-  } noraise {
-    stream => stream
+  builder.open_stream() catch {
+    original_err => open_default_stream_fallback(original_err)
   }
 }
 
@@ -194,7 +170,7 @@ pub fn OutputStreamBuilder::with_device(
   self : OutputStreamBuilder,
   device : @moon_cpal.Device,
 ) -> OutputStreamBuilder {
-  { ..self, device: Some(device) }
+  { ..self, device: Some(device), }
 }
 
 ///|
@@ -203,7 +179,7 @@ pub fn OutputStreamBuilder::with_channels(
   channel_count : ChannelCount,
 ) -> OutputStreamBuilder {
   guard channel_count > 0 else { panic() }
-  { ..self, config: { ..self.config, channel_count, } }
+  { ..self, config: { ..self.config, channel_count, }, }
 }
 
 ///|
@@ -212,7 +188,7 @@ pub fn OutputStreamBuilder::with_sample_rate(
   sample_rate : SampleRate,
 ) -> OutputStreamBuilder {
   guard sample_rate > 0 else { panic() }
-  { ..self, config: { ..self.config, sample_rate, } }
+  { ..self, config: { ..self.config, sample_rate, }, }
 }
 
 ///|
@@ -220,7 +196,7 @@ pub fn OutputStreamBuilder::with_buffer_size(
   self : OutputStreamBuilder,
   buffer_size : @moon_cpal.BufferSize,
 ) -> OutputStreamBuilder {
-  { ..self, config: { ..self.config, buffer_size, } }
+  { ..self, config: { ..self.config, buffer_size, }, }
 }
 
 ///|
@@ -228,7 +204,7 @@ pub fn OutputStreamBuilder::with_sample_format(
   self : OutputStreamBuilder,
   sample_format : @moon_cpal.SampleFormat,
 ) -> OutputStreamBuilder {
-  { ..self, config: { ..self.config, sample_format, } }
+  { ..self, config: { ..self.config, sample_format, }, }
 }
 
 ///|
@@ -268,7 +244,7 @@ pub fn OutputStreamBuilder::with_error_callback(
   self : OutputStreamBuilder,
   callback : (@moon_cpal.StreamError) -> Unit,
 ) -> OutputStreamBuilder {
-  { ..self, error_callback: callback }
+  { ..self, error_callback: callback, }
 }
 
 ///|
@@ -285,32 +261,8 @@ pub fn OutputStreamBuilder::open_stream(
 pub fn OutputStreamBuilder::open_stream_or_fallback(
   self : OutputStreamBuilder,
 ) -> OutputStream raise StreamError {
-  try self.open_stream() catch {
-    original_err => {
-      let device = match self.device {
-        None => raise NoDevice
-        Some(d) => d
-      }
-      let configs = supported_output_configs(device)
-      for config in configs {
-        let attempt = Some(
-          OutputStreamBuilder::default()
-          .with_device(device)
-          .with_supported_config(config)
-          .with_error_callback(self.error_callback)
-          .open_stream(),
-        ) catch {
-          _ => None
-        }
-        match attempt {
-          Some(stream) => return stream
-          None => ()
-        }
-      }
-      raise original_err
-    }
-  } noraise {
-    stream => stream
+  self.open_stream() catch {
+    original_err => self.open_stream_fallback(original_err)
   }
 }
 
@@ -617,7 +569,7 @@ pub fn OutputStream::open(
   stream.play() catch {
     err => raise PlayStreamError(err)
   }
-  { config, mixer: controller, _stream: stream, log_on_drop: @ref.new(true) }
+  { config, mixer: controller, _stream: stream, log_on_drop: @ref.new(true), }
 }
 
 ///|
@@ -641,4 +593,77 @@ pub fn supported_output_configs(
     out.push(sf.with_sample_rate(min_rate))
   }
   out
+}
+
+///|
+pub extend OutputStreamConfig with Debug::{to_repr}
+
+///|
+pub extend OutputStreamConfig with Eq::{not_equal, equal}
+
+///|
+pub extend OutputStreamConfig with Show::{to_string, output}
+
+///|
+pub extend StreamError with Debug::{to_repr}
+
+///|
+pub extend StreamError with Eq::{not_equal, equal}
+
+///|
+pub extend StreamError with Show::{to_string, output}
+
+///|
+fn open_default_stream_fallback(
+  original_err : StreamError,
+) -> OutputStream raise StreamError {
+  let host = @moon_cpal.default_host()
+  let devices = try host.output_devices() catch {
+    _ => raise original_err
+  } noraise {
+    xs => xs
+  }
+
+  for device in devices {
+    let maybe_stream = try {
+      let next_builder = OutputStreamBuilder::from_device(device)
+      Some(next_builder.open_stream_or_fallback())
+    } catch {
+      _ => None
+    }
+    match maybe_stream {
+      Some(stream) => return stream
+      None => ()
+    }
+  }
+
+  raise original_err
+}
+
+///|
+fn OutputStreamBuilder::open_stream_fallback(
+  self : OutputStreamBuilder,
+  original_err : StreamError,
+) -> OutputStream raise StreamError {
+  let device = match self.device {
+    None => raise NoDevice
+    Some(d) => d
+  }
+  let configs = supported_output_configs(device)
+  for config in configs {
+    let attempt = Some(
+      OutputStreamBuilder::default()
+      .with_device(device)
+      .with_supported_config(config)
+      .with_error_callback(self.error_callback)
+      .open_stream(),
+    ) catch {
+      _ => None
+    }
+    match attempt {
+      Some(stream) => return stream
+      None => ()
+    }
+  }
+  raise original_err
 }

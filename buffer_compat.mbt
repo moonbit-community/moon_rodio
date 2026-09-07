@@ -28,7 +28,7 @@ pub fn StaticSamplesBuffer::new(
 ) -> StaticSamplesBuffer {
   guard channels > 0 else { panic() }
   guard sample_rate > 0 else { panic() }
-  { channels, sample_rate, samples, cursor: @ref.new(0) }
+  { channels, sample_rate, samples, cursor: @ref.new(0), }
 }
 
 ///|
@@ -108,4 +108,11 @@ pub fn buffer_from_iter(
   samples : Array[Sample],
 ) -> SamplesBuffer {
   SamplesBuffer::new(channels, sample_rate, samples)
+}
+
+///|
+pub extend StaticSamplesBuffer with Source::{
+  total_duration,
+  try_seek,
+  current_span_len,
 }

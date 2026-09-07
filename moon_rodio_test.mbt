@@ -243,7 +243,7 @@ fn SpanMismatchSource::new(
   sample_rate : @moon_rodio.SampleRate,
   total_span_len : Int?,
 ) -> SpanMismatchSource {
-  { samples, cursor: @ref.new(0), channels, sample_rate, total_span_len }
+  { samples, cursor: @ref.new(0), channels, sample_rate, total_span_len, }
 }
 
 ///|

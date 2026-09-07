@@ -154,3 +154,6 @@ pub impl Source for MixerSource with fn try_seek(
 ) -> Unit raise SeekError {
   source_default_try_seek(pos)
 }
+
+///|
+pub extend MixerSource with Source::{total_duration, try_seek, current_span_len}

@@ -55,7 +55,7 @@ struct TestNoiseRng {
 
 ///|
 fn TestNoiseRng::new(seed : UInt64) -> TestNoiseRng {
-  { inner: LcgNoiseRng::new(seed) }
+  { inner: LcgNoiseRng::new(seed), }
 }
 
 ///|
@@ -77,7 +77,7 @@ fn ExternalSource::new(
   channels : ChannelCount,
   sample_rate : SampleRate,
 ) -> ExternalSource {
-  { samples, cursor: @ref.new(0), channels, sample_rate }
+  { samples, cursor: @ref.new(0), channels, sample_rate, }
 }
 
 ///|

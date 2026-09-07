@@ -1,0 +1,13 @@
+.DS_Store
+_build/
+.mooncakes/
+.moonagent/
+target/
+target
+rodio-reference/
+mp3-reference/
+wav-reference/
+flac-reference/
+vorbis-reference/
+
+/test_assets/

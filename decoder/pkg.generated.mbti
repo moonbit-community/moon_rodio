@@ -28,6 +28,11 @@ pub suberror DecoderError {
   InvalidFormat(String)
   Unsupported(String)
 } derive(Eq, @debug.Debug)
+pub fn DecoderError::equal(Self, Self) -> Bool
+pub fn DecoderError::not_equal(Self, Self) -> Bool
+pub fn DecoderError::output(Self, &Logger) -> Unit
+pub fn DecoderError::to_repr(Self) -> @debug.Repr
+pub fn DecoderError::to_string(Self) -> String
 pub impl Show for DecoderError
 
 // Types and methods

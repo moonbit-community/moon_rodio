@@ -125,3 +125,12 @@ pub fn[S : Source] output_to_wav(
 ) -> Unit raise ToWavError {
   wav_to_file(source, wav_file)
 }
+
+///|
+pub extend ToWavError with Debug::{to_repr}
+
+///|
+pub extend ToWavError with Eq::{not_equal, equal}
+
+///|
+pub extend ToWavError with Show::{to_string, output}

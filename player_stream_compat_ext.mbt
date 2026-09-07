@@ -48,24 +48,24 @@ pub struct DeviceSinkBuilder {
 
 ///|
 pub fn DeviceSinkBuilder::default() -> DeviceSinkBuilder {
-  { inner: OutputStreamBuilder::default() }
+  { inner: OutputStreamBuilder::default(), }
 }
 
 ///|
 pub fn DeviceSinkBuilder::from_device(
   device : @moon_cpal.Device,
 ) -> DeviceSinkBuilder raise DeviceSinkError {
-  { inner: OutputStreamBuilder::from_device(device) }
+  { inner: OutputStreamBuilder::from_device(device), }
 }
 
 ///|
 pub fn DeviceSinkBuilder::from_default_device() -> DeviceSinkBuilder raise DeviceSinkError {
-  { inner: OutputStreamBuilder::from_default_device() }
+  { inner: OutputStreamBuilder::from_default_device(), }
 }
 
 ///|
 pub fn DeviceSinkBuilder::open_default_sink() -> MixerDeviceSink raise DeviceSinkError {
-  { inner: OutputStreamBuilder::open_default_stream() }
+  { inner: OutputStreamBuilder::open_default_stream(), }
 }
 
 ///|
@@ -73,7 +73,7 @@ pub fn DeviceSinkBuilder::with_device(
   self : DeviceSinkBuilder,
   device : @moon_cpal.Device,
 ) -> DeviceSinkBuilder {
-  { inner: self.inner.with_device(device) }
+  { inner: self.inner.with_device(device), }
 }
 
 ///|
@@ -81,7 +81,7 @@ pub fn DeviceSinkBuilder::with_channels(
   self : DeviceSinkBuilder,
   channel_count : ChannelCount,
 ) -> DeviceSinkBuilder {
-  { inner: self.inner.with_channels(channel_count) }
+  { inner: self.inner.with_channels(channel_count), }
 }
 
 ///|
@@ -89,7 +89,7 @@ pub fn DeviceSinkBuilder::with_sample_rate(
   self : DeviceSinkBuilder,
   sample_rate : SampleRate,
 ) -> DeviceSinkBuilder {
-  { inner: self.inner.with_sample_rate(sample_rate) }
+  { inner: self.inner.with_sample_rate(sample_rate), }
 }
 
 ///|
@@ -97,7 +97,7 @@ pub fn DeviceSinkBuilder::with_buffer_size(
   self : DeviceSinkBuilder,
   buffer_size : @moon_cpal.BufferSize,
 ) -> DeviceSinkBuilder {
-  { inner: self.inner.with_buffer_size(buffer_size) }
+  { inner: self.inner.with_buffer_size(buffer_size), }
 }
 
 ///|
@@ -105,7 +105,7 @@ pub fn DeviceSinkBuilder::with_sample_format(
   self : DeviceSinkBuilder,
   sample_format : @moon_cpal.SampleFormat,
 ) -> DeviceSinkBuilder {
-  { inner: self.inner.with_sample_format(sample_format) }
+  { inner: self.inner.with_sample_format(sample_format), }
 }
 
 ///|
@@ -113,7 +113,7 @@ pub fn DeviceSinkBuilder::with_supported_config(
   self : DeviceSinkBuilder,
   config : @moon_cpal.SupportedStreamConfig,
 ) -> DeviceSinkBuilder {
-  { inner: self.inner.with_supported_config(config) }
+  { inner: self.inner.with_supported_config(config), }
 }
 
 ///|
@@ -121,7 +121,7 @@ pub fn DeviceSinkBuilder::with_config(
   self : DeviceSinkBuilder,
   config : @moon_cpal.StreamConfig,
 ) -> DeviceSinkBuilder {
-  { inner: self.inner.with_config(config) }
+  { inner: self.inner.with_config(config), }
 }
 
 ///|
@@ -129,7 +129,7 @@ pub fn DeviceSinkBuilder::with_error_callback(
   self : DeviceSinkBuilder,
   callback : (@moon_cpal.StreamError) -> Unit,
 ) -> DeviceSinkBuilder {
-  { inner: self.inner.with_error_callback(callback) }
+  { inner: self.inner.with_error_callback(callback), }
 }
 
 ///|
@@ -141,14 +141,14 @@ pub fn DeviceSinkBuilder::config(self : DeviceSinkBuilder) -> DeviceSinkConfig {
 pub fn DeviceSinkBuilder::open_stream(
   self : DeviceSinkBuilder,
 ) -> MixerDeviceSink raise DeviceSinkError {
-  { inner: self.inner.open_stream() }
+  { inner: self.inner.open_stream(), }
 }
 
 ///|
 pub fn DeviceSinkBuilder::open_sink_or_fallback(
   self : DeviceSinkBuilder,
 ) -> MixerDeviceSink raise DeviceSinkError {
-  { inner: self.inner.open_stream_or_fallback() }
+  { inner: self.inner.open_stream_or_fallback(), }
 }
 
 ///|
@@ -158,13 +158,13 @@ pub struct Player {
 
 ///|
 pub fn Player::connect_new(mixer : Mixer) -> Player {
-  { inner: Sink::connect_new(mixer) }
+  { inner: Sink::connect_new(mixer), }
 }
 
 ///|
 pub fn Player::new() -> (Player, ControlledQueueSource) {
   let (sink, source) = Sink::new()
-  ({ inner: sink }, source)
+  ({ inner: sink, }, source)
 }
 
 ///|

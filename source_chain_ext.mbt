@@ -21,7 +21,7 @@ pub struct Done {
 
 ///|
 pub fn[S : Source] Done::new(source : S, signal : Ref[Int]) -> Done {
-  { input: to_dyn(source), signal, signal_sent: @ref.new(false) }
+  { input: to_dyn(source), signal, signal_sent: @ref.new(false), }
 }
 
 ///|
@@ -373,4 +373,24 @@ pub impl Source for FromIter with fn try_seek(
   } else {
     ()
   }
+}
+
+///|
+pub extend Done with Source::{total_duration, try_seek, current_span_len}
+
+///|
+pub extend EmptyCallback with Source::{
+  total_duration,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend FromIter with Source::{total_duration, try_seek, current_span_len}
+
+///|
+pub extend UniformSourceIterator with Source::{
+  total_duration,
+  try_seek,
+  current_span_len,
 }

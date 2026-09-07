@@ -66,7 +66,7 @@ struct WavBytesCollector {
 
 ///|
 fn WavBytesCollector::new() -> WavBytesCollector {
-  { out: @ref.new(b"") }
+  { out: @ref.new(b""), }
 }
 
 ///|

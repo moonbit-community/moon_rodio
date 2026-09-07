@@ -259,3 +259,33 @@ pub impl Source for Dither with fn try_seek(
   }
   self.input.try_seek(pos)
 }
+
+///|
+pub extend BitDepth with Debug::{to_repr}
+
+///|
+pub extend BitDepth with Eq::{not_equal, equal}
+
+///|
+pub extend BitDepth with Show::{to_string, output}
+
+///|
+pub extend BitDepthError with Debug::{to_repr}
+
+///|
+pub extend BitDepthError with Eq::{not_equal, equal}
+
+///|
+pub extend BitDepthError with Show::{to_string, output}
+
+///|
+pub extend Dither with Source::{total_duration, try_seek, current_span_len}
+
+///|
+pub extend DitherAlgorithm with Debug::{to_repr}
+
+///|
+pub extend DitherAlgorithm with Eq::{not_equal, equal}
+
+///|
+pub extend DitherAlgorithm with Show::{to_string, output}

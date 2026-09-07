@@ -131,7 +131,7 @@ pub struct Stoppable {
 
 ///|
 pub fn[S : Source] stoppable(source : S) -> Stoppable {
-  { input: to_dyn(source), stopped: @ref.new(false) }
+  { input: to_dyn(source), stopped: @ref.new(false), }
 }
 
 ///|
@@ -214,7 +214,7 @@ pub struct Skippable {
 
 ///|
 pub fn[S : Source] skippable(source : S) -> Skippable {
-  { input: to_dyn(source), do_skip: @ref.new(false) }
+  { input: to_dyn(source), do_skip: @ref.new(false), }
 }
 
 ///|
@@ -288,3 +288,12 @@ pub impl Source for Skippable with fn try_seek(
 ) -> Unit raise SeekError {
   _self.input.try_seek(pos)
 }
+
+///|
+pub extend Pausable with Source::{total_duration, try_seek, current_span_len}
+
+///|
+pub extend Skippable with Source::{total_duration, try_seek, current_span_len}
+
+///|
+pub extend Stoppable with Source::{total_duration, try_seek, current_span_len}

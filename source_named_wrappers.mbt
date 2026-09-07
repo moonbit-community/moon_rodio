@@ -20,7 +20,7 @@ pub struct Amplify {
 
 ///|
 pub fn[S : Source] Amplify::new(source : S, factor : Sample) -> Amplify {
-  { input: to_dyn(source), factor: @ref.new(factor) }
+  { input: to_dyn(source), factor: @ref.new(factor), }
 }
 
 ///|
@@ -55,7 +55,7 @@ pub struct Buffered {
 
 ///|
 pub fn[S : Source] Buffered::new(source : S) -> Buffered {
-  { inner: buffered(source) }
+  { inner: buffered(source), }
 }
 
 ///|
@@ -134,7 +134,7 @@ pub fn[A : Source, B : Source] Crossfade::new(
   right : B,
   duration : @moon_cpal.Duration,
 ) -> Crossfade {
-  { inner: crossfade(left, right, duration) }
+  { inner: crossfade(left, right, duration), }
 }
 
 ///|
@@ -162,7 +162,7 @@ pub fn[S : Source] Delay::new(
   source : S,
   duration : @moon_cpal.Duration,
 ) -> Delay {
-  { inner: delay(source, duration) }
+  { inner: delay(source, duration), }
 }
 
 ///|
@@ -249,7 +249,7 @@ pub struct Empty {
 
 ///|
 pub fn Empty::new(channels : ChannelCount, sample_rate : SampleRate) -> Empty {
-  { inner: empty(channels, sample_rate) }
+  { inner: empty(channels, sample_rate), }
 }
 
 ///|
@@ -277,7 +277,7 @@ pub fn[S : Source] FadeIn::new(
   source : S,
   duration : @moon_cpal.Duration,
 ) -> FadeIn {
-  { inner: fade_in(source, duration) }
+  { inner: fade_in(source, duration), }
 }
 
 ///|
@@ -305,7 +305,7 @@ pub fn[S : Source] FadeOut::new(
   source : S,
   duration : @moon_cpal.Duration,
 ) -> FadeOut {
-  { inner: fade_out(source, duration) }
+  { inner: fade_out(source, duration), }
 }
 
 ///|
@@ -458,7 +458,7 @@ pub fn LimitSettings::with_min(
   min_value : Sample,
 ) -> LimitSettings {
   let peak = limit_peak_from_range(min_value, self.max_value)
-  { ..self, min_value, threshold: limit_threshold_from_peak(peak) }
+  { ..self, min_value, threshold: limit_threshold_from_peak(peak), }
 }
 
 ///|
@@ -467,7 +467,7 @@ pub fn LimitSettings::with_max(
   max_value : Sample,
 ) -> LimitSettings {
   let peak = limit_peak_from_range(self.min_value, max_value)
-  { ..self, max_value, threshold: limit_threshold_from_peak(peak) }
+  { ..self, max_value, threshold: limit_threshold_from_peak(peak), }
 }
 
 ///|
@@ -476,7 +476,7 @@ pub fn LimitSettings::with_threshold(
   threshold : Sample,
 ) -> LimitSettings {
   let peak = limit_peak_from_threshold(threshold)
-  { ..self, min_value: -peak, max_value: peak, threshold }
+  { ..self, min_value: -peak, max_value: peak, threshold, }
 }
 
 ///|
@@ -615,7 +615,7 @@ pub fn[S : Source] LimitMono::new(
   source : S,
   settings : LimitSettings,
 ) -> LimitMono {
-  { inner: Limit::new(source, settings) }
+  { inner: Limit::new(source, settings), }
 }
 
 ///|
@@ -643,7 +643,7 @@ pub fn[S : Source] LimitStereo::new(
   source : S,
   settings : LimitSettings,
 ) -> LimitStereo {
-  { inner: Limit::new(source, settings) }
+  { inner: Limit::new(source, settings), }
 }
 
 ///|
@@ -671,7 +671,7 @@ pub fn[S : Source] LimitMulti::new(
   source : S,
   settings : LimitSettings,
 ) -> LimitMulti {
-  { inner: Limit::new(source, settings) }
+  { inner: Limit::new(source, settings), }
 }
 
 ///|
@@ -696,7 +696,7 @@ pub struct Mix {
 
 ///|
 pub fn[A : Source, B : Source] Mix::new(left : A, right : B) -> Mix {
-  { inner: mix(left, right) }
+  { inner: mix(left, right), }
 }
 
 ///|
@@ -721,7 +721,7 @@ pub struct Repeat {
 
 ///|
 pub fn[S : Source] Repeat::new(source : S) -> Repeat {
-  { inner: repeat_infinite(source) }
+  { inner: repeat_infinite(source), }
 }
 
 ///|
@@ -749,7 +749,7 @@ pub fn[S : Source] SkipDuration::new(
   source : S,
   duration : @moon_cpal.Duration,
 ) -> SkipDuration {
-  { inner: skip_duration(source, duration) }
+  { inner: skip_duration(source, duration), }
 }
 
 ///|
@@ -776,7 +776,7 @@ pub struct Speed {
 ///|
 pub fn[S : Source] Speed::new(source : S, ratio : Double) -> Speed {
   guard ratio > 0.0 else { panic() }
-  { input: to_dyn(source), factor: @ref.new(ratio) }
+  { input: to_dyn(source), factor: @ref.new(ratio), }
 }
 
 ///|
@@ -861,7 +861,7 @@ pub struct Zero {
 
 ///|
 pub fn Zero::new(channels : ChannelCount, sample_rate : SampleRate) -> Zero {
-  { inner: zero(channels, sample_rate) }
+  { inner: zero(channels, sample_rate), }
 }
 
 ///|
@@ -870,7 +870,7 @@ pub fn Zero::new_samples(
   sample_rate : SampleRate,
   num_samples : Int,
 ) -> Zero {
-  { inner: zero_samples(channels, sample_rate, num_samples) }
+  { inner: zero_samples(channels, sample_rate, num_samples), }
 }
 
 ///|
@@ -945,7 +945,7 @@ pub fn[S : Source] Spatial::new(
   left_ear : Array[Double],
   right_ear : Array[Double],
 ) -> Spatial {
-  { inner: SpatialSource::new(input, emitter_position, left_ear, right_ear) }
+  { inner: SpatialSource::new(input, emitter_position, left_ear, right_ear), }
 }
 
 ///|
@@ -1926,4 +1926,218 @@ pub impl Source for Spatial with fn try_seek(
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
   _self.inner().try_seek(pos)
+}
+
+///|
+pub extend Amplify with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend Buffered with Source::{total_duration, try_seek, current_span_len}
+
+///|
+pub extend ChannelVolume with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend Crossfade with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend Delay with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend Distortion with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend Empty with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend FadeIn with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend FadeOut with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend Function with Debug::{to_repr}
+
+///|
+pub extend Function with Eq::{not_equal, equal}
+
+///|
+pub extend Function with Show::{to_string, output}
+
+///|
+pub extend Limit with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend LimitMono with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend LimitMulti with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend LimitSettings with Debug::{to_repr}
+
+///|
+pub extend LimitSettings with Eq::{not_equal, equal}
+
+///|
+pub extend LimitSettings with Show::{to_string, output}
+
+///|
+pub extend LimitStereo with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend LinearGainRamp with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend Mix with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend Repeat with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend SkipDuration with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend Spatial with Source::{total_duration, try_seek, current_span_len}
+
+///|
+pub extend Speed with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend TakeDuration with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend Zero with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+  try_seek,
+  current_span_len,
 }

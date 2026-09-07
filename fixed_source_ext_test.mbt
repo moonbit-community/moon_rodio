@@ -26,7 +26,7 @@ fn ExternalFixedSource::new(
   sample_rate : SampleRate,
   samples : Array[Sample],
 ) -> ExternalFixedSource {
-  { samples, cursor: @ref.new(0), channels, sample_rate }
+  { samples, cursor: @ref.new(0), channels, sample_rate, }
 }
 
 ///|

@@ -118,7 +118,7 @@ pub fn Reader::into_bytes(self : Reader) -> Bytes {
 
 ///|
 pub fn DecoderBuilder::new() -> DecoderBuilder {
-  { data: None, settings: Settings::default() }
+  { data: None, settings: Settings::default(), }
 }
 
 ///|
@@ -126,7 +126,7 @@ pub fn DecoderBuilder::with_data(
   self : DecoderBuilder,
   data : Bytes,
 ) -> DecoderBuilder {
-  { ..self, data: Some(data) }
+  { ..self, data: Some(data), }
 }
 
 ///|
@@ -137,7 +137,7 @@ pub fn DecoderBuilder::with_byte_len(
   guard byte_len >= 0 else { panic() }
   {
     ..self,
-    settings: { ..self.settings, byte_len: Some(byte_len), is_seekable: true },
+    settings: { ..self.settings, byte_len: Some(byte_len), is_seekable: true, },
   }
 }
 
@@ -146,7 +146,7 @@ pub fn DecoderBuilder::with_coarse_seek(
   self : DecoderBuilder,
   coarse_seek : Bool,
 ) -> DecoderBuilder {
-  { ..self, settings: { ..self.settings, coarse_seek, } }
+  { ..self, settings: { ..self.settings, coarse_seek, }, }
 }
 
 ///|
@@ -154,7 +154,7 @@ pub fn DecoderBuilder::with_gapless(
   self : DecoderBuilder,
   gapless : Bool,
 ) -> DecoderBuilder {
-  { ..self, settings: { ..self.settings, gapless, } }
+  { ..self, settings: { ..self.settings, gapless, }, }
 }
 
 ///|
@@ -162,7 +162,7 @@ pub fn DecoderBuilder::with_hint(
   self : DecoderBuilder,
   hint : StringView,
 ) -> DecoderBuilder {
-  { ..self, settings: { ..self.settings, hint: Some(hint.to_owned()) } }
+  { ..self, settings: { ..self.settings, hint: Some(hint.to_owned()), }, }
 }
 
 ///|
@@ -172,7 +172,7 @@ pub fn DecoderBuilder::with_mime_type(
 ) -> DecoderBuilder {
   {
     ..self,
-    settings: { ..self.settings, mime_type: Some(mime_type.to_owned()) },
+    settings: { ..self.settings, mime_type: Some(mime_type.to_owned()), },
   }
 }
 
@@ -181,7 +181,7 @@ pub fn DecoderBuilder::with_seekable(
   self : DecoderBuilder,
   is_seekable : Bool,
 ) -> DecoderBuilder {
-  { ..self, settings: { ..self.settings, is_seekable, } }
+  { ..self, settings: { ..self.settings, is_seekable, }, }
 }
 
 ///|
@@ -260,7 +260,7 @@ fn DecoderBuilder::decoder_builder_build(
     }
   }
 
-  { ..decoded, seekable: self.settings.is_seekable, allow_backward_seek }
+  { ..decoded, seekable: self.settings.is_seekable, allow_backward_seek, }
 }
 
 ///|
@@ -282,7 +282,7 @@ fn to_looped_decoder(decoder : Decoder) -> LoopedDecoder {
       Some(s) => samples.push(s)
     }
   }
-  { channels, sample_rate, samples, cursor: @ref.new(0), seekable }
+  { channels, sample_rate, samples, cursor: @ref.new(0), seekable, }
 }
 
 ///|
@@ -434,7 +434,7 @@ fn decode_wav_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
   } noraise {
     src => src
   }
-  { inner: decoded, seekable: true, allow_backward_seek: true, kind: Wav }
+  { inner: decoded, seekable: true, allow_backward_seek: true, kind: Wav, }
 }
 
 ///|
@@ -444,7 +444,7 @@ fn decode_flac_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
   } noraise {
     src => src
   }
-  { inner: decoded, seekable: true, allow_backward_seek: true, kind: Flac }
+  { inner: decoded, seekable: true, allow_backward_seek: true, kind: Flac, }
 }
 
 ///|
@@ -454,7 +454,7 @@ fn decode_vorbis_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
   } noraise {
     src => src
   }
-  { inner: decoded, seekable: true, allow_backward_seek: true, kind: Vorbis }
+  { inner: decoded, seekable: true, allow_backward_seek: true, kind: Vorbis, }
 }
 
 ///|
@@ -464,7 +464,7 @@ fn decode_mp3_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
   } noraise {
     src => src
   }
-  { inner: decoded, seekable: true, allow_backward_seek: true, kind: Mp3 }
+  { inner: decoded, seekable: true, allow_backward_seek: true, kind: Mp3, }
 }
 
 ///|
@@ -474,7 +474,7 @@ fn decode_mp4a_or_raise(bytes : Bytes) -> Decoder raise DecoderError {
   } noraise {
     src => src
   }
-  { inner: decoded, seekable: true, allow_backward_seek: true, kind: Mp4a }
+  { inner: decoded, seekable: true, allow_backward_seek: true, kind: Mp4a, }
 }
 
 ///|
@@ -725,3 +725,46 @@ pub fn play_file(mixer : Mixer, path : StringView) -> Player raise PlayError {
 pub fn play_reader(mixer : Mixer, reader : Reader) -> Player raise PlayError {
   play(mixer, reader)
 }
+
+///|
+pub extend Decoder with Source::{total_duration, try_seek, current_span_len}
+
+///|
+pub extend DecoderError with Debug::{to_repr}
+
+///|
+pub extend DecoderError with Eq::{not_equal, equal}
+
+///|
+pub extend DecoderError with Show::{to_string, output}
+
+///|
+pub extend DecoderKind with Debug::{to_repr}
+
+///|
+pub extend DecoderKind with Eq::{not_equal, equal}
+
+///|
+pub extend LoopedDecoder with Source::{
+  total_duration,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend PlayError with Debug::{to_repr}
+
+///|
+pub extend PlayError with Eq::{not_equal, equal}
+
+///|
+pub extend PlayError with Show::{to_string, output}
+
+///|
+pub extend Settings with Debug::{to_repr}
+
+///|
+pub extend Settings with Eq::{not_equal, equal}
+
+///|
+pub extend Settings with Show::{to_string, output}

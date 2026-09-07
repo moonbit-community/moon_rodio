@@ -28,7 +28,7 @@ pub fn[S : Source] ChannelCountConverter::new(
   guard to > 0 else { panic() }
   let src = to_dyn(input)
   guard src.channels() == from else { panic() }
-  { inner: channel_convert(src, to), to }
+  { inner: channel_convert(src, to), to, }
 }
 
 ///|
@@ -108,7 +108,7 @@ pub fn[S : Source] SampleRateConverter::new(
   let src = to_dyn(input)
   guard src.sample_rate() == from else { panic() }
   guard src.channels() == num_channels else { panic() }
-  { inner: sample_rate_convert(src, to), to, channels: num_channels }
+  { inner: sample_rate_convert(src, to), to, channels: num_channels, }
 }
 
 ///|
@@ -169,7 +169,7 @@ pub struct SampleTypeConverter {
 
 ///|
 pub fn[S : Source] SampleTypeConverter::new(input : S) -> SampleTypeConverter {
-  { inner: to_dyn(input) }
+  { inner: to_dyn(input), }
 }
 
 ///|
@@ -221,4 +221,34 @@ pub impl Source for SampleTypeConverter with fn try_seek(
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
   _self.inner.try_seek(pos)
+}
+
+///|
+pub extend ChannelCountConverter with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend SampleRateConverter with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend SampleTypeConverter with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+  try_seek,
+  current_span_len,
 }

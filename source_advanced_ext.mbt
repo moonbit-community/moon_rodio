@@ -560,7 +560,7 @@ pub struct LcgNoiseRng {
 
 ///|
 pub fn LcgNoiseRng::new(seed : UInt64) -> LcgNoiseRng {
-  { state: @ref.new(seed_or_default(seed)) }
+  { state: @ref.new(seed_or_default(seed)), }
 }
 
 ///|
@@ -581,12 +581,12 @@ pub struct NoiseRngState {
 ///|
 fn seeded_rng_state(seed : UInt64) -> NoiseRngState {
   let rng = LcgNoiseRng::new(seed)
-  { next_fn: fn() { rng.next_u64() } }
+  { next_fn: fn() { rng.next_u64() }, }
 }
 
 ///|
 fn[R : NoiseRng] custom_rng_state(rng : R) -> NoiseRngState {
-  { next_fn: fn() { rng.next_u64() } }
+  { next_fn: fn() { rng.next_u64() }, }
 }
 
 ///|
@@ -622,7 +622,7 @@ pub fn WhiteUniform::new_with_seed(
   seed : UInt64,
 ) -> WhiteUniform {
   guard sample_rate > 0 else { panic() }
-  { sample_rate, rng: seeded_rng_state(seed) }
+  { sample_rate, rng: seeded_rng_state(seed), }
 }
 
 ///|
@@ -631,7 +631,7 @@ pub fn[R : NoiseRng] WhiteUniform::new_with_rng(
   rng : R,
 ) -> WhiteUniform {
   guard sample_rate > 0 else { panic() }
-  { sample_rate, rng: custom_rng_state(rng) }
+  { sample_rate, rng: custom_rng_state(rng), }
 }
 
 ///|
@@ -689,7 +689,7 @@ pub fn Pink::new(sample_rate : SampleRate) -> Pink {
 ///|
 pub fn Pink::new_with_seed(sample_rate : SampleRate, seed : UInt64) -> Pink {
   guard sample_rate > 0 else { panic() }
-  { sample_rate, rng: seeded_rng_state(seed), prev: @ref.new(0.0) }
+  { sample_rate, rng: seeded_rng_state(seed), prev: @ref.new(0.0), }
 }
 
 ///|
@@ -698,7 +698,7 @@ pub fn[R : NoiseRng] Pink::new_with_rng(
   rng : R,
 ) -> Pink {
   guard sample_rate > 0 else { panic() }
-  { sample_rate, rng: custom_rng_state(rng), prev: @ref.new(0.0) }
+  { sample_rate, rng: custom_rng_state(rng), prev: @ref.new(0.0), }
 }
 
 ///|
@@ -755,7 +755,7 @@ pub fn WhiteTriangular::new_with_seed(
   seed : UInt64,
 ) -> WhiteTriangular {
   guard sample_rate > 0 else { panic() }
-  { sample_rate, rng: seeded_rng_state(seed) }
+  { sample_rate, rng: seeded_rng_state(seed), }
 }
 
 ///|
@@ -764,7 +764,7 @@ pub fn[R : NoiseRng] WhiteTriangular::new_with_rng(
   rng : R,
 ) -> WhiteTriangular {
   guard sample_rate > 0 else { panic() }
-  { sample_rate, rng: custom_rng_state(rng) }
+  { sample_rate, rng: custom_rng_state(rng), }
 }
 
 ///|
@@ -819,7 +819,7 @@ pub fn WhiteGaussian::new_with_seed(
   seed : UInt64,
 ) -> WhiteGaussian {
   guard sample_rate > 0 else { panic() }
-  { sample_rate, rng: seeded_rng_state(seed) }
+  { sample_rate, rng: seeded_rng_state(seed), }
 }
 
 ///|
@@ -828,7 +828,7 @@ pub fn[R : NoiseRng] WhiteGaussian::new_with_rng(
   rng : R,
 ) -> WhiteGaussian {
   guard sample_rate > 0 else { panic() }
-  { sample_rate, rng: custom_rng_state(rng) }
+  { sample_rate, rng: custom_rng_state(rng), }
 }
 
 ///|
@@ -1535,4 +1535,62 @@ pub impl Source for Red with fn try_seek(
   _pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
   ()
+}
+
+///|
+pub extend AutomaticGainControl with Source::{
+  total_duration,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend BltFilter with Source::{total_duration, try_seek, current_span_len}
+
+///|
+pub extend BltMode with Debug::{to_repr}
+
+///|
+pub extend BltMode with Eq::{not_equal, equal}
+
+///|
+pub extend BltMode with Show::{to_string, output}
+
+///|
+pub extend Blue with Source::{total_duration, try_seek, current_span_len}
+
+///|
+pub extend Brownian with Source::{total_duration, try_seek, current_span_len}
+
+///|
+pub extend Pink with Source::{total_duration, try_seek, current_span_len}
+
+///|
+pub extend Red with Source::{total_duration, try_seek, current_span_len}
+
+///|
+pub extend Velvet with Source::{total_duration, try_seek, current_span_len}
+
+///|
+pub extend Violet with Source::{total_duration, try_seek, current_span_len}
+
+///|
+pub extend WhiteGaussian with Source::{
+  total_duration,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend WhiteTriangular with Source::{
+  total_duration,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend WhiteUniform with Source::{
+  total_duration,
+  try_seek,
+  current_span_len,
 }

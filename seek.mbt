@@ -30,3 +30,12 @@ pub fn SeekError::source_intact(self : SeekError) -> Bool {
     NotSupported => true
   }
 }
+
+///|
+pub extend SeekError with Debug::{to_repr}
+
+///|
+pub extend SeekError with Eq::{not_equal, equal}
+
+///|
+pub extend SeekError with Show::{to_string, output}

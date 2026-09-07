@@ -207,7 +207,7 @@ pub fn SamplesBuffer::new(
 ) -> SamplesBuffer {
   guard channels > 0 else { panic() }
   guard sample_rate > 0 else { panic() }
-  { channels, sample_rate, samples, cursor: @ref.new(0) }
+  { channels, sample_rate, samples, cursor: @ref.new(0), }
 }
 
 ///|
@@ -741,4 +741,11 @@ fn uniform_source(
       }
     },
   )
+}
+
+///|
+pub extend SamplesBuffer with Source::{
+  total_duration,
+  try_seek,
+  current_span_len,
 }

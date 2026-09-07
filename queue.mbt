@@ -86,7 +86,7 @@ pub fn[S : Source] SourcesQueueInput::append(
   self : SourcesQueueInput,
   source : S,
 ) -> Unit {
-  self.next_sounds.val.push({ source: to_dyn(source), signal: None })
+  self.next_sounds.val.push({ source: to_dyn(source), signal: None, })
 }
 
 ///|
@@ -94,8 +94,8 @@ pub fn[S : Source] SourcesQueueInput::append_with_signal(
   self : SourcesQueueInput,
   source : S,
 ) -> QueueSignal {
-  let signal = { done: @ref.new(false) }
-  self.next_sounds.val.push({ source: to_dyn(source), signal: Some(signal) })
+  let signal = { done: @ref.new(false), }
+  self.next_sounds.val.push({ source: to_dyn(source), signal: Some(signal), })
   signal
 }
 
@@ -347,4 +347,11 @@ pub impl Source for SourcesQueueOutput with fn try_seek(
   self.samples_consumed_in_span.val = 0
   self.padding_samples_remaining.val = 0
   self.current.val.try_seek(pos)
+}
+
+///|
+pub extend SourcesQueueOutput with Source::{
+  total_duration,
+  try_seek,
+  current_span_len,
 }

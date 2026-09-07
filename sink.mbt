@@ -237,7 +237,7 @@ pub fn Sink::new() -> (Sink, ControlledQueueSource) {
       detached: @ref.new(false),
       last_signal: @ref.new(None),
     },
-    { inner: queue_rx, controls },
+    { inner: queue_rx, controls, },
   )
 }
 
@@ -366,4 +366,11 @@ pub fn Sink::len(self : Sink) -> Int {
 ///|
 pub fn Sink::detach(self : Sink) -> Unit {
   self.detached.val = true
+}
+
+///|
+pub extend ControlledQueueSource with Source::{
+  total_duration,
+  try_seek,
+  current_span_len,
 }

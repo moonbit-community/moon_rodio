@@ -87,7 +87,7 @@ pub fn available_inputs() -> Array[Input] raise MicrophoneListError {
 
   let out : Array[Input] = []
   for device in devices {
-    out.push({ inner: device })
+    out.push({ inner: device, })
   }
   out
 }
@@ -126,7 +126,7 @@ pub fn InputConfig::new(
 ) -> InputConfig {
   guard channel_count > 0 else { panic() }
   guard sample_rate > 0 else { panic() }
-  { channel_count, sample_rate, buffer_size, sample_format }
+  { channel_count, sample_rate, buffer_size, sample_format, }
 }
 
 ///|
@@ -194,7 +194,7 @@ pub fn InputConfig::stream_config(
 
 ///|
 fn InputConfig::with_f32_samples(self : InputConfig) -> InputConfig {
-  { ..self, sample_format: F32 }
+  { ..self, sample_format: F32, }
 }
 
 ///|
@@ -272,7 +272,7 @@ fn MicrophoneBuilder::with_device_inner(
   device : @moon_cpal.Device,
 ) -> MicrophoneBuilder raise MicrophoneError {
   let supported_configs = collect_supported_input_configs(device)
-  { ..self, device: Some(device), supported_configs, config: None }
+  { ..self, device: Some(device), supported_configs, config: None, }
 }
 
 ///|
@@ -336,7 +336,7 @@ pub fn MicrophoneBuilder::default_config(
   } else {
     config
   }
-  { ..self, config: Some(selected) }
+  { ..self, config: Some(selected), }
 }
 
 ///|
@@ -345,7 +345,7 @@ pub fn MicrophoneBuilder::config(
   config : InputConfig,
 ) -> MicrophoneBuilder raise MicrophoneError {
   self.check_config(config)
-  { ..self, config: Some(config) }
+  { ..self, config: Some(config), }
 }
 
 ///|
@@ -353,7 +353,7 @@ pub fn MicrophoneBuilder::with_error_callback(
   self : MicrophoneBuilder,
   callback : (@moon_cpal.StreamError) -> Unit,
 ) -> MicrophoneBuilder {
-  { ..self, error_callback: callback }
+  { ..self, error_callback: callback, }
 }
 
 ///|
@@ -374,7 +374,7 @@ pub fn MicrophoneBuilder::try_sample_rate(
   let current = self.get_config()
   let next = { ..current, sample_rate, }
   self.check_config(next)
-  { ..self, config: Some(next) }
+  { ..self, config: Some(next), }
 }
 
 ///|
@@ -395,7 +395,7 @@ pub fn MicrophoneBuilder::prefer_sample_rates(
       break
     }
   }
-  { ..self, config: Some(selected) }
+  { ..self, config: Some(selected), }
 }
 
 ///|
@@ -406,7 +406,7 @@ pub fn MicrophoneBuilder::try_channels(
   let current = self.get_config()
   let next = { ..current, channel_count, }
   self.check_config(next)
-  { ..self, config: Some(next) }
+  { ..self, config: Some(next), }
 }
 
 ///|
@@ -427,7 +427,7 @@ pub fn MicrophoneBuilder::prefer_channel_counts(
       break
     }
   }
-  { ..self, config: Some(selected) }
+  { ..self, config: Some(selected), }
 }
 
 ///|
@@ -441,7 +441,7 @@ pub fn MicrophoneBuilder::try_buffer_size(
     buffer_size: @moon_cpal.BufferSize::fixed(buffer_size),
   }
   self.check_config(next)
-  { ..self, config: Some(next) }
+  { ..self, config: Some(next), }
 }
 
 ///|
@@ -468,7 +468,7 @@ pub fn MicrophoneBuilder::prefer_buffer_sizes(
       break
     }
   }
-  { ..self, config: Some(selected) }
+  { ..self, config: Some(selected), }
 }
 
 ///|
@@ -913,3 +913,39 @@ pub impl Source for Microphone with fn try_seek(
 ) -> Unit raise SeekError {
   raise NotSupported
 }
+
+///|
+pub extend InputConfig with Debug::{to_repr}
+
+///|
+pub extend InputConfig with Eq::{not_equal, equal}
+
+///|
+pub extend InputConfig with Show::{to_string, output}
+
+///|
+pub extend Microphone with Source::{
+  sample_rate,
+  channels,
+  total_duration,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend MicrophoneError with Debug::{to_repr}
+
+///|
+pub extend MicrophoneError with Eq::{not_equal, equal}
+
+///|
+pub extend MicrophoneError with Show::{to_string, output}
+
+///|
+pub extend MicrophoneListError with Debug::{to_repr}
+
+///|
+pub extend MicrophoneListError with Eq::{not_equal, equal}
+
+///|
+pub extend MicrophoneListError with Show::{to_string, output}

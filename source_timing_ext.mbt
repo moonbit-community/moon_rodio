@@ -198,7 +198,7 @@ pub fn[S : Source] periodic_access_with_source(
   callback : (DynSource) -> Unit,
 ) -> PeriodicAccess {
   guard every_samples > 0 else { panic() }
-  { input: to_dyn(source), every_samples, remaining: @ref.new(1), callback }
+  { input: to_dyn(source), every_samples, remaining: @ref.new(1), callback, }
 }
 
 ///|
@@ -294,4 +294,18 @@ pub impl Source for PeriodicAccess with fn try_seek(
   pos : @moon_cpal.Duration,
 ) -> Unit raise SeekError {
   self.input.try_seek(pos)
+}
+
+///|
+pub extend PeriodicAccess with Source::{
+  total_duration,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend TrackPosition with Source::{
+  total_duration,
+  try_seek,
+  current_span_len,
 }

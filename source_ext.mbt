@@ -67,7 +67,7 @@ pub fn SignalGenerator::new(
 ) -> SignalGenerator {
   guard sample_rate > 0 else { panic() }
   guard frequency != 0.0 else { panic() }
-  { channels: 1, sample_rate, frequency, function, phase: @ref.new(0.0) }
+  { channels: 1, sample_rate, frequency, function, phase: @ref.new(0.0), }
 }
 
 ///|
@@ -140,7 +140,7 @@ pub struct SineWave {
 
 ///|
 pub fn SineWave::new(freq : Double) -> SineWave {
-  { inner: SignalGenerator::new(48_000, freq, Sine) }
+  { inner: SignalGenerator::new(48_000, freq, Sine), }
 }
 
 ///|
@@ -198,7 +198,7 @@ pub struct SquareWave {
 
 ///|
 pub fn SquareWave::new(freq : Double) -> SquareWave {
-  { inner: SignalGenerator::new(48_000, freq, Square) }
+  { inner: SignalGenerator::new(48_000, freq, Square), }
 }
 
 ///|
@@ -256,7 +256,7 @@ pub struct SawtoothWave {
 
 ///|
 pub fn SawtoothWave::new(freq : Double) -> SawtoothWave {
-  { inner: SignalGenerator::new(48_000, freq, Sawtooth) }
+  { inner: SignalGenerator::new(48_000, freq, Sawtooth), }
 }
 
 ///|
@@ -314,7 +314,7 @@ pub struct TriangleWave {
 
 ///|
 pub fn TriangleWave::new(freq : Double) -> TriangleWave {
-  { inner: SignalGenerator::new(48_000, freq, Triangle) }
+  { inner: SignalGenerator::new(48_000, freq, Triangle), }
 }
 
 ///|
@@ -527,4 +527,40 @@ pub fn SamplesBuffer::repeat_infinite(self : SamplesBuffer) -> DynSource {
     self.sample_rate,
     current_span_len=fn() { Some(len - idx.val) },
   )
+}
+
+///|
+pub extend SawtoothWave with Source::{
+  total_duration,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend SignalFunction with Debug::{to_repr}
+
+///|
+pub extend SignalFunction with Eq::{not_equal, equal}
+
+///|
+pub extend SignalFunction with Show::{to_string, output}
+
+///|
+pub extend SignalGenerator with Source::{
+  total_duration,
+  try_seek,
+  current_span_len,
+}
+
+///|
+pub extend SineWave with Source::{total_duration, try_seek, current_span_len}
+
+///|
+pub extend SquareWave with Source::{total_duration, try_seek, current_span_len}
+
+///|
+pub extend TriangleWave with Source::{
+  total_duration,
+  try_seek,
+  current_span_len,
 }

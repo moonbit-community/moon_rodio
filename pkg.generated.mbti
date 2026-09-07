@@ -159,12 +159,22 @@ pub fn zero_samples(Int, Int, Int) -> DynSource
 pub suberror BitDepthError {
   OutOfRange(Int)
 } derive(Eq, @debug.Debug)
+pub fn BitDepthError::equal(Self, Self) -> Bool
+pub fn BitDepthError::not_equal(Self, Self) -> Bool
+pub fn BitDepthError::output(Self, &Logger) -> Unit
+pub fn BitDepthError::to_repr(Self) -> @debug.Repr
+pub fn BitDepthError::to_string(Self) -> String
 pub impl Show for BitDepthError
 
 pub suberror DecoderError {
   Backend(@decoder.DecoderError)
   UnrecognizedFormat
 } derive(Eq, @debug.Debug)
+pub fn DecoderError::equal(Self, Self) -> Bool
+pub fn DecoderError::not_equal(Self, Self) -> Bool
+pub fn DecoderError::output(Self, &Logger) -> Unit
+pub fn DecoderError::to_repr(Self) -> @debug.Repr
+pub fn DecoderError::to_string(Self) -> String
 pub impl Show for DecoderError
 
 pub suberror MicrophoneError {
@@ -177,22 +187,42 @@ pub suberror MicrophoneError {
   PlayStreamError(@core.PlayStreamError)
   UnsupportedSampleFormat
 } derive(Eq, @debug.Debug)
+pub fn MicrophoneError::equal(Self, Self) -> Bool
+pub fn MicrophoneError::not_equal(Self, Self) -> Bool
+pub fn MicrophoneError::output(Self, &Logger) -> Unit
+pub fn MicrophoneError::to_repr(Self) -> @debug.Repr
+pub fn MicrophoneError::to_string(Self) -> String
 pub impl Show for MicrophoneError
 
 pub suberror MicrophoneListError {
   DevicesError(@core.DevicesError)
 } derive(Eq, @debug.Debug)
+pub fn MicrophoneListError::equal(Self, Self) -> Bool
+pub fn MicrophoneListError::not_equal(Self, Self) -> Bool
+pub fn MicrophoneListError::output(Self, &Logger) -> Unit
+pub fn MicrophoneListError::to_repr(Self) -> @debug.Repr
+pub fn MicrophoneListError::to_string(Self) -> String
 pub impl Show for MicrophoneListError
 
 pub suberror PlayError {
   DecoderError(DecoderError)
 } derive(Eq, @debug.Debug)
+pub fn PlayError::equal(Self, Self) -> Bool
+pub fn PlayError::not_equal(Self, Self) -> Bool
+pub fn PlayError::output(Self, &Logger) -> Unit
+pub fn PlayError::to_repr(Self) -> @debug.Repr
+pub fn PlayError::to_string(Self) -> String
 pub impl Show for PlayError
 
 pub suberror SeekError {
   NotSupported
 } derive(Eq, @debug.Debug)
+pub fn SeekError::equal(Self, Self) -> Bool
+pub fn SeekError::not_equal(Self, Self) -> Bool
+pub fn SeekError::output(Self, &Logger) -> Unit
 pub fn SeekError::source_intact(Self) -> Bool
+pub fn SeekError::to_repr(Self) -> @debug.Repr
+pub fn SeekError::to_string(Self) -> String
 pub impl Show for SeekError
 
 pub suberror SpeakersError {
@@ -203,11 +233,21 @@ pub suberror SpeakersError {
   UnsupportedByDevice
   DeviceSinkError(StreamError)
 } derive(Eq, @debug.Debug)
+pub fn SpeakersError::equal(Self, Self) -> Bool
+pub fn SpeakersError::not_equal(Self, Self) -> Bool
+pub fn SpeakersError::output(Self, &Logger) -> Unit
+pub fn SpeakersError::to_repr(Self) -> @debug.Repr
+pub fn SpeakersError::to_string(Self) -> String
 pub impl Show for SpeakersError
 
 pub suberror SpeakersListError {
   DevicesError(@core.DevicesError)
 } derive(Eq, @debug.Debug)
+pub fn SpeakersListError::equal(Self, Self) -> Bool
+pub fn SpeakersListError::not_equal(Self, Self) -> Bool
+pub fn SpeakersListError::output(Self, &Logger) -> Unit
+pub fn SpeakersListError::to_repr(Self) -> @debug.Repr
+pub fn SpeakersListError::to_string(Self) -> String
 pub impl Show for SpeakersListError
 
 pub suberror SpeakersPlayError {
@@ -215,6 +255,11 @@ pub suberror SpeakersPlayError {
   WrongSampleRate(Int, Int)
   BuilderError(SpeakersError)
 } derive(Eq, @debug.Debug)
+pub fn SpeakersPlayError::equal(Self, Self) -> Bool
+pub fn SpeakersPlayError::not_equal(Self, Self) -> Bool
+pub fn SpeakersPlayError::output(Self, &Logger) -> Unit
+pub fn SpeakersPlayError::to_repr(Self) -> @debug.Repr
+pub fn SpeakersPlayError::to_string(Self) -> String
 pub impl Show for SpeakersPlayError
 
 #alias(DeviceSinkError)
@@ -226,6 +271,11 @@ pub suberror StreamError {
   NoDevice
   UnsupportedSampleFormat
 } derive(Eq, @debug.Debug)
+pub fn StreamError::equal(Self, Self) -> Bool
+pub fn StreamError::not_equal(Self, Self) -> Bool
+pub fn StreamError::output(Self, &Logger) -> Unit
+pub fn StreamError::to_repr(Self) -> @debug.Repr
+pub fn StreamError::to_string(Self) -> String
 pub impl Show for StreamError
 
 pub suberror ToWavError {
@@ -235,6 +285,11 @@ pub suberror ToWavError {
   Finishing
   Flushing
 } derive(Eq, @debug.Debug)
+pub fn ToWavError::equal(Self, Self) -> Bool
+pub fn ToWavError::not_equal(Self, Self) -> Bool
+pub fn ToWavError::output(Self, &Logger) -> Unit
+pub fn ToWavError::to_repr(Self) -> @debug.Repr
+pub fn ToWavError::to_string(Self) -> String
 pub impl Show for ToWavError
 
 // Types and methods
@@ -242,12 +297,18 @@ pub struct Amplify {
   input : DynSource
   factor : @ref.Ref[Double]
 }
+pub fn Amplify::channels(Self) -> Int
+pub fn Amplify::current_span_len(Self) -> Int?
 pub fn Amplify::inner(Self) -> DynSource
 pub fn Amplify::inner_mut(Self) -> DynSource
 pub fn Amplify::into_inner(Self) -> DynSource
 pub fn[S : Source] Amplify::new(S, Double) -> Self
+pub fn Amplify::next(Self) -> Double?
+pub fn Amplify::sample_rate(Self) -> Int
 pub fn Amplify::set_factor(Self, Double) -> Unit
 pub fn Amplify::set_log_factor(Self, Double) -> Unit
+pub fn Amplify::total_duration(Self) -> @core.Duration?
+pub fn Amplify::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Amplify
 
 pub struct AutomaticGainControl {
@@ -261,6 +322,7 @@ pub struct AutomaticGainControl {
   agc_control : @ref.Ref[Bool]
 }
 pub fn AutomaticGainControl::channels(Self) -> Int
+pub fn AutomaticGainControl::current_span_len(Self) -> Int?
 pub fn AutomaticGainControl::get_absolute_max_gain(Self) -> @ref.Ref[Double]
 pub fn AutomaticGainControl::get_agc_control(Self) -> @ref.Ref[Bool]
 pub fn AutomaticGainControl::get_attack_coeff(Self) -> @ref.Ref[Double]
@@ -274,6 +336,8 @@ pub fn AutomaticGainControl::next(Self) -> Double?
 pub fn AutomaticGainControl::sample_rate(Self) -> Int
 pub fn AutomaticGainControl::set_enabled(Self, Bool) -> Unit
 pub fn AutomaticGainControl::set_floor(Self, Double?) -> Unit
+pub fn AutomaticGainControl::total_duration(Self) -> @core.Duration?
+pub fn AutomaticGainControl::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for AutomaticGainControl
 
 pub struct AutomaticGainControlSettings {
@@ -292,8 +356,13 @@ pub fn AutomaticGainControlSettings::with_target_level(Self, Double) -> Self
 pub struct BitDepth {
   bits : Int
 } derive(Eq, @debug.Debug)
+pub fn BitDepth::equal(Self, Self) -> Bool
 pub fn BitDepth::get(Self) -> Int
 pub fn BitDepth::new(Int) -> Self raise BitDepthError
+pub fn BitDepth::not_equal(Self, Self) -> Bool
+pub fn BitDepth::output(Self, &Logger) -> Unit
+pub fn BitDepth::to_repr(Self) -> @debug.Repr
+pub fn BitDepth::to_string(Self) -> String
 pub impl Show for BitDepth
 
 pub struct BltFilter {
@@ -312,6 +381,7 @@ pub struct BltFilter {
   y2 : @ref.Ref[Double]
 }
 pub fn BltFilter::channels(Self) -> Int
+pub fn BltFilter::current_span_len(Self) -> Int?
 pub fn BltFilter::inner(Self) -> DynSource
 pub fn BltFilter::inner_mut(Self) -> DynSource
 pub fn BltFilter::into_inner(Self) -> DynSource
@@ -321,12 +391,19 @@ pub fn BltFilter::to_high_pass(Self, Int) -> Unit
 pub fn BltFilter::to_high_pass_with_q(Self, Int, Double) -> Unit
 pub fn BltFilter::to_low_pass(Self, Int) -> Unit
 pub fn BltFilter::to_low_pass_with_q(Self, Int, Double) -> Unit
+pub fn BltFilter::total_duration(Self) -> @core.Duration?
+pub fn BltFilter::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for BltFilter
 
 pub enum BltMode {
   LowPass
   HighPass
 } derive(Eq, @debug.Debug)
+pub fn BltMode::equal(Self, Self) -> Bool
+pub fn BltMode::not_equal(Self, Self) -> Bool
+pub fn BltMode::output(Self, &Logger) -> Unit
+pub fn BltMode::to_repr(Self) -> @debug.Repr
+pub fn BltMode::to_string(Self) -> String
 pub impl Show for BltMode
 
 pub struct Blue {
@@ -335,11 +412,14 @@ pub struct Blue {
   prev_white : @ref.Ref[Double]
 }
 pub fn Blue::channels(Self) -> Int
+pub fn Blue::current_span_len(Self) -> Int?
 pub fn Blue::new(Int) -> Self
 pub fn[R : NoiseRng] Blue::new_with_rng(Int, R) -> Self
 pub fn Blue::new_with_seed(Int, UInt64) -> Self
 pub fn Blue::next(Self) -> Double?
 pub fn Blue::sample_rate(Self) -> Int
+pub fn Blue::total_duration(Self) -> @core.Duration?
+pub fn Blue::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Blue
 
 pub struct Brownian {
@@ -350,32 +430,44 @@ pub struct Brownian {
   scale : @ref.Ref[Double]
 }
 pub fn Brownian::channels(Self) -> Int
+pub fn Brownian::current_span_len(Self) -> Int?
 pub fn Brownian::new(Int) -> Self
 pub fn[R : NoiseRng] Brownian::new_with_rng(Int, R) -> Self
 pub fn Brownian::new_with_seed(Int, UInt64) -> Self
 pub fn Brownian::next(Self) -> Double?
 pub fn Brownian::sample_rate(Self) -> Int
+pub fn Brownian::total_duration(Self) -> @core.Duration?
+pub fn Brownian::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Brownian
 
 pub struct Buffered {
   inner : SamplesBuffer
 }
 pub fn Buffered::channels(Self) -> Int
+pub fn Buffered::current_span_len(Self) -> Int?
 pub fn Buffered::inner(Self) -> SamplesBuffer
 pub fn Buffered::inner_mut(Self) -> SamplesBuffer
 pub fn Buffered::into_inner(Self) -> SamplesBuffer
 pub fn[S : Source] Buffered::new(S) -> Self
 pub fn Buffered::next(Self) -> Double?
 pub fn Buffered::sample_rate(Self) -> Int
+pub fn Buffered::total_duration(Self) -> @core.Duration?
+pub fn Buffered::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Buffered
 
 pub struct ChannelCountConverter {
   inner : DynSource
   to : Int
 }
+pub fn ChannelCountConverter::channels(Self) -> Int
+pub fn ChannelCountConverter::current_span_len(Self) -> Int?
 pub fn ChannelCountConverter::inner_mut(Self) -> DynSource
 pub fn ChannelCountConverter::into_inner(Self) -> DynSource
 pub fn[S : Source] ChannelCountConverter::new(S, Int, Int) -> Self
+pub fn ChannelCountConverter::next(Self) -> Double?
+pub fn ChannelCountConverter::sample_rate(Self) -> Int
+pub fn ChannelCountConverter::total_duration(Self) -> @core.Duration?
+pub fn ChannelCountConverter::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for ChannelCountConverter
 
 pub struct ChannelVolume {
@@ -384,11 +476,17 @@ pub struct ChannelVolume {
   current_channel : @ref.Ref[Int]
   current_sample : @ref.Ref[Double?]
 }
+pub fn ChannelVolume::channels(Self) -> Int
+pub fn ChannelVolume::current_span_len(Self) -> Int?
 pub fn ChannelVolume::inner(Self) -> DynSource
 pub fn ChannelVolume::inner_mut(Self) -> DynSource
 pub fn ChannelVolume::into_inner(Self) -> DynSource
 pub fn[S : Source] ChannelVolume::new(S, Array[Double]) -> Self
+pub fn ChannelVolume::next(Self) -> Double?
+pub fn ChannelVolume::sample_rate(Self) -> Int
 pub fn ChannelVolume::set_volume(Self, Int, Double) -> Unit
+pub fn ChannelVolume::total_duration(Self) -> @core.Duration?
+pub fn ChannelVolume::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for ChannelVolume
 
 pub struct Chirp {
@@ -400,8 +498,11 @@ pub struct Chirp {
   phase : @ref.Ref[Double]
 }
 pub fn Chirp::channels(Self) -> Int
+pub fn Chirp::current_span_len(Self) -> Int?
 pub fn Chirp::next(Self) -> Double?
 pub fn Chirp::sample_rate(Self) -> Int
+pub fn Chirp::total_duration(Self) -> @core.Duration?
+pub fn Chirp::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Chirp
 
 pub struct ControlledQueueSource {
@@ -409,17 +510,26 @@ pub struct ControlledQueueSource {
   controls : SinkControls
 }
 pub fn ControlledQueueSource::channels(Self) -> Int
+pub fn ControlledQueueSource::current_span_len(Self) -> Int?
 pub fn ControlledQueueSource::next(Self) -> Double?
 pub fn ControlledQueueSource::sample_rate(Self) -> Int
+pub fn ControlledQueueSource::total_duration(Self) -> @core.Duration?
+pub fn ControlledQueueSource::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for ControlledQueueSource
 
 pub struct Crossfade {
   inner : DynSource
 }
+pub fn Crossfade::channels(Self) -> Int
+pub fn Crossfade::current_span_len(Self) -> Int?
 pub fn Crossfade::inner(Self) -> DynSource
 pub fn Crossfade::inner_mut(Self) -> DynSource
 pub fn Crossfade::into_inner(Self) -> DynSource
 pub fn[A : Source, B : Source] Crossfade::new(A, B, @core.Duration) -> Self
+pub fn Crossfade::next(Self) -> Double?
+pub fn Crossfade::sample_rate(Self) -> Int
+pub fn Crossfade::total_duration(Self) -> @core.Duration?
+pub fn Crossfade::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Crossfade
 
 pub struct Decoder {
@@ -430,6 +540,7 @@ pub struct Decoder {
 }
 pub fn Decoder::builder() -> DecoderBuilder
 pub fn Decoder::channels(Self) -> Int
+pub fn Decoder::current_span_len(Self) -> Int?
 pub fn Decoder::new(Bytes) -> Self raise DecoderError
 pub fn Decoder::new_aac(Bytes) -> Self raise DecoderError
 pub fn Decoder::new_flac(Bytes) -> Self raise DecoderError
@@ -441,8 +552,10 @@ pub fn Decoder::new_vorbis(Bytes) -> Self raise DecoderError
 pub fn Decoder::new_wav(Bytes) -> Self raise DecoderError
 pub fn Decoder::next(Self) -> Double?
 pub fn Decoder::sample_rate(Self) -> Int
+pub fn Decoder::total_duration(Self) -> @core.Duration?
 pub fn Decoder::try_from_file(StringView) -> Self raise DecoderError
 pub fn Decoder::try_from_file_looped(StringView) -> LoopedDecoder raise DecoderError
+pub fn Decoder::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Decoder
 
 pub struct DecoderBuilder {
@@ -461,14 +574,23 @@ pub fn DecoderBuilder::with_mime_type(Self, StringView) -> Self
 pub fn DecoderBuilder::with_seekable(Self, Bool) -> Self
 
 type DecoderKind derive(Eq, @debug.Debug)
+pub fn DecoderKind::equal(Self, Self) -> Bool
+pub fn DecoderKind::not_equal(Self, Self) -> Bool
+pub fn DecoderKind::to_repr(Self) -> @debug.Repr
 
 pub struct Delay {
   inner : DynSource
 }
+pub fn Delay::channels(Self) -> Int
+pub fn Delay::current_span_len(Self) -> Int?
 pub fn Delay::inner(Self) -> DynSource
 pub fn Delay::inner_mut(Self) -> DynSource
 pub fn Delay::into_inner(Self) -> DynSource
 pub fn[S : Source] Delay::new(S, @core.Duration) -> Self
+pub fn Delay::next(Self) -> Double?
+pub fn Delay::sample_rate(Self) -> Int
+pub fn Delay::total_duration(Self) -> @core.Duration?
+pub fn Delay::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Delay
 
 pub struct DeviceSinkBuilder {
@@ -495,13 +617,19 @@ pub struct Distortion {
   gain : @ref.Ref[Double]
   threshold : @ref.Ref[Double]
 }
+pub fn Distortion::channels(Self) -> Int
+pub fn Distortion::current_span_len(Self) -> Int?
 pub fn Distortion::inner(Self) -> DynSource
 pub fn Distortion::inner_mut(Self) -> DynSource
 pub fn Distortion::into_inner(Self) -> DynSource
 pub fn[S : Source] Distortion::new(S, Double, Double) -> Self
 pub fn[S : Source] Distortion::new_with_threshold(S, Double) -> Self
+pub fn Distortion::next(Self) -> Double?
+pub fn Distortion::sample_rate(Self) -> Int
 pub fn Distortion::set_gain(Self, Double) -> Unit
 pub fn Distortion::set_threshold(Self, Double) -> Unit
+pub fn Distortion::total_duration(Self) -> @core.Duration?
+pub fn Distortion::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub fn[S : Source] Distortion::with_gain(S, Double, Double) -> Self
 pub impl Source for Distortion
 
@@ -515,9 +643,12 @@ pub struct Dither {
 }
 pub fn Dither::algorithm(Self) -> DitherAlgorithm
 pub fn Dither::channels(Self) -> Int
+pub fn Dither::current_span_len(Self) -> Int?
 pub fn Dither::next(Self) -> Double?
 pub fn Dither::sample_rate(Self) -> Int
 pub fn Dither::set_algorithm(Self, DitherAlgorithm) -> Unit
+pub fn Dither::total_duration(Self) -> @core.Duration?
+pub fn Dither::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Dither
 
 pub enum DitherAlgorithm {
@@ -526,9 +657,14 @@ pub enum DitherAlgorithm {
   RPDF
   TPDF
 } derive(Eq, @debug.Debug)
+pub fn DitherAlgorithm::equal(Self, Self) -> Bool
 pub fn DitherAlgorithm::gpdf() -> Self
 pub fn DitherAlgorithm::high_pass() -> Self
+pub fn DitherAlgorithm::not_equal(Self, Self) -> Bool
+pub fn DitherAlgorithm::output(Self, &Logger) -> Unit
 pub fn DitherAlgorithm::rpdf() -> Self
+pub fn DitherAlgorithm::to_repr(Self) -> @debug.Repr
+pub fn DitherAlgorithm::to_string(Self) -> String
 pub fn DitherAlgorithm::tpdf() -> Self
 pub impl Show for DitherAlgorithm
 
@@ -538,12 +674,15 @@ pub struct Done {
   signal_sent : @ref.Ref[Bool]
 }
 pub fn Done::channels(Self) -> Int
+pub fn Done::current_span_len(Self) -> Int?
 pub fn Done::inner(Self) -> DynSource
 pub fn Done::inner_mut(Self) -> DynSource
 pub fn Done::into_inner(Self) -> DynSource
 pub fn[S : Source] Done::new(S, @ref.Ref[Int]) -> Self
 pub fn Done::next(Self) -> Double?
 pub fn Done::sample_rate(Self) -> Int
+pub fn Done::total_duration(Self) -> @core.Duration?
+pub fn Done::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Done
 
 pub struct DynSource {
@@ -567,37 +706,58 @@ pub impl Source for DynSource
 pub struct Empty {
   inner : DynSource
 }
+pub fn Empty::channels(Self) -> Int
+pub fn Empty::current_span_len(Self) -> Int?
 pub fn Empty::inner(Self) -> DynSource
 pub fn Empty::inner_mut(Self) -> DynSource
 pub fn Empty::into_inner(Self) -> DynSource
 pub fn Empty::new(Int, Int) -> Self
+pub fn Empty::next(Self) -> Double?
+pub fn Empty::sample_rate(Self) -> Int
+pub fn Empty::total_duration(Self) -> @core.Duration?
+pub fn Empty::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Empty
 
 pub struct EmptyCallback {
   callback : () -> Unit
 }
 pub fn EmptyCallback::channels(Self) -> Int
+pub fn EmptyCallback::current_span_len(Self) -> Int?
 pub fn EmptyCallback::new(() -> Unit) -> Self
 pub fn EmptyCallback::next(Self) -> Double?
 pub fn EmptyCallback::sample_rate(Self) -> Int
+pub fn EmptyCallback::total_duration(Self) -> @core.Duration?
+pub fn EmptyCallback::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for EmptyCallback
 
 pub struct FadeIn {
   inner : DynSource
 }
+pub fn FadeIn::channels(Self) -> Int
+pub fn FadeIn::current_span_len(Self) -> Int?
 pub fn FadeIn::inner(Self) -> DynSource
 pub fn FadeIn::inner_mut(Self) -> DynSource
 pub fn FadeIn::into_inner(Self) -> DynSource
 pub fn[S : Source] FadeIn::new(S, @core.Duration) -> Self
+pub fn FadeIn::next(Self) -> Double?
+pub fn FadeIn::sample_rate(Self) -> Int
+pub fn FadeIn::total_duration(Self) -> @core.Duration?
+pub fn FadeIn::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for FadeIn
 
 pub struct FadeOut {
   inner : DynSource
 }
+pub fn FadeOut::channels(Self) -> Int
+pub fn FadeOut::current_span_len(Self) -> Int?
 pub fn FadeOut::inner(Self) -> DynSource
 pub fn FadeOut::inner_mut(Self) -> DynSource
 pub fn FadeOut::into_inner(Self) -> DynSource
 pub fn[S : Source] FadeOut::new(S, @core.Duration) -> Self
+pub fn FadeOut::next(Self) -> Double?
+pub fn FadeOut::sample_rate(Self) -> Int
+pub fn FadeOut::total_duration(Self) -> @core.Duration?
+pub fn FadeOut::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for FadeOut
 
 pub struct FixedSamplesBuffer {
@@ -607,17 +767,24 @@ pub struct FixedSamplesBuffer {
   cursor : @ref.Ref[Int]
   duration : @core.Duration?
 }
+pub fn FixedSamplesBuffer::channels(Self) -> Int
 pub fn FixedSamplesBuffer::new(Int, Int, Array[Double]) -> Self
+pub fn FixedSamplesBuffer::next(Self) -> Double?
+pub fn FixedSamplesBuffer::sample_rate(Self) -> Int
+pub fn FixedSamplesBuffer::total_duration(Self) -> @core.Duration?
 pub impl FixedSource for FixedSamplesBuffer
 
 pub struct FixedSourceAdapter {
   inner : DynSource
 }
 pub fn FixedSourceAdapter::channels(Self) -> Int
+pub fn FixedSourceAdapter::current_span_len(Self) -> Int?
 pub fn FixedSourceAdapter::inner(Self) -> DynSource
 pub fn[S : FixedSource] FixedSourceAdapter::new(S) -> Self
 pub fn FixedSourceAdapter::next(Self) -> Double?
 pub fn FixedSourceAdapter::sample_rate(Self) -> Int
+pub fn FixedSourceAdapter::total_duration(Self) -> @core.Duration?
+pub fn FixedSourceAdapter::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for FixedSourceAdapter
 
 pub struct FromFactoryIter[S] {
@@ -627,8 +794,11 @@ pub struct FromFactoryIter[S] {
   sample_rate : @ref.Ref[Int]
 }
 pub fn[S] FromFactoryIter::channels(Self[S]) -> Int
+pub fn[S : Source] FromFactoryIter::current_span_len(Self[S]) -> Int?
 pub fn[S : Source] FromFactoryIter::next(Self[S]) -> Double?
 pub fn[S] FromFactoryIter::sample_rate(Self[S]) -> Int
+pub fn[S : Source] FromFactoryIter::total_duration(Self[S]) -> @core.Duration?
+pub fn[S : Source] FromFactoryIter::try_seek(Self[S], @core.Duration) -> Unit raise SeekError
 pub impl[S : Source] Source for FromFactoryIter[S]
 
 pub struct FromIter {
@@ -637,8 +807,11 @@ pub struct FromIter {
   has_current : @ref.Ref[Bool]
 }
 pub fn FromIter::channels(Self) -> Int
+pub fn FromIter::current_span_len(Self) -> Int?
 pub fn FromIter::next(Self) -> Double?
 pub fn FromIter::sample_rate(Self) -> Int
+pub fn FromIter::total_duration(Self) -> @core.Duration?
+pub fn FromIter::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for FromIter
 
 pub enum Function {
@@ -647,9 +820,14 @@ pub enum Function {
   Square
   Sawtooth
 } derive(Eq, @debug.Debug)
+pub fn Function::equal(Self, Self) -> Bool
+pub fn Function::not_equal(Self, Self) -> Bool
+pub fn Function::output(Self, &Logger) -> Unit
 pub fn Function::sawtooth() -> Self
 pub fn Function::sine() -> Self
 pub fn Function::square() -> Self
+pub fn Function::to_repr(Self) -> @debug.Repr
+pub fn Function::to_string(Self) -> String
 pub fn Function::triangle() -> Self
 pub impl Show for Function
 
@@ -671,10 +849,15 @@ pub struct InputConfig {
   sample_format : @core.SampleFormat
 } derive(Eq, @debug.Debug)
 pub fn InputConfig::default() -> Self
+pub fn InputConfig::equal(Self, Self) -> Bool
 pub fn InputConfig::from_supported(@core.SupportedStreamConfig) -> Self
 pub fn InputConfig::new(Int, Int, @core.BufferSize, @core.SampleFormat) -> Self
+pub fn InputConfig::not_equal(Self, Self) -> Bool
+pub fn InputConfig::output(Self, &Logger) -> Unit
 pub fn InputConfig::stream_config(Self) -> @core.StreamConfig
 pub fn InputConfig::supported_given(Self, @core.SupportedStreamConfigRange) -> Bool
+pub fn InputConfig::to_repr(Self) -> @debug.Repr
+pub fn InputConfig::to_string(Self) -> String
 pub fn InputConfig::with_buffer_size(Self, @core.BufferSize) -> Self
 pub fn InputConfig::with_channel_count(Self, Int) -> Self
 pub fn InputConfig::with_sample_format(Self, @core.SampleFormat) -> Self
@@ -697,28 +880,46 @@ pub struct Limit {
   peaks : @ref.Ref[Array[Double]]
   position : @ref.Ref[Int]
 }
+pub fn Limit::channels(Self) -> Int
+pub fn Limit::current_span_len(Self) -> Int?
 pub fn Limit::inner(Self) -> DynSource
 pub fn Limit::inner_mut(Self) -> DynSource
 pub fn Limit::into_inner(Self) -> DynSource
 pub fn[S : Source] Limit::new(S, LimitSettings) -> Self
+pub fn Limit::next(Self) -> Double?
+pub fn Limit::sample_rate(Self) -> Int
+pub fn Limit::total_duration(Self) -> @core.Duration?
+pub fn Limit::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Limit
 
 pub struct LimitMono {
   inner : Limit
 }
+pub fn LimitMono::channels(Self) -> Int
+pub fn LimitMono::current_span_len(Self) -> Int?
 pub fn LimitMono::inner(Self) -> Limit
 pub fn LimitMono::inner_mut(Self) -> Limit
 pub fn LimitMono::into_inner(Self) -> Limit
 pub fn[S : Source] LimitMono::new(S, LimitSettings) -> Self
+pub fn LimitMono::next(Self) -> Double?
+pub fn LimitMono::sample_rate(Self) -> Int
+pub fn LimitMono::total_duration(Self) -> @core.Duration?
+pub fn LimitMono::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for LimitMono
 
 pub struct LimitMulti {
   inner : Limit
 }
+pub fn LimitMulti::channels(Self) -> Int
+pub fn LimitMulti::current_span_len(Self) -> Int?
 pub fn LimitMulti::inner(Self) -> Limit
 pub fn LimitMulti::inner_mut(Self) -> Limit
 pub fn LimitMulti::into_inner(Self) -> Limit
 pub fn[S : Source] LimitMulti::new(S, LimitSettings) -> Self
+pub fn LimitMulti::next(Self) -> Double?
+pub fn LimitMulti::sample_rate(Self) -> Int
+pub fn LimitMulti::total_duration(Self) -> @core.Duration?
+pub fn LimitMulti::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for LimitMulti
 
 pub struct LimitSettings {
@@ -732,10 +933,15 @@ pub struct LimitSettings {
 pub fn LimitSettings::broadcast() -> Self
 pub fn LimitSettings::default() -> Self
 pub fn LimitSettings::dynamic_content() -> Self
+pub fn LimitSettings::equal(Self, Self) -> Bool
 pub fn LimitSettings::gaming() -> Self
 pub fn LimitSettings::live_performance() -> Self
 pub fn LimitSettings::mastering() -> Self
 pub fn LimitSettings::new() -> Self
+pub fn LimitSettings::not_equal(Self, Self) -> Bool
+pub fn LimitSettings::output(Self, &Logger) -> Unit
+pub fn LimitSettings::to_repr(Self) -> @debug.Repr
+pub fn LimitSettings::to_string(Self) -> String
 pub fn LimitSettings::with_attack(Self, @core.Duration) -> Self
 pub fn LimitSettings::with_knee_width(Self, Double) -> Self
 pub fn LimitSettings::with_max(Self, Double) -> Self
@@ -747,20 +953,32 @@ pub impl Show for LimitSettings
 pub struct LimitStereo {
   inner : Limit
 }
+pub fn LimitStereo::channels(Self) -> Int
+pub fn LimitStereo::current_span_len(Self) -> Int?
 pub fn LimitStereo::inner(Self) -> Limit
 pub fn LimitStereo::inner_mut(Self) -> Limit
 pub fn LimitStereo::into_inner(Self) -> Limit
 pub fn[S : Source] LimitStereo::new(S, LimitSettings) -> Self
+pub fn LimitStereo::next(Self) -> Double?
+pub fn LimitStereo::sample_rate(Self) -> Int
+pub fn LimitStereo::total_duration(Self) -> @core.Duration?
+pub fn LimitStereo::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for LimitStereo
 
 pub struct LinearGainRamp {
   inner : DynSource
 }
+pub fn LinearGainRamp::channels(Self) -> Int
+pub fn LinearGainRamp::current_span_len(Self) -> Int?
 pub fn LinearGainRamp::inner(Self) -> DynSource
 pub fn LinearGainRamp::inner_mut(Self) -> DynSource
 pub fn LinearGainRamp::into_inner(Self) -> DynSource
 pub fn[S : Source] LinearGainRamp::new(S, Double, Double, @core.Duration) -> Self
 pub fn[S : Source] LinearGainRamp::new_with_clamp(S, Double, Double, @core.Duration, Bool) -> Self
+pub fn LinearGainRamp::next(Self) -> Double?
+pub fn LinearGainRamp::sample_rate(Self) -> Int
+pub fn LinearGainRamp::total_duration(Self) -> @core.Duration?
+pub fn LinearGainRamp::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for LinearGainRamp
 
 pub struct LoopedDecoder {
@@ -771,8 +989,11 @@ pub struct LoopedDecoder {
   seekable : Bool
 }
 pub fn LoopedDecoder::channels(Self) -> Int
+pub fn LoopedDecoder::current_span_len(Self) -> Int?
 pub fn LoopedDecoder::next(Self) -> Double?
 pub fn LoopedDecoder::sample_rate(Self) -> Int
+pub fn LoopedDecoder::total_duration(Self) -> @core.Duration?
+pub fn LoopedDecoder::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for LoopedDecoder
 
 pub struct Microphone {
@@ -783,8 +1004,13 @@ pub struct Microphone {
   config : InputConfig
   error_occurred : @ref.Ref[Bool]
 }
+pub fn Microphone::channels(Self) -> Int
 pub fn Microphone::config(Self) -> InputConfig
+pub fn Microphone::current_span_len(Self) -> Int?
 pub fn Microphone::next(Self) -> Double?
+pub fn Microphone::sample_rate(Self) -> Int
+pub fn Microphone::total_duration(Self) -> @core.Duration?
+pub fn Microphone::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Microphone
 
 pub struct MicrophoneBuilder {
@@ -811,10 +1037,16 @@ pub fn MicrophoneBuilder::with_error_callback(Self, (@core.StreamError) -> Unit)
 pub struct Mix {
   inner : DynSource
 }
+pub fn Mix::channels(Self) -> Int
+pub fn Mix::current_span_len(Self) -> Int?
 pub fn Mix::inner(Self) -> DynSource
 pub fn Mix::inner_mut(Self) -> DynSource
 pub fn Mix::into_inner(Self) -> DynSource
 pub fn[A : Source, B : Source] Mix::new(A, B) -> Self
+pub fn Mix::next(Self) -> Double?
+pub fn Mix::sample_rate(Self) -> Int
+pub fn Mix::total_duration(Self) -> @core.Duration?
+pub fn Mix::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Mix
 
 pub struct Mixer {
@@ -838,8 +1070,11 @@ pub struct MixerSource {
   sample_count : @ref.Ref[Int]
 }
 pub fn MixerSource::channels(Self) -> Int
+pub fn MixerSource::current_span_len(Self) -> Int?
 pub fn MixerSource::next(Self) -> Double?
 pub fn MixerSource::sample_rate(Self) -> Int
+pub fn MixerSource::total_duration(Self) -> @core.Duration?
+pub fn MixerSource::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for MixerSource
 
 pub struct NoiseRngState {
@@ -861,9 +1096,14 @@ pub struct OutputConfig {
   sample_format : @core.SampleFormat
 } derive(Eq, @debug.Debug)
 pub fn OutputConfig::default() -> Self
+pub fn OutputConfig::equal(Self, Self) -> Bool
 pub fn OutputConfig::from_supported(@core.SupportedStreamConfig) -> Self
 pub fn OutputConfig::new(Int, Int, @core.BufferSize, @core.SampleFormat) -> Self
+pub fn OutputConfig::not_equal(Self, Self) -> Bool
+pub fn OutputConfig::output(Self, &Logger) -> Unit
 pub fn OutputConfig::supported_given(Self, @core.SupportedStreamConfigRange) -> Bool
+pub fn OutputConfig::to_repr(Self) -> @debug.Repr
+pub fn OutputConfig::to_string(Self) -> String
 pub fn OutputConfig::with_buffer_size(Self, @core.BufferSize) -> Self
 pub fn OutputConfig::with_channel_count(Self, Int) -> Self
 pub fn OutputConfig::with_sample_format(Self, @core.SampleFormat) -> Self
@@ -911,8 +1151,13 @@ pub struct OutputStreamConfig {
 pub fn OutputStreamConfig::buffer_size(Self) -> @core.BufferSize
 pub fn OutputStreamConfig::channel_count(Self) -> Int
 pub fn OutputStreamConfig::default() -> Self
+pub fn OutputStreamConfig::equal(Self, Self) -> Bool
+pub fn OutputStreamConfig::not_equal(Self, Self) -> Bool
+pub fn OutputStreamConfig::output(Self, &Logger) -> Unit
 pub fn OutputStreamConfig::sample_format(Self) -> @core.SampleFormat
 pub fn OutputStreamConfig::sample_rate(Self) -> Int
+pub fn OutputStreamConfig::to_repr(Self) -> @debug.Repr
+pub fn OutputStreamConfig::to_string(Self) -> String
 pub impl Show for OutputStreamConfig
 
 pub struct Pausable {
@@ -921,6 +1166,7 @@ pub struct Pausable {
   remaining_paused_samples : @ref.Ref[Int]
 }
 pub fn Pausable::channels(Self) -> Int
+pub fn Pausable::current_span_len(Self) -> Int?
 pub fn Pausable::inner(Self) -> DynSource
 pub fn Pausable::inner_mut(Self) -> DynSource
 pub fn Pausable::into_inner(Self) -> DynSource
@@ -928,6 +1174,8 @@ pub fn Pausable::is_paused(Self) -> Bool
 pub fn Pausable::next(Self) -> Double?
 pub fn Pausable::sample_rate(Self) -> Int
 pub fn Pausable::set_paused(Self, Bool) -> Unit
+pub fn Pausable::total_duration(Self) -> @core.Duration?
+pub fn Pausable::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Pausable
 
 pub struct PeriodicAccess {
@@ -937,11 +1185,14 @@ pub struct PeriodicAccess {
   callback : (DynSource) -> Unit
 }
 pub fn PeriodicAccess::channels(Self) -> Int
+pub fn PeriodicAccess::current_span_len(Self) -> Int?
 pub fn PeriodicAccess::inner(Self) -> DynSource
 pub fn PeriodicAccess::inner_mut(Self) -> DynSource
 pub fn PeriodicAccess::into_inner(Self) -> DynSource
 pub fn PeriodicAccess::next(Self) -> Double?
 pub fn PeriodicAccess::sample_rate(Self) -> Int
+pub fn PeriodicAccess::total_duration(Self) -> @core.Duration?
+pub fn PeriodicAccess::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for PeriodicAccess
 
 pub struct Pink {
@@ -950,11 +1201,14 @@ pub struct Pink {
   prev : @ref.Ref[Double]
 }
 pub fn Pink::channels(Self) -> Int
+pub fn Pink::current_span_len(Self) -> Int?
 pub fn Pink::new(Int) -> Self
 pub fn[R : NoiseRng] Pink::new_with_rng(Int, R) -> Self
 pub fn Pink::new_with_seed(Int, UInt64) -> Self
 pub fn Pink::next(Self) -> Double?
 pub fn Pink::sample_rate(Self) -> Int
+pub fn Pink::total_duration(Self) -> @core.Duration?
+pub fn Pink::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Pink
 
 pub struct Player {
@@ -1003,20 +1257,29 @@ pub struct Red {
   scale : @ref.Ref[Double]
 }
 pub fn Red::channels(Self) -> Int
+pub fn Red::current_span_len(Self) -> Int?
 pub fn Red::new(Int) -> Self
 pub fn[R : NoiseRng] Red::new_with_rng(Int, R) -> Self
 pub fn Red::new_with_seed(Int, UInt64) -> Self
 pub fn Red::next(Self) -> Double?
 pub fn Red::sample_rate(Self) -> Int
+pub fn Red::total_duration(Self) -> @core.Duration?
+pub fn Red::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Red
 
 pub struct Repeat {
   inner : DynSource
 }
+pub fn Repeat::channels(Self) -> Int
+pub fn Repeat::current_span_len(Self) -> Int?
 pub fn Repeat::inner(Self) -> DynSource
 pub fn Repeat::inner_mut(Self) -> DynSource
 pub fn Repeat::into_inner(Self) -> DynSource
 pub fn[S : Source] Repeat::new(S) -> Self
+pub fn Repeat::next(Self) -> Double?
+pub fn Repeat::sample_rate(Self) -> Int
+pub fn Repeat::total_duration(Self) -> @core.Duration?
+pub fn Repeat::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Repeat
 
 pub struct SampleRateConverter {
@@ -1024,17 +1287,29 @@ pub struct SampleRateConverter {
   to : Int
   channels : Int
 }
+pub fn SampleRateConverter::channels(Self) -> Int
+pub fn SampleRateConverter::current_span_len(Self) -> Int?
 pub fn SampleRateConverter::inner_mut(Self) -> DynSource
 pub fn SampleRateConverter::into_inner(Self) -> DynSource
 pub fn[S : Source] SampleRateConverter::new(S, Int, Int, Int) -> Self
+pub fn SampleRateConverter::next(Self) -> Double?
+pub fn SampleRateConverter::sample_rate(Self) -> Int
+pub fn SampleRateConverter::total_duration(Self) -> @core.Duration?
+pub fn SampleRateConverter::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for SampleRateConverter
 
 pub struct SampleTypeConverter {
   inner : DynSource
 }
+pub fn SampleTypeConverter::channels(Self) -> Int
+pub fn SampleTypeConverter::current_span_len(Self) -> Int?
 pub fn SampleTypeConverter::inner_mut(Self) -> DynSource
 pub fn SampleTypeConverter::into_inner(Self) -> DynSource
 pub fn[S : Source] SampleTypeConverter::new(S) -> Self
+pub fn SampleTypeConverter::next(Self) -> Double?
+pub fn SampleTypeConverter::sample_rate(Self) -> Int
+pub fn SampleTypeConverter::total_duration(Self) -> @core.Duration?
+pub fn SampleTypeConverter::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for SampleTypeConverter
 
 pub struct SamplesBuffer {
@@ -1045,20 +1320,26 @@ pub struct SamplesBuffer {
 }
 pub fn SamplesBuffer::amplify(Self, Double) -> DynSource
 pub fn SamplesBuffer::channels(Self) -> Int
+pub fn SamplesBuffer::current_span_len(Self) -> Int?
 pub fn SamplesBuffer::new(Int, Int, Array[Double]) -> Self
 pub fn SamplesBuffer::next(Self) -> Double?
 pub fn[S : Source] SamplesBuffer::record_source(S) -> Self
 pub fn SamplesBuffer::repeat_infinite(Self) -> DynSource
 pub fn SamplesBuffer::sample_rate(Self) -> Int
+pub fn SamplesBuffer::total_duration(Self) -> @core.Duration?
+pub fn SamplesBuffer::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for SamplesBuffer
 
 pub struct SawtoothWave {
   inner : SignalGenerator
 }
 pub fn SawtoothWave::channels(Self) -> Int
+pub fn SawtoothWave::current_span_len(Self) -> Int?
 pub fn SawtoothWave::new(Double) -> Self
 pub fn SawtoothWave::next(Self) -> Double?
 pub fn SawtoothWave::sample_rate(Self) -> Int
+pub fn SawtoothWave::total_duration(Self) -> @core.Duration?
+pub fn SawtoothWave::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for SawtoothWave
 
 pub struct Settings {
@@ -1070,6 +1351,11 @@ pub struct Settings {
   is_seekable : Bool
 } derive(Eq, @debug.Debug)
 pub fn Settings::default() -> Self
+pub fn Settings::equal(Self, Self) -> Bool
+pub fn Settings::not_equal(Self, Self) -> Bool
+pub fn Settings::output(Self, &Logger) -> Unit
+pub fn Settings::to_repr(Self) -> @debug.Repr
+pub fn Settings::to_string(Self) -> String
 pub impl Show for Settings
 
 pub enum SignalFunction {
@@ -1078,6 +1364,11 @@ pub enum SignalFunction {
   Sawtooth
   Triangle
 } derive(Eq, @debug.Debug)
+pub fn SignalFunction::equal(Self, Self) -> Bool
+pub fn SignalFunction::not_equal(Self, Self) -> Bool
+pub fn SignalFunction::output(Self, &Logger) -> Unit
+pub fn SignalFunction::to_repr(Self) -> @debug.Repr
+pub fn SignalFunction::to_string(Self) -> String
 pub impl Show for SignalFunction
 
 pub struct SignalGenerator {
@@ -1088,10 +1379,13 @@ pub struct SignalGenerator {
   phase : @ref.Ref[Double]
 }
 pub fn SignalGenerator::channels(Self) -> Int
+pub fn SignalGenerator::current_span_len(Self) -> Int?
 pub fn SignalGenerator::from_function(Int, Double, Function) -> Self
 pub fn SignalGenerator::new(Int, Double, SignalFunction) -> Self
 pub fn SignalGenerator::next(Self) -> Double?
 pub fn SignalGenerator::sample_rate(Self) -> Int
+pub fn SignalGenerator::total_duration(Self) -> @core.Duration?
+pub fn SignalGenerator::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub fn SignalGenerator::with_function(Int, Double, Function) -> Self
 pub fn SignalGenerator::with_generator(Int, Double, GeneratorFunction) -> DynSource
 pub impl Source for SignalGenerator
@@ -1100,9 +1394,12 @@ pub struct SineWave {
   inner : SignalGenerator
 }
 pub fn SineWave::channels(Self) -> Int
+pub fn SineWave::current_span_len(Self) -> Int?
 pub fn SineWave::new(Double) -> Self
 pub fn SineWave::next(Self) -> Double?
 pub fn SineWave::sample_rate(Self) -> Int
+pub fn SineWave::total_duration(Self) -> @core.Duration?
+pub fn SineWave::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for SineWave
 
 pub struct Sink {
@@ -1149,10 +1446,16 @@ pub struct SinkHandle {
 pub struct SkipDuration {
   inner : DynSource
 }
+pub fn SkipDuration::channels(Self) -> Int
+pub fn SkipDuration::current_span_len(Self) -> Int?
 pub fn SkipDuration::inner(Self) -> DynSource
 pub fn SkipDuration::inner_mut(Self) -> DynSource
 pub fn SkipDuration::into_inner(Self) -> DynSource
 pub fn[S : Source] SkipDuration::new(S, @core.Duration) -> Self
+pub fn SkipDuration::next(Self) -> Double?
+pub fn SkipDuration::sample_rate(Self) -> Int
+pub fn SkipDuration::total_duration(Self) -> @core.Duration?
+pub fn SkipDuration::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for SkipDuration
 
 pub struct Skippable {
@@ -1160,12 +1463,15 @@ pub struct Skippable {
   do_skip : @ref.Ref[Bool]
 }
 pub fn Skippable::channels(Self) -> Int
+pub fn Skippable::current_span_len(Self) -> Int?
 pub fn Skippable::inner(Self) -> DynSource
 pub fn Skippable::inner_mut(Self) -> DynSource
 pub fn Skippable::into_inner(Self) -> DynSource
 pub fn Skippable::next(Self) -> Double?
 pub fn Skippable::sample_rate(Self) -> Int
 pub fn Skippable::skip(Self) -> Unit
+pub fn Skippable::total_duration(Self) -> @core.Duration?
+pub fn Skippable::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Skippable
 
 pub struct SourcesQueueInput {
@@ -1188,15 +1494,19 @@ pub struct SourcesQueueOutput {
   input : SourcesQueueInput
 }
 pub fn SourcesQueueOutput::channels(Self) -> Int
+pub fn SourcesQueueOutput::current_span_len(Self) -> Int?
 pub fn SourcesQueueOutput::next(Self) -> Double?
 pub fn SourcesQueueOutput::sample_rate(Self) -> Int
 pub fn SourcesQueueOutput::skip_one(Self) -> Unit
+pub fn SourcesQueueOutput::total_duration(Self) -> @core.Duration?
+pub fn SourcesQueueOutput::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for SourcesQueueOutput
 
 pub struct Spatial {
   inner : SpatialSource
 }
 pub fn Spatial::channels(Self) -> Int
+pub fn Spatial::current_span_len(Self) -> Int?
 pub fn Spatial::inner(Self) -> SpatialSource
 pub fn Spatial::inner_mut(Self) -> SpatialSource
 pub fn Spatial::into_inner(Self) -> SpatialSource
@@ -1204,6 +1514,8 @@ pub fn[S : Source] Spatial::new(S, Array[Double], Array[Double], Array[Double]) 
 pub fn Spatial::next(Self) -> Double?
 pub fn Spatial::sample_rate(Self) -> Int
 pub fn Spatial::set_positions(Self, Array[Double], Array[Double], Array[Double]) -> Unit
+pub fn Spatial::total_duration(Self) -> @core.Duration?
+pub fn Spatial::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Spatial
 
 pub struct SpatialPlayer {
@@ -1270,10 +1582,13 @@ pub struct SpatialSource {
   pending_channel : @ref.Ref[Int]
 }
 pub fn SpatialSource::channels(Self) -> Int
+pub fn SpatialSource::current_span_len(Self) -> Int?
 pub fn[S : Source] SpatialSource::new(S, Array[Double], Array[Double], Array[Double]) -> Self
 pub fn SpatialSource::next(Self) -> Double?
 pub fn SpatialSource::sample_rate(Self) -> Int
 pub fn SpatialSource::set_positions(Self, Array[Double], Array[Double], Array[Double]) -> Unit
+pub fn SpatialSource::total_duration(Self) -> @core.Duration?
+pub fn SpatialSource::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for SpatialSource
 
 pub struct SpeakersBuilder {
@@ -1302,20 +1617,29 @@ pub struct Speed {
   input : DynSource
   factor : @ref.Ref[Double]
 }
+pub fn Speed::channels(Self) -> Int
+pub fn Speed::current_span_len(Self) -> Int?
 pub fn Speed::inner(Self) -> DynSource
 pub fn Speed::inner_mut(Self) -> DynSource
 pub fn Speed::into_inner(Self) -> DynSource
 pub fn[S : Source] Speed::new(S, Double) -> Self
+pub fn Speed::next(Self) -> Double?
+pub fn Speed::sample_rate(Self) -> Int
 pub fn Speed::set_factor(Self, Double) -> Unit
+pub fn Speed::total_duration(Self) -> @core.Duration?
+pub fn Speed::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Speed
 
 pub struct SquareWave {
   inner : SignalGenerator
 }
 pub fn SquareWave::channels(Self) -> Int
+pub fn SquareWave::current_span_len(Self) -> Int?
 pub fn SquareWave::new(Double) -> Self
 pub fn SquareWave::next(Self) -> Double?
 pub fn SquareWave::sample_rate(Self) -> Int
+pub fn SquareWave::total_duration(Self) -> @core.Duration?
+pub fn SquareWave::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for SquareWave
 
 pub struct StaticSamplesBuffer {
@@ -1325,9 +1649,12 @@ pub struct StaticSamplesBuffer {
   cursor : @ref.Ref[Int]
 }
 pub fn StaticSamplesBuffer::channels(Self) -> Int
+pub fn StaticSamplesBuffer::current_span_len(Self) -> Int?
 pub fn StaticSamplesBuffer::new(Int, Int, Array[Double]) -> Self
 pub fn StaticSamplesBuffer::next(Self) -> Double?
 pub fn StaticSamplesBuffer::sample_rate(Self) -> Int
+pub fn StaticSamplesBuffer::total_duration(Self) -> @core.Duration?
+pub fn StaticSamplesBuffer::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for StaticSamplesBuffer
 
 pub struct Stoppable {
@@ -1335,12 +1662,15 @@ pub struct Stoppable {
   stopped : @ref.Ref[Bool]
 }
 pub fn Stoppable::channels(Self) -> Int
+pub fn Stoppable::current_span_len(Self) -> Int?
 pub fn Stoppable::inner(Self) -> DynSource
 pub fn Stoppable::inner_mut(Self) -> DynSource
 pub fn Stoppable::into_inner(Self) -> DynSource
 pub fn Stoppable::next(Self) -> Double?
 pub fn Stoppable::sample_rate(Self) -> Int
 pub fn Stoppable::stop(Self) -> Unit
+pub fn Stoppable::total_duration(Self) -> @core.Duration?
+pub fn Stoppable::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Stoppable
 
 pub struct TakeDuration {
@@ -1350,12 +1680,18 @@ pub struct TakeDuration {
   remaining_samples : @ref.Ref[Int]
   filter_fadeout : @ref.Ref[Bool]
 }
+pub fn TakeDuration::channels(Self) -> Int
 pub fn TakeDuration::clear_filter(Self) -> Unit
+pub fn TakeDuration::current_span_len(Self) -> Int?
 pub fn TakeDuration::inner(Self) -> DynSource
 pub fn TakeDuration::inner_mut(Self) -> DynSource
 pub fn TakeDuration::into_inner(Self) -> DynSource
 pub fn[S : Source] TakeDuration::new(S, @core.Duration) -> Self
+pub fn TakeDuration::next(Self) -> Double?
+pub fn TakeDuration::sample_rate(Self) -> Int
 pub fn TakeDuration::set_filter_fadeout(Self) -> Unit
+pub fn TakeDuration::total_duration(Self) -> @core.Duration?
+pub fn TakeDuration::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for TakeDuration
 
 pub struct TrackPosition {
@@ -1367,21 +1703,27 @@ pub struct TrackPosition {
   current_span_len : @ref.Ref[Int?]
 }
 pub fn TrackPosition::channels(Self) -> Int
+pub fn TrackPosition::current_span_len(Self) -> Int?
 pub fn TrackPosition::get_pos(Self) -> @core.Duration
 pub fn TrackPosition::inner(Self) -> DynSource
 pub fn TrackPosition::inner_mut(Self) -> DynSource
 pub fn TrackPosition::into_inner(Self) -> DynSource
 pub fn TrackPosition::next(Self) -> Double?
 pub fn TrackPosition::sample_rate(Self) -> Int
+pub fn TrackPosition::total_duration(Self) -> @core.Duration?
+pub fn TrackPosition::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for TrackPosition
 
 pub struct TriangleWave {
   inner : SignalGenerator
 }
 pub fn TriangleWave::channels(Self) -> Int
+pub fn TriangleWave::current_span_len(Self) -> Int?
 pub fn TriangleWave::new(Double) -> Self
 pub fn TriangleWave::next(Self) -> Double?
 pub fn TriangleWave::sample_rate(Self) -> Int
+pub fn TriangleWave::total_duration(Self) -> @core.Duration?
+pub fn TriangleWave::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for TriangleWave
 
 pub struct UniformSourceIterator {
@@ -1391,10 +1733,13 @@ pub struct UniformSourceIterator {
   total_duration : @core.Duration?
 }
 pub fn UniformSourceIterator::channels(Self) -> Int
+pub fn UniformSourceIterator::current_span_len(Self) -> Int?
 pub fn UniformSourceIterator::inner_mut(Self) -> DynSource
 pub fn[S : Source] UniformSourceIterator::new(S, Int, Int) -> Self
 pub fn UniformSourceIterator::next(Self) -> Double?
 pub fn UniformSourceIterator::sample_rate(Self) -> Int
+pub fn UniformSourceIterator::total_duration(Self) -> @core.Duration?
+pub fn UniformSourceIterator::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for UniformSourceIterator
 
 pub struct Velvet {
@@ -1405,6 +1750,7 @@ pub struct Velvet {
   impulse_pos : @ref.Ref[Double]
 }
 pub fn Velvet::channels(Self) -> Int
+pub fn Velvet::current_span_len(Self) -> Int?
 pub fn Velvet::new(Int) -> Self
 pub fn Velvet::new_with_density(Int, Double) -> Self
 pub fn[R : NoiseRng] Velvet::new_with_density_and_rng(Int, Double, R) -> Self
@@ -1413,6 +1759,8 @@ pub fn[R : NoiseRng] Velvet::new_with_rng(Int, R) -> Self
 pub fn Velvet::new_with_seed(Int, UInt64) -> Self
 pub fn Velvet::next(Self) -> Double?
 pub fn Velvet::sample_rate(Self) -> Int
+pub fn Velvet::total_duration(Self) -> @core.Duration?
+pub fn Velvet::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Velvet
 
 pub struct Violet {
@@ -1421,11 +1769,14 @@ pub struct Violet {
   prev : @ref.Ref[Double]
 }
 pub fn Violet::channels(Self) -> Int
+pub fn Violet::current_span_len(Self) -> Int?
 pub fn Violet::new(Int) -> Self
 pub fn[R : NoiseRng] Violet::new_with_rng(Int, R) -> Self
 pub fn Violet::new_with_seed(Int, UInt64) -> Self
 pub fn Violet::next(Self) -> Double?
 pub fn Violet::sample_rate(Self) -> Int
+pub fn Violet::total_duration(Self) -> @core.Duration?
+pub fn Violet::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Violet
 
 pub struct WhiteGaussian {
@@ -1433,6 +1784,7 @@ pub struct WhiteGaussian {
   rng : NoiseRngState
 }
 pub fn WhiteGaussian::channels(Self) -> Int
+pub fn WhiteGaussian::current_span_len(Self) -> Int?
 pub fn WhiteGaussian::mean(Self) -> Double
 pub fn WhiteGaussian::new(Int) -> Self
 pub fn[R : NoiseRng] WhiteGaussian::new_with_rng(Int, R) -> Self
@@ -1440,6 +1792,8 @@ pub fn WhiteGaussian::new_with_seed(Int, UInt64) -> Self
 pub fn WhiteGaussian::next(Self) -> Double?
 pub fn WhiteGaussian::sample_rate(Self) -> Int
 pub fn WhiteGaussian::std_dev(Self) -> Double
+pub fn WhiteGaussian::total_duration(Self) -> @core.Duration?
+pub fn WhiteGaussian::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for WhiteGaussian
 
 pub struct WhiteTriangular {
@@ -1447,12 +1801,15 @@ pub struct WhiteTriangular {
   rng : NoiseRngState
 }
 pub fn WhiteTriangular::channels(Self) -> Int
+pub fn WhiteTriangular::current_span_len(Self) -> Int?
 pub fn WhiteTriangular::new(Int) -> Self
 pub fn[R : NoiseRng] WhiteTriangular::new_with_rng(Int, R) -> Self
 pub fn WhiteTriangular::new_with_seed(Int, UInt64) -> Self
 pub fn WhiteTriangular::next(Self) -> Double?
 pub fn WhiteTriangular::sample_rate(Self) -> Int
 pub fn WhiteTriangular::std_dev(Self) -> Double
+pub fn WhiteTriangular::total_duration(Self) -> @core.Duration?
+pub fn WhiteTriangular::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for WhiteTriangular
 
 pub struct WhiteUniform {
@@ -1460,22 +1817,31 @@ pub struct WhiteUniform {
   rng : NoiseRngState
 }
 pub fn WhiteUniform::channels(Self) -> Int
+pub fn WhiteUniform::current_span_len(Self) -> Int?
 pub fn WhiteUniform::new(Int) -> Self
 pub fn[R : NoiseRng] WhiteUniform::new_with_rng(Int, R) -> Self
 pub fn WhiteUniform::new_with_seed(Int, UInt64) -> Self
 pub fn WhiteUniform::next(Self) -> Double?
 pub fn WhiteUniform::sample_rate(Self) -> Int
 pub fn WhiteUniform::std_dev(Self) -> Double
+pub fn WhiteUniform::total_duration(Self) -> @core.Duration?
+pub fn WhiteUniform::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for WhiteUniform
 
 pub struct Zero {
   inner : DynSource
 }
+pub fn Zero::channels(Self) -> Int
+pub fn Zero::current_span_len(Self) -> Int?
 pub fn Zero::inner(Self) -> DynSource
 pub fn Zero::inner_mut(Self) -> DynSource
 pub fn Zero::into_inner(Self) -> DynSource
 pub fn Zero::new(Int, Int) -> Self
 pub fn Zero::new_samples(Int, Int, Int) -> Self
+pub fn Zero::next(Self) -> Double?
+pub fn Zero::sample_rate(Self) -> Int
+pub fn Zero::total_duration(Self) -> @core.Duration?
+pub fn Zero::try_seek(Self, @core.Duration) -> Unit raise SeekError
 pub impl Source for Zero
 
 // Type aliases

@@ -443,3 +443,10 @@ pub fn SpatialSink::try_seek(
 pub fn SpatialSink::get_pos(self : SpatialSink) -> @moon_cpal.Duration {
   self.sink.get_pos()
 }
+
+///|
+pub extend SpatialSource with Source::{
+  total_duration,
+  try_seek,
+  current_span_len,
+}

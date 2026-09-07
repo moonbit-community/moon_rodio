@@ -127,7 +127,7 @@ pub fn FixedSamplesBuffer::new(
     channels,
     sample_rate,
   )
-  { channels, sample_rate, samples, cursor: @ref.new(0), duration }
+  { channels, sample_rate, samples, cursor: @ref.new(0), duration, }
 }
 
 ///|
@@ -162,4 +162,19 @@ pub impl FixedSource for FixedSamplesBuffer with fn total_duration(
   self : FixedSamplesBuffer,
 ) {
   self.duration
+}
+
+///|
+pub extend FixedSamplesBuffer with FixedSource::{
+  sample_rate,
+  channels,
+  total_duration,
+  next,
+}
+
+///|
+pub extend FixedSourceAdapter with Source::{
+  total_duration,
+  try_seek,
+  current_span_len,
 }

@@ -249,3 +249,13 @@ pub impl[S : Source] Source for FromFactoryIter[S] with fn try_seek(
     Some(current) => current.try_seek(pos)
   }
 }
+
+///|
+pub extend Chirp with Source::{total_duration, try_seek, current_span_len}
+
+///|
+pub extend FromFactoryIter with Source::{
+  total_duration,
+  try_seek,
+  current_span_len,
+}

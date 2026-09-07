@@ -44,7 +44,7 @@ pub fn DecodedSamples::new(
 ) -> DecodedSamples {
   guard channels > 0 else { panic() }
   guard sample_rate > 0 else { panic() }
-  { channels, sample_rate, samples, cursor: @ref.new(0) }
+  { channels, sample_rate, samples, cursor: @ref.new(0), }
 }
 
 ///|
@@ -99,7 +99,7 @@ pub struct WavDecoder {
 
 ///|
 pub fn WavDecoder::new(bytes : Bytes) -> WavDecoder raise DecoderError {
-  { inner: decode_wav_bytes(bytes) }
+  { inner: decode_wav_bytes(bytes), }
 }
 
 ///|
@@ -144,7 +144,7 @@ pub struct Mp3Decoder {
 
 ///|
 pub fn Mp3Decoder::new(bytes : Bytes) -> Mp3Decoder raise DecoderError {
-  { inner: decode_mp3_bytes(bytes) }
+  { inner: decode_mp3_bytes(bytes), }
 }
 
 ///|
@@ -189,7 +189,7 @@ pub struct FlacDecoder {
 
 ///|
 pub fn FlacDecoder::new(bytes : Bytes) -> FlacDecoder raise DecoderError {
-  { inner: decode_flac_bytes(bytes) }
+  { inner: decode_flac_bytes(bytes), }
 }
 
 ///|
@@ -234,7 +234,7 @@ pub struct VorbisDecoder {
 
 ///|
 pub fn VorbisDecoder::new(bytes : Bytes) -> VorbisDecoder raise DecoderError {
-  { inner: decode_vorbis_bytes(bytes) }
+  { inner: decode_vorbis_bytes(bytes), }
 }
 
 ///|
@@ -305,7 +305,7 @@ pub fn ReadSeekSource::from_bytes(
     Some(v) => Some(v)
     None => Some(bytes.length())
   }
-  { inner: bytes, byte_len: effective_len, is_seekable }
+  { inner: bytes, byte_len: effective_len, is_seekable, }
 }
 
 ///|
@@ -322,3 +322,12 @@ pub fn ReadSeekSource::is_seekable(self : ReadSeekSource) -> Bool {
 pub fn ReadSeekSource::into_inner(self : ReadSeekSource) -> Bytes {
   self.inner
 }
+
+///|
+pub extend DecoderError with Debug::{to_repr}
+
+///|
+pub extend DecoderError with Eq::{not_equal, equal}
+
+///|
+pub extend DecoderError with Show::{to_string, output}
