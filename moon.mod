@@ -1,6 +1,6 @@
 name = "Milky2018/moon_rodio"
 
-version = "0.3.5"
+version = "0.3.6"
 
 import {
   "moonbitlang/x@0.5.5",
