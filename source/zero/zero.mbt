@@ -19,15 +19,15 @@ pub type Zero = @Milky2018/moon_rodio.Zero
 pub type DynSource = @Milky2018/moon_rodio.DynSource
 
 ///|
-pub fn zero(channels : Int, sample_rate : Int) -> DynSource {
+pub fn zero(channels : Int32, sample_rate : Int32) -> DynSource {
   @Milky2018/moon_rodio.zero(channels, sample_rate)
 }
 
 ///|
 pub fn zero_samples(
-  channels : Int,
-  sample_rate : Int,
-  count : Int,
+  channels : Int32,
+  sample_rate : Int32,
+  count : Int32,
 ) -> DynSource {
   @Milky2018/moon_rodio.zero_samples(channels, sample_rate, count)
 }

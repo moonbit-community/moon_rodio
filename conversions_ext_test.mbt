@@ -13,8 +13,11 @@
 // limitations under the License.
 
 ///|
-fn[S : Source] collect_n_conv(source : S, n : Int) -> Array[Sample] {
-  let out : Array[Sample] = []
+fn[S : Source] collect_n_conv(
+  source : S,
+  n : Int32,
+) -> Array[@moon_rodio.Sample] {
+  let out : Array[@moon_rodio.Sample] = []
   for _ in 0..<n {
     match source.next() {
       None => break
@@ -26,63 +29,65 @@ fn[S : Source] collect_n_conv(source : S, n : Int) -> Array[Sample] {
 
 ///|
 test "rodio::conversions::convert_channels" {
-  let src = SamplesBuffer::new(1, 48_000, [1.0, -2.0])
-  let out = convert_channels(src, 2)
-  @debug.assert_eq(out.channels(), 2)
-  @debug.assert_eq(collect_n_conv(out, 6), [1.0, 1.0, -2.0, -2.0])
+  let src = @moon_rodio.SamplesBuffer::new(1, 48_000, [1.0, -2.0])
+  let out = @moon_rodio.convert_channels(src, 2)
+  assert_eq(out.channels(), 2)
+  assert_eq(collect_n_conv(out, 6), [1.0, 1.0, -2.0, -2.0])
 
-  let remove_3_to_2 = convert_channels(
-    SamplesBuffer::new(3, 48_000, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]),
+  let remove_3_to_2 = @moon_rodio.convert_channels(
+    @moon_rodio.SamplesBuffer::new(3, 48_000, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]),
     2,
   )
-  @debug.assert_eq(collect_n_conv(remove_3_to_2, 16), [1.0, 2.0, 4.0, 5.0])
+  assert_eq(collect_n_conv(remove_3_to_2, 16), [1.0, 2.0, 4.0, 5.0])
 
-  let remove_4_to_1 = convert_channels(
-    SamplesBuffer::new(4, 48_000, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]),
+  let remove_4_to_1 = @moon_rodio.convert_channels(
+    @moon_rodio.SamplesBuffer::new(4, 48_000, [
+      1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
+    ]),
     1,
   )
-  @debug.assert_eq(collect_n_conv(remove_4_to_1, 16), [1.0, 5.0])
+  assert_eq(collect_n_conv(remove_4_to_1, 16), [1.0, 5.0])
 
-  let add_1_to_4 = convert_channels(
-    SamplesBuffer::new(1, 48_000, [1.0, 2.0]),
+  let add_1_to_4 = @moon_rodio.convert_channels(
+    @moon_rodio.SamplesBuffer::new(1, 48_000, [1.0, 2.0]),
     4,
   )
-  @debug.assert_eq(collect_n_conv(add_1_to_4, 16), [
+  assert_eq(collect_n_conv(add_1_to_4, 16), [
     1.0, 1.0, 0.0, 0.0, 2.0, 2.0, 0.0, 0.0,
   ])
 
-  let add_2_to_4 = convert_channels(
-    SamplesBuffer::new(2, 48_000, [1.0, 2.0, 3.0, 4.0]),
+  let add_2_to_4 = @moon_rodio.convert_channels(
+    @moon_rodio.SamplesBuffer::new(2, 48_000, [1.0, 2.0, 3.0, 4.0]),
     4,
   )
-  @debug.assert_eq(collect_n_conv(add_2_to_4, 16), [
+  assert_eq(collect_n_conv(add_2_to_4, 16), [
     1.0, 2.0, 0.0, 0.0, 3.0, 4.0, 0.0, 0.0,
   ])
 }
 
 ///|
 test "rodio::conversions::convert_sample_rate" {
-  let src = SamplesBuffer::new(1, 2, [0.0, 2.0, 4.0])
-  let out = convert_sample_rate(src, 4)
-  @debug.assert_eq(out.sample_rate(), 4)
+  let src = @moon_rodio.SamplesBuffer::new(1, 2, [0.0, 2.0, 4.0])
+  let out = @moon_rodio.convert_sample_rate(src, 4)
+  assert_eq(out.sample_rate(), 4)
   // Linear interpolation at x=[0,0.5,1,1.5,2]
   let vals = collect_n_conv(out, 5)
-  @debug.assert_eq(vals[0], 0.0)
+  assert_eq(vals[0], 0.0)
   assert_true(vals[1] > 0.99 && vals[1] < 1.01)
-  @debug.assert_eq(vals[2], 2.0)
+  assert_eq(vals[2], 2.0)
   assert_true(vals[3] > 2.99 && vals[3] < 3.01)
-  @debug.assert_eq(vals[4], 4.0)
+  assert_eq(vals[4], 4.0)
 }
 
 ///|
 test "rodio::conversions::uniform" {
-  let src = SamplesBuffer::new(1, 2, [0.0, 2.0, 4.0])
-  let out = uniform(src, 2, 4)
-  @debug.assert_eq(out.channels(), 2)
-  @debug.assert_eq(out.sample_rate(), 4)
+  let src = @moon_rodio.SamplesBuffer::new(1, 2, [0.0, 2.0, 4.0])
+  let out = @moon_rodio.uniform(src, 2, 4)
+  assert_eq(out.channels(), 2)
+  assert_eq(out.sample_rate(), 4)
   let vals = collect_n_conv(out, 10)
-  @debug.assert_eq(vals[0], 0.0)
-  @debug.assert_eq(vals[1], 0.0)
+  assert_eq(vals[0], 0.0)
+  assert_eq(vals[1], 0.0)
   assert_true(vals[2] > 0.99 && vals[2] < 1.01)
   assert_true(vals[3] > 0.99 && vals[3] < 1.01)
 }
@@ -90,14 +95,20 @@ test "rodio::conversions::uniform" {
 ///|
 test "rodio::conversions::convert_channels_length_behavior" {
   let len_more = collect_n_conv(
-    convert_channels(SamplesBuffer::new(2, 48_000, [1.0, 2.0, 3.0, 4.0]), 3),
+    @moon_rodio.convert_channels(
+      @moon_rodio.SamplesBuffer::new(2, 48_000, [1.0, 2.0, 3.0, 4.0]),
+      3,
+    ),
     64,
   )
-  @debug.assert_eq(len_more.length(), 6)
+  assert_eq(len_more.length(), 6)
 
   let len_less = collect_n_conv(
-    convert_channels(SamplesBuffer::new(2, 48_000, [1.0, 2.0, 3.0, 4.0]), 1),
+    @moon_rodio.convert_channels(
+      @moon_rodio.SamplesBuffer::new(2, 48_000, [1.0, 2.0, 3.0, 4.0]),
+      1,
+    ),
     64,
   )
-  @debug.assert_eq(len_less.length(), 2)
+  assert_eq(len_less.length(), 2)
 }

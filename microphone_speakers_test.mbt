@@ -22,7 +22,12 @@ test "rodio::microphone::input_config_supported_given" {
     F32,
   )
 
-  let ok = InputConfig::new(1, 44_100, @moon_cpal.BufferSize::fixed(512), F32)
+  let ok = @moon_rodio.InputConfig::new(
+    1,
+    44_100,
+    @moon_cpal.BufferSize::fixed(512),
+    F32,
+  )
   assert_true(ok.supported_given(range))
 
   let bad_channels = ok.with_channel_count(2)
@@ -42,7 +47,12 @@ test "rodio::speakers::output_config_supported_given" {
     F32,
   )
 
-  let ok = OutputConfig::new(2, 48_000, @moon_cpal.BufferSize::fixed(2048), F32)
+  let ok = @moon_rodio.OutputConfig::new(
+    2,
+    48_000,
+    @moon_cpal.BufferSize::fixed(2048),
+    F32,
+  )
   assert_true(ok.supported_given(range))
 
   let bad_rate = ok.with_sample_rate(192_000)
@@ -54,9 +64,9 @@ test "rodio::speakers::output_config_supported_given" {
 
 ///|
 test "rodio::speakers::play_requires_builder_config" {
-  let src = FixedSamplesBuffer::new(1, 44_100, [0.0, 0.1, -0.1, 0.0])
+  let src = @moon_rodio.FixedSamplesBuffer::new(1, 44_100, [0.0, 0.1, -0.1, 0.0])
   let got = try {
-    ignore(SpeakersBuilder::new().play(src))
+    ignore(@moon_rodio.SpeakersBuilder::new().play(src))
     false
   } catch {
     BuilderError(NoConfig) => true

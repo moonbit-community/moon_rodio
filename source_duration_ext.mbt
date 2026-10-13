@@ -17,7 +17,7 @@ fn duration_to_sample_count(
   duration : @moon_cpal.Duration,
   channels : ChannelCount,
   sample_rate : SampleRate,
-) -> Int {
+) -> Int32 {
   if channels <= 0 || sample_rate <= 0 {
     return 0
   }
@@ -29,7 +29,7 @@ fn duration_to_sample_count(
 }
 
 ///|
-fn skip_samples(input : DynSource, count : Int) -> Unit {
+fn skip_samples(input : DynSource, count : Int32) -> Unit {
   let limit = if count < 0 { 0 } else { count }
   for _ in 0..<limit {
     if input.next() is None {
@@ -56,7 +56,7 @@ fn skip_duration_span_aware(
   input : DynSource,
   duration : @moon_cpal.Duration,
 ) -> Unit {
-  let remaining = @ref.new(duration)
+  let remaining = Ref(duration)
   while duration_compare(
           remaining.val,
           @moon_cpal.Duration::from_secs((0 : UInt64)),
@@ -134,7 +134,7 @@ pub fn[S : Source] take_duration(
   let channels = src.channels()
   let sample_rate = src.sample_rate()
   let sample_count = duration_to_sample_count(duration, channels, sample_rate)
-  let remaining = @ref.new(sample_count)
+  let remaining = Ref(sample_count)
 
   DynSource::new_dynamic(
     fn() {
@@ -217,9 +217,7 @@ pub fn[S : Source] delay(
   let src = to_dyn(source)
   let channels = src.channels()
   let sample_rate = src.sample_rate()
-  let remaining = @ref.new(
-    duration_to_sample_count(duration, channels, sample_rate),
-  )
+  let remaining = Ref(duration_to_sample_count(duration, channels, sample_rate))
 
   DynSource::new_dynamic(
     fn() {

@@ -433,7 +433,7 @@ pub fn MicrophoneBuilder::prefer_channel_counts(
 ///|
 pub fn MicrophoneBuilder::try_buffer_size(
   self : MicrophoneBuilder,
-  buffer_size : Int,
+  buffer_size : Int32,
 ) -> MicrophoneBuilder raise MicrophoneError {
   let current = self.get_config()
   let next = {
@@ -447,7 +447,7 @@ pub fn MicrophoneBuilder::try_buffer_size(
 ///|
 pub fn MicrophoneBuilder::prefer_buffer_sizes(
   self : MicrophoneBuilder,
-  buffer_sizes : Array[Int],
+  buffer_sizes : Array[Int32],
 ) -> MicrophoneBuilder {
   let current = match self.config {
     None => return self
@@ -475,8 +475,8 @@ pub fn MicrophoneBuilder::prefer_buffer_sizes(
 pub struct Microphone {
   _stream_handle : @moon_cpal.Stream
   queued_samples : Ref[Array[Sample]]
-  read_pos : Ref[Int]
-  max_buffered_samples : Int
+  read_pos : Ref[Int32]
+  max_buffered_samples : Int32
   config : InputConfig
   error_occurred : Ref[Bool]
 }
@@ -484,7 +484,7 @@ pub struct Microphone {
 ///|
 fn microphone_compact_queue(
   queue : Ref[Array[Sample]],
-  read_pos : Ref[Int],
+  read_pos : Ref[Int32],
 ) -> Unit {
   if read_pos.val >= 4096 && read_pos.val * 2 >= queue.val.length() {
     let remaining : Array[Sample] = []
@@ -499,8 +499,8 @@ fn microphone_compact_queue(
 ///|
 fn microphone_push_sample(
   queue : Ref[Array[Sample]],
-  read_pos : Ref[Int],
-  max_buffered_samples : Int,
+  read_pos : Ref[Int32],
+  max_buffered_samples : Int32,
   sample : Sample,
 ) -> Unit {
   queue.val.push(sample)
@@ -513,7 +513,7 @@ fn microphone_push_sample(
 }
 
 ///|
-fn read_u16_le(bytes : FixedArray[Byte], offset : Int) -> UInt16? {
+fn read_u16_le(bytes : FixedArray[Byte], offset : Int32) -> UInt16? {
   if offset + 2 > bytes.length() {
     None
   } else {
@@ -525,7 +525,7 @@ fn read_u16_le(bytes : FixedArray[Byte], offset : Int) -> UInt16? {
 }
 
 ///|
-fn read_u32_le(bytes : FixedArray[Byte], offset : Int) -> UInt? {
+fn read_u32_le(bytes : FixedArray[Byte], offset : Int32) -> UInt32? {
   if offset + 4 > bytes.length() {
     None
   } else {
@@ -539,7 +539,7 @@ fn read_u32_le(bytes : FixedArray[Byte], offset : Int) -> UInt? {
 }
 
 ///|
-fn read_u64_le(bytes : FixedArray[Byte], offset : Int) -> UInt64? {
+fn read_u64_le(bytes : FixedArray[Byte], offset : Int32) -> UInt64? {
   if offset + 8 > bytes.length() {
     None
   } else {
@@ -557,7 +557,7 @@ fn read_u64_le(bytes : FixedArray[Byte], offset : Int) -> UInt64? {
 }
 
 ///|
-fn sample_from_i8(value : Int) -> Sample {
+fn sample_from_i8(value : Int32) -> Sample {
   Double::from_int(value) / 128.0
 }
 
@@ -577,22 +577,22 @@ fn sample_from_u16(value : UInt16) -> Sample {
 }
 
 ///|
-fn sample_from_i24(value : Int) -> Sample {
+fn sample_from_i24(value : Int32) -> Sample {
   Double::from_int(value) / 8_388_608.0
 }
 
 ///|
-fn sample_from_u24(value : Int) -> Sample {
+fn sample_from_u24(value : Int32) -> Sample {
   Double::from_int(value) / 16_777_215.0 * 2.0 - 1.0
 }
 
 ///|
-fn sample_from_i32(value : Int) -> Sample {
+fn sample_from_i32(value : Int32) -> Sample {
   Double::from_int(value) / 2_147_483_648.0
 }
 
 ///|
-fn sample_from_u32(value : UInt) -> Sample {
+fn sample_from_u32(value : UInt32) -> Sample {
   value.to_double() / 4_294_967_295.0 * 2.0 - 1.0
 }
 
@@ -609,8 +609,8 @@ fn sample_from_u64(value : UInt64) -> Sample {
 ///|
 fn microphone_push_raw_samples(
   queue : Ref[Array[Sample]],
-  read_pos : Ref[Int],
-  max_buffered_samples : Int,
+  read_pos : Ref[Int32],
+  max_buffered_samples : Int32,
   data : @moon_cpal.Data,
 ) -> Unit {
   let format = data.sample_format()
@@ -667,8 +667,8 @@ fn microphone_push_raw_samples(
         let u = bytes[offset].to_int().reinterpret_as_uint() |
           (bytes[offset + 1].to_int().reinterpret_as_uint() << 8) |
           (bytes[offset + 2].to_int().reinterpret_as_uint() << 16)
-        let signed = if (u & (0x00800000 : UInt)) != (0 : UInt) {
-          (u | (0xff000000 : UInt)).reinterpret_as_int()
+        let signed = if (u & (0x00800000 : UInt32)) != (0 : UInt32) {
+          (u | (0xff000000 : UInt32)).reinterpret_as_int()
         } else {
           u.reinterpret_as_int()
         }
@@ -777,7 +777,7 @@ fn microphone_push_raw_samples(
 ///|
 fn microphone_pop_next(
   queue : Ref[Array[Sample]],
-  read_pos : Ref[Int],
+  read_pos : Ref[Int32],
 ) -> Sample? {
   if read_pos.val >= queue.val.length() {
     return None
@@ -795,10 +795,10 @@ fn microphone_open(
   config : InputConfig,
   error_callback : (@moon_cpal.StreamError) -> Unit,
 ) -> Microphone raise MicrophoneError {
-  let queue = @ref.new([])
-  let read_pos = @ref.new(0)
-  let error_occurred = @ref.new(false)
-  let max_buffered_samples = Int::max(
+  let queue = Ref([])
+  let read_pos = Ref(0)
+  let error_occurred = Ref(false)
+  let max_buffered_samples = Int32::max(
     1,
     config.channel_count * config.sample_rate / 10,
   )

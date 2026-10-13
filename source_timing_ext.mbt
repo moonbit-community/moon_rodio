@@ -15,22 +15,22 @@
 ///|
 pub struct TrackPosition {
   input : DynSource
-  samples_counted : Ref[Int]
+  samples_counted : Ref[Int32]
   offset_duration : Ref[@moon_cpal.Duration]
   current_span_sample_rate : Ref[SampleRate]
   current_span_channels : Ref[ChannelCount]
-  current_span_len : Ref[Int?]
+  current_span_len : Ref[Int32?]
 }
 
 ///|
 pub fn[S : Source] track_position(source : S) -> TrackPosition {
   {
     input: to_dyn(source),
-    samples_counted: @ref.new(0),
-    offset_duration: @ref.new(@moon_cpal.Duration::from_secs((0 : UInt64))),
-    current_span_sample_rate: @ref.new(0),
-    current_span_channels: @ref.new(0),
-    current_span_len: @ref.new(None),
+    samples_counted: Ref(0),
+    offset_duration: Ref(@moon_cpal.Duration::from_secs((0 : UInt64))),
+    current_span_sample_rate: Ref(0),
+    current_span_channels: Ref(0),
+    current_span_len: Ref(None),
   }
 }
 
@@ -157,8 +157,8 @@ pub impl Source for TrackPosition with fn try_seek(
 ///|
 pub struct PeriodicAccess {
   input : DynSource
-  every_samples : Int
-  remaining : Ref[Int]
+  every_samples : Int32
+  remaining : Ref[Int32]
   callback : (DynSource) -> Unit
 }
 
@@ -167,7 +167,7 @@ fn period_to_sample_count(
   period : @moon_cpal.Duration,
   channels : ChannelCount,
   sample_rate : SampleRate,
-) -> Int {
+) -> Int32 {
   if channels <= 0 || sample_rate <= 0 {
     return 1
   }
@@ -185,7 +185,7 @@ fn period_to_sample_count(
 ///|
 pub fn[S : Source] periodic_access(
   source : S,
-  every_samples : Int,
+  every_samples : Int32,
   callback : () -> Unit,
 ) -> PeriodicAccess {
   periodic_access_with_source(source, every_samples, fn(_src) { callback() })
@@ -194,11 +194,11 @@ pub fn[S : Source] periodic_access(
 ///|
 pub fn[S : Source] periodic_access_with_source(
   source : S,
-  every_samples : Int,
+  every_samples : Int32,
   callback : (DynSource) -> Unit,
 ) -> PeriodicAccess {
   guard every_samples > 0 else { panic() }
-  { input: to_dyn(source), every_samples, remaining: @ref.new(1), callback, }
+  { input: to_dyn(source), every_samples, remaining: Ref(1), callback, }
 }
 
 ///|

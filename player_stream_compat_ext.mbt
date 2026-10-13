@@ -238,7 +238,7 @@ pub fn Player::empty(self : Player) -> Bool {
 }
 
 ///|
-pub fn Player::len(self : Player) -> Int {
+pub fn Player::len(self : Player) -> Int32 {
   self.inner.len()
 }
 

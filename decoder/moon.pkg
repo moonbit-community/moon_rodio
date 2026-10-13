@@ -1,6 +1,4 @@
 import {
-  "moonbitlang/core/debug",
-  "moonbitlang/core/ref",
 }
 
 supported_targets = "native"
@@ -17,3 +15,6 @@ options(
     "vorbis_decoder_native.mbt": [ "native" ],
   },
 )
+
+import {
+} for "test"

@@ -49,7 +49,7 @@ fn[S : Source] source_to_wav_bytes(source : S) -> Bytes {
   buf.write_uint_le(riff_size.reinterpret_as_uint())
   buf.write_bytes(b"WAVE")
   buf.write_bytes(b"fmt ")
-  buf.write_uint_le((16 : UInt))
+  buf.write_uint_le((16 : UInt32))
   buf.write_uint16_le((3 : UInt16))
   buf.write_uint16_le(channels.to_uint16())
   buf.write_uint_le(sample_rate.reinterpret_as_uint())

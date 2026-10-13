@@ -14,13 +14,13 @@
 
 ///|
 test "rodio::source::spatial::aliases" {
-  let s = Spatial::new(
+  let s = @spatial.Spatial::new(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 44_100, [1.0, 1.0]),
     [0.0, 0.0, 0.0],
     [-1.0, 0.0, 0.0],
     [1.0, 0.0, 0.0],
   )
-  @debug.assert_eq(s.channels(), 2)
-  @debug.assert_eq(s.sample_rate(), 44_100)
+  assert_eq(s.channels(), 2)
+  assert_eq(s.sample_rate(), 44_100)
   assert_true(s.next() != None)
 }

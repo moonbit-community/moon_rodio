@@ -20,8 +20,8 @@ pub type SamplesBuffer = @Milky2018/moon_rodio.SamplesBuffer
 
 ///|
 pub fn new(
-  channels : Int,
-  sample_rate : Int,
+  channels : Int32,
+  sample_rate : Int32,
   samples : Array[Double],
 ) -> StaticSamplesBuffer {
   @Milky2018/moon_rodio.StaticSamplesBuffer::new(channels, sample_rate, samples)
@@ -29,8 +29,8 @@ pub fn new(
 
 ///|
 pub fn buffer_from_iter(
-  channels : Int,
-  sample_rate : Int,
+  channels : Int32,
+  sample_rate : Int32,
   samples : Array[Double],
 ) -> SamplesBuffer {
   @Milky2018/moon_rodio.buffer_from_iter(channels, sample_rate, samples)

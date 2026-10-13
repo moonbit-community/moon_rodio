@@ -296,9 +296,9 @@ fn sample_clamped(value : Sample) -> Sample {
 }
 
 ///|
-fn sample_to_i8(value : Sample) -> Int {
+fn sample_to_i8(value : Sample) -> Int32 {
   let v = sample_clamped(value)
-  Int::clamp((v * 127.0).to_int(), min=-128, max=127)
+  Int32::clamp((v * 127.0).to_int(), min=-128, max=127)
 }
 
 ///|
@@ -314,9 +314,9 @@ fn sample_to_u24(value : Sample) -> @moon_cpal.U24 {
 }
 
 ///|
-fn sample_to_i32(value : Sample) -> Int {
+fn sample_to_i32(value : Sample) -> Int32 {
   let v = sample_clamped(value)
-  Int::clamp(
+  Int32::clamp(
     (v * 2_147_483_647.0).to_int(),
     min=-2_147_483_648,
     max=2_147_483_647,
@@ -324,7 +324,7 @@ fn sample_to_i32(value : Sample) -> Int {
 }
 
 ///|
-fn sample_to_u32(value : Sample) -> UInt {
+fn sample_to_u32(value : Sample) -> UInt32 {
   let v = sample_clamped(value)
   ((v * 0.5 + 0.5) * 4_294_967_295.0).to_uint()
 }
@@ -395,14 +395,14 @@ fn fill_raw_output_data(data : @spec.Data, samples : MixerSource) -> Unit {
       ignore(data.write_i64(out))
     }
     U8 => {
-      let out = Array::make(len, (0 : Int).to_byte())
+      let out = Array::make(len, (0 : Int32).to_byte())
       for i in 0..<len {
         out[i] = sample_to_u8(next_or_silence(samples))
       }
       ignore(data.write_u8(out))
     }
     U16 => {
-      let out = Array::make(len, (0 : Int).to_uint16())
+      let out = Array::make(len, (0 : Int32).to_uint16())
       for i in 0..<len {
         out[i] = sample_to_u16(next_or_silence(samples))
       }
@@ -569,7 +569,7 @@ pub fn OutputStream::open(
   stream.play() catch {
     err => raise PlayStreamError(err)
   }
-  { config, mixer: controller, _stream: stream, log_on_drop: @ref.new(true), }
+  { config, mixer: controller, _stream: stream, log_on_drop: Ref(true), }
 }
 
 ///|

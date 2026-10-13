@@ -30,8 +30,8 @@ pub fn[S : @Milky2018/moon_rodio.FixedSource] adapt(
 
 ///|
 pub fn new_samples_buffer(
-  channels : Int,
-  sample_rate : Int,
+  channels : Int32,
+  sample_rate : Int32,
   samples : Array[Double],
 ) -> FixedSamplesBuffer {
   @Milky2018/moon_rodio.FixedSamplesBuffer::new(channels, sample_rate, samples)

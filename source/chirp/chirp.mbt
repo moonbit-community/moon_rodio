@@ -17,7 +17,7 @@ pub type Chirp = @Milky2018/moon_rodio.Chirp
 
 ///|
 pub fn chirp(
-  sample_rate : Int,
+  sample_rate : Int32,
   start_frequency : Double,
   end_frequency : Double,
   duration : @moon_cpal.Duration,

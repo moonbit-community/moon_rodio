@@ -22,8 +22,8 @@ let log10_2 : Double = 0.3010299956639812
 pub fn lerp(
   first : Sample,
   second : Sample,
-  numerator : Int,
-  denominator : Int,
+  numerator : Int32,
+  denominator : Int32,
 ) -> Sample {
   guard denominator > 0 else { panic() }
   first +

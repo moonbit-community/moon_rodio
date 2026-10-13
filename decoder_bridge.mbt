@@ -58,7 +58,7 @@ pub struct Decoder {
 
 ///|
 pub struct Settings {
-  byte_len : Int?
+  byte_len : Int32?
   coarse_seek : Bool
   gapless : Bool
   hint : String?
@@ -132,7 +132,7 @@ pub fn DecoderBuilder::with_data(
 ///|
 pub fn DecoderBuilder::with_byte_len(
   self : DecoderBuilder,
-  byte_len : Int,
+  byte_len : Int32,
 ) -> DecoderBuilder {
   guard byte_len >= 0 else { panic() }
   {
@@ -189,7 +189,7 @@ pub struct LoopedDecoder {
   channels : ChannelCount
   sample_rate : SampleRate
   samples : Array[Sample]
-  cursor : Ref[Int]
+  cursor : Ref[Int32]
   seekable : Bool
 }
 
@@ -282,7 +282,7 @@ fn to_looped_decoder(decoder : Decoder) -> LoopedDecoder {
       Some(s) => samples.push(s)
     }
   }
-  { channels, sample_rate, samples, cursor: @ref.new(0), seekable, }
+  { channels, sample_rate, samples, cursor: Ref(0), seekable, }
 }
 
 ///|
@@ -374,11 +374,11 @@ pub impl Source for LoopedDecoder with fn try_seek(
 ///|
 fn bytes_eq4(
   bytes : Bytes,
-  offset : Int,
-  b0 : Int,
-  b1 : Int,
-  b2 : Int,
-  b3 : Int,
+  offset : Int32,
+  b0 : Int32,
+  b1 : Int32,
+  b2 : Int32,
+  b3 : Int32,
 ) -> Bool {
   offset + 4 <= bytes.length() &&
   bytes[offset].to_int() == b0 &&

@@ -14,20 +14,20 @@
 
 ///|
 test "rodio::source::take::aliases" {
-  let t = take(
+  let t = @take.take(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [1.0, 2.0, 3.0]),
     2,
   )
-  @debug.assert_eq(t.channels(), 1)
-  @debug.assert_eq(t.sample_rate(), 8)
-  @debug.assert_eq(t.next(), Some(1.0))
-  @debug.assert_eq(t.next(), Some(2.0))
-  @debug.assert_eq(t.next(), None)
+  assert_eq(t.channels(), 1)
+  assert_eq(t.sample_rate(), 8)
+  assert_eq(t.next(), Some(1.0))
+  assert_eq(t.next(), Some(2.0))
+  assert_eq(t.next(), None)
 
-  let td = take_duration(
+  let td = @take.take_duration(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [1.0, 2.0, 3.0]),
     @moon_cpal.Duration::from_secs((1 : UInt64)),
   )
-  @debug.assert_eq(td.channels(), 1)
+  assert_eq(td.channels(), 1)
   assert_true(td.next() != None)
 }

@@ -125,7 +125,7 @@ pub fn SpatialPlayer::empty(self : SpatialPlayer) -> Bool {
 }
 
 ///|
-pub fn SpatialPlayer::len(self : SpatialPlayer) -> Int {
+pub fn SpatialPlayer::len(self : SpatialPlayer) -> Int32 {
   self.inner.len()
 }
 

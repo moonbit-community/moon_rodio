@@ -16,7 +16,7 @@
 pub struct Pausable {
   input : DynSource
   paused_channels : Ref[ChannelCount?]
-  remaining_paused_samples : Ref[Int]
+  remaining_paused_samples : Ref[Int32]
 }
 
 ///|
@@ -24,14 +24,8 @@ pub fn[S : Source] pausable(source : S, paused : Bool) -> Pausable {
   let input = to_dyn(source)
   {
     input,
-    paused_channels: @ref.new(
-      if paused {
-        Some(input.channels())
-      } else {
-        None
-      },
-    ),
-    remaining_paused_samples: @ref.new(0),
+    paused_channels: Ref(if paused { Some(input.channels()) } else { None }),
+    remaining_paused_samples: Ref(0),
   }
 }
 
@@ -131,7 +125,7 @@ pub struct Stoppable {
 
 ///|
 pub fn[S : Source] stoppable(source : S) -> Stoppable {
-  { input: to_dyn(source), stopped: @ref.new(false), }
+  { input: to_dyn(source), stopped: Ref(false), }
 }
 
 ///|
@@ -214,7 +208,7 @@ pub struct Skippable {
 
 ///|
 pub fn[S : Source] skippable(source : S) -> Skippable {
-  { input: to_dyn(source), do_skip: @ref.new(false), }
+  { input: to_dyn(source), do_skip: Ref(false), }
 }
 
 ///|

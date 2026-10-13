@@ -14,27 +14,27 @@
 
 ///|
 test "rodio::source::limit::aliases" {
-  let settings = LimitSettings::default().with_threshold(-6.0)
+  let settings = @limit.LimitSettings::default().with_threshold(-6.0)
   let src = @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [
     1.2, -1.1, 0.4, -0.2,
   ])
-  let out = limit(src, settings)
-  @debug.assert_eq(out.channels(), 1)
-  @debug.assert_eq(out.sample_rate(), 8)
+  let out = @limit.limit(src, settings)
+  assert_eq(out.channels(), 1)
+  assert_eq(out.sample_rate(), 8)
   assert_true(out.next() != None)
 
-  let ranged = limit_range(
+  let ranged = @limit.limit_range(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [2.0, -2.0]),
     -0.5,
     0.5,
   )
-  @debug.assert_eq(ranged.channels(), 1)
-  @debug.assert_eq(ranged.sample_rate(), 8)
+  assert_eq(ranged.channels(), 1)
+  assert_eq(ranged.sample_rate(), 8)
   assert_true(ranged.next() != None)
 
-  let mono = LimitMono::new(
+  let mono = @limit.LimitMono::new(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [1.0]),
-    LimitSettings::default(),
+    @limit.LimitSettings::default(),
   )
-  @debug.assert_eq(mono.channels(), 1)
+  assert_eq(mono.channels(), 1)
 }

@@ -14,7 +14,7 @@
 
 ///|
 pub suberror BitDepthError {
-  OutOfRange(Int)
+  OutOfRange(Int32)
 } derive(Debug, Eq)
 
 ///|
@@ -27,7 +27,7 @@ pub impl Show for BitDepthError with fn output(self, logger) {
 
 ///|
 pub struct BitDepth {
-  bits : Int
+  bits : Int32
 } derive(Debug, Eq)
 
 ///|
@@ -36,7 +36,7 @@ pub impl Show for BitDepth with fn output(self, logger) {
 }
 
 ///|
-pub fn BitDepth::new(bits : Int) -> BitDepth raise BitDepthError {
+pub fn BitDepth::new(bits : Int32) -> BitDepth raise BitDepthError {
   if bits <= 0 || bits > 64 {
     raise OutOfRange(bits)
   }
@@ -44,7 +44,7 @@ pub fn BitDepth::new(bits : Int) -> BitDepth raise BitDepthError {
 }
 
 ///|
-pub fn BitDepth::get(self : BitDepth) -> Int {
+pub fn BitDepth::get(self : BitDepth) -> Int32 {
   self.bits
 }
 
@@ -90,7 +90,7 @@ pub fn DitherAlgorithm::tpdf() -> DitherAlgorithm {
 pub struct Dither {
   input : DynSource
   noise : Ref[DitherAlgorithm]
-  current_channel : Ref[Int]
+  current_channel : Ref[Int32]
   lsb_amplitude : Ref[Sample]
   rng_state : Ref[UInt64]
   highpass_prev : Ref[Array[Sample]]
@@ -113,7 +113,7 @@ fn dither_rand_unit(state : Ref[UInt64]) -> Sample {
 }
 
 ///|
-fn ensure_highpass_state(d : Dither, channels : Int) -> Unit {
+fn ensure_highpass_state(d : Dither, channels : Int32) -> Unit {
   if channels <= 0 {
     return
   }
@@ -125,7 +125,7 @@ fn ensure_highpass_state(d : Dither, channels : Int) -> Unit {
 }
 
 ///|
-fn dither_noise_sample(d : Dither, channels : Int) -> Sample {
+fn dither_noise_sample(d : Dither, channels : Int32) -> Sample {
   let channel = if channels <= 0 { 0 } else { d.current_channel.val % channels }
   let noise = match d.noise.val {
     RPDF => dither_rand_unit(d.rng_state) * 2.0 - 1.0
@@ -165,11 +165,11 @@ pub fn[S : Source] dither(
   let dyn_src = to_dyn(source)
   {
     input: dyn_src,
-    noise: @ref.new(algorithm),
-    current_channel: @ref.new(0),
-    lsb_amplitude: @ref.new(bit_depth_lsb_amplitude(target_bits)),
-    rng_state: @ref.new((0x9E3779B97F4A7C15 : UInt64)),
-    highpass_prev: @ref.new(
+    noise: Ref(algorithm),
+    current_channel: Ref(0),
+    lsb_amplitude: Ref(bit_depth_lsb_amplitude(target_bits)),
+    rng_state: Ref((0x9E3779B97F4A7C15 : UInt64)),
+    highpass_prev: Ref(
       Array::make(
         if dyn_src.channels() > 0 {
           dyn_src.channels()

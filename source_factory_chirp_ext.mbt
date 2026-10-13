@@ -17,8 +17,8 @@ pub struct Chirp {
   sample_rate : SampleRate
   start_frequency : Double
   end_frequency : Double
-  total_samples : Int
-  elapsed_samples : Ref[Int]
+  total_samples : Int32
+  elapsed_samples : Ref[Int32]
   phase : Ref[Double]
 }
 
@@ -26,7 +26,7 @@ pub struct Chirp {
 fn chirp_duration_to_samples(
   sample_rate : SampleRate,
   duration : @moon_cpal.Duration,
-) -> Int {
+) -> Int32 {
   let secs_part = duration.secs.to_int() * sample_rate
   let nanos_part = duration.nanos * sample_rate / 1_000_000_000
   secs_part + nanos_part
@@ -48,8 +48,8 @@ pub fn chirp(
     start_frequency,
     end_frequency,
     total_samples: chirp_duration_to_samples(sample_rate, duration),
-    elapsed_samples: @ref.new(0),
-    phase: @ref.new(0.0),
+    elapsed_samples: Ref(0),
+    phase: Ref(0.0),
   }
 }
 
@@ -148,16 +148,16 @@ pub fn[S : Source] from_factory(factory : () -> S?) -> FromFactoryIter[S] {
     None =>
       {
         factory,
-        current: @ref.new(None),
-        channels: @ref.new(1),
-        sample_rate: @ref.new(hz_44100),
+        current: Ref(None),
+        channels: Ref(1),
+        sample_rate: Ref(hz_44100),
       }
     Some(source) =>
       {
         factory,
-        current: @ref.new(Some(to_dyn(source))),
-        channels: @ref.new(source.channels()),
-        sample_rate: @ref.new(source.sample_rate()),
+        current: Ref(Some(to_dyn(source))),
+        channels: Ref(source.channels()),
+        sample_rate: Ref(source.sample_rate()),
       }
   }
 }

@@ -14,32 +14,38 @@
 
 ///|
 test "rodio::static_buffer::basic" {
-  let _ = StaticSamplesBuffer::new(1, 44_100, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+  let _ = @moon_rodio.StaticSamplesBuffer::new(1, 44_100, [
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+  ])
 }
 
 ///|
 test "rodio::static_buffer::duration_basic" {
-  let buf = StaticSamplesBuffer::new(2, 2, [0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+  let buf = @moon_rodio.StaticSamplesBuffer::new(2, 2, [
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+  ])
   let dur = buf.total_duration().unwrap()
-  @debug.assert_eq(dur.secs, (1 : UInt64))
-  @debug.assert_eq(dur.nanos, 500_000_000)
+  assert_eq(dur.secs, (1 : UInt64))
+  assert_eq(dur.nanos, 500_000_000)
 }
 
 ///|
 test "rodio::static_buffer::iteration" {
-  let buf = StaticSamplesBuffer::new(1, 44_100, [1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
-  @debug.assert_eq(buf.next(), Some(1.0))
-  @debug.assert_eq(buf.next(), Some(2.0))
-  @debug.assert_eq(buf.next(), Some(3.0))
-  @debug.assert_eq(buf.next(), Some(4.0))
-  @debug.assert_eq(buf.next(), Some(5.0))
-  @debug.assert_eq(buf.next(), Some(6.0))
-  @debug.assert_eq(buf.next(), None)
+  let buf = @moon_rodio.StaticSamplesBuffer::new(1, 44_100, [
+    1.0, 2.0, 3.0, 4.0, 5.0, 6.0,
+  ])
+  assert_eq(buf.next(), Some(1.0))
+  assert_eq(buf.next(), Some(2.0))
+  assert_eq(buf.next(), Some(3.0))
+  assert_eq(buf.next(), Some(4.0))
+  assert_eq(buf.next(), Some(5.0))
+  assert_eq(buf.next(), Some(6.0))
+  assert_eq(buf.next(), None)
 }
 
 ///|
 test "rodio::static_buffer::seek_not_supported" {
-  let buf = StaticSamplesBuffer::new(1, 44_100, [1.0])
+  let buf = @moon_rodio.StaticSamplesBuffer::new(1, 44_100, [1.0])
   let got_not_supported = try {
     buf.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
     false

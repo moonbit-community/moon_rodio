@@ -14,26 +14,30 @@
 
 ///|
 test "rodio::source::signal_generator::aliases" {
-  let sg = with_function(8, 1.0, Function::sine())
-  @debug.assert_eq(sg.channels(), 1)
-  @debug.assert_eq(sg.sample_rate(), 8)
-  assert_true(sg.next() != None)
-
-  let custom = with_generator(
+  let sg = @signal_generator.with_function(
     8,
     1.0,
-    GeneratorFunction::new(fn(_phase : Double) { 0.25 }),
+    @signal_generator.Function::sine(),
   )
-  @debug.assert_eq(custom.channels(), 1)
-  @debug.assert_eq(custom.sample_rate(), 8)
-  @debug.assert_eq(custom.next(), Some(0.25))
+  assert_eq(sg.channels(), 1)
+  assert_eq(sg.sample_rate(), 8)
+  assert_true(sg.next() != None)
 
-  let sine = SineWave::new(440.0)
-  let square = SquareWave::new(440.0)
-  let saw = SawtoothWave::new(440.0)
-  let tri = TriangleWave::new(440.0)
-  @debug.assert_eq(sine.channels(), 1)
-  @debug.assert_eq(square.channels(), 1)
-  @debug.assert_eq(saw.channels(), 1)
-  @debug.assert_eq(tri.channels(), 1)
+  let custom = @signal_generator.with_generator(
+    8,
+    1.0,
+    @signal_generator.GeneratorFunction::new(fn(_phase : Double) { 0.25 }),
+  )
+  assert_eq(custom.channels(), 1)
+  assert_eq(custom.sample_rate(), 8)
+  assert_eq(custom.next(), Some(0.25))
+
+  let sine = @signal_generator.SineWave::new(440.0)
+  let square = @signal_generator.SquareWave::new(440.0)
+  let saw = @signal_generator.SawtoothWave::new(440.0)
+  let tri = @signal_generator.TriangleWave::new(440.0)
+  assert_eq(sine.channels(), 1)
+  assert_eq(square.channels(), 1)
+  assert_eq(saw.channels(), 1)
+  assert_eq(tri.channels(), 1)
 }

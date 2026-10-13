@@ -15,13 +15,13 @@
 ///|
 pub struct Done {
   input : DynSource
-  signal : Ref[Int]
+  signal : Ref[Int32]
   signal_sent : Ref[Bool]
 }
 
 ///|
-pub fn[S : Source] Done::new(source : S, signal : Ref[Int]) -> Done {
-  { input: to_dyn(source), signal, signal_sent: @ref.new(false), }
+pub fn[S : Source] Done::new(source : S, signal : Ref[Int32]) -> Done {
+  { input: to_dyn(source), signal, signal_sent: Ref(false), }
 }
 
 ///|
@@ -258,18 +258,14 @@ pub struct FromIter {
 fn from_dyn_iter(sources : Array[DynSource]) -> FromIter {
   if sources.is_empty() {
     {
-      sources: @ref.new([]),
-      current: @ref.new(make_empty_dyn_source(1, hz_44100)),
-      has_current: @ref.new(false),
+      sources: Ref([]),
+      current: Ref(make_empty_dyn_source(1, hz_44100)),
+      has_current: Ref(false),
     }
   } else {
     let xs = sources
     let first = xs.remove(0)
-    {
-      sources: @ref.new(xs),
-      current: @ref.new(first),
-      has_current: @ref.new(true),
-    }
+    { sources: Ref(xs), current: Ref(first), has_current: Ref(true), }
   }
 }
 

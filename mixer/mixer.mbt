@@ -19,6 +19,6 @@ pub type Mixer = @Milky2018/moon_rodio.Mixer
 pub type MixerSource = @Milky2018/moon_rodio.MixerSource
 
 ///|
-pub fn mixer(channels : Int, sample_rate : Int) -> (Mixer, MixerSource) {
+pub fn mixer(channels : Int32, sample_rate : Int32) -> (Mixer, MixerSource) {
   @Milky2018/moon_rodio.mixer(channels, sample_rate)
 }

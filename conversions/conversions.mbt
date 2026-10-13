@@ -27,7 +27,7 @@ pub type DynSource = @Milky2018/moon_rodio.DynSource
 ///|
 pub fn[S : @Milky2018/moon_rodio.Source] convert_channels(
   source : S,
-  target_channels : Int,
+  target_channels : Int32,
 ) -> DynSource {
   @Milky2018/moon_rodio.convert_channels(source, target_channels)
 }
@@ -35,7 +35,7 @@ pub fn[S : @Milky2018/moon_rodio.Source] convert_channels(
 ///|
 pub fn[S : @Milky2018/moon_rodio.Source] convert_sample_rate(
   source : S,
-  target_sample_rate : Int,
+  target_sample_rate : Int32,
 ) -> DynSource {
   @Milky2018/moon_rodio.convert_sample_rate(source, target_sample_rate)
 }
@@ -43,8 +43,8 @@ pub fn[S : @Milky2018/moon_rodio.Source] convert_sample_rate(
 ///|
 pub fn[S : @Milky2018/moon_rodio.Source] uniform(
   source : S,
-  target_channels : Int,
-  target_sample_rate : Int,
+  target_channels : Int32,
+  target_sample_rate : Int32,
 ) -> DynSource {
   @Milky2018/moon_rodio.uniform(source, target_channels, target_sample_rate)
 }
@@ -52,8 +52,8 @@ pub fn[S : @Milky2018/moon_rodio.Source] uniform(
 ///|
 pub fn[S : @Milky2018/moon_rodio.Source] new_channel_count_converter(
   input : S,
-  from : Int,
-  to : Int,
+  from : Int32,
+  to : Int32,
 ) -> ChannelCountConverter {
   @Milky2018/moon_rodio.ChannelCountConverter::new(input, from, to)
 }
@@ -61,9 +61,9 @@ pub fn[S : @Milky2018/moon_rodio.Source] new_channel_count_converter(
 ///|
 pub fn[S : @Milky2018/moon_rodio.Source] new_sample_rate_converter(
   input : S,
-  from : Int,
-  to : Int,
-  num_channels : Int,
+  from : Int32,
+  to : Int32,
+  num_channels : Int32,
 ) -> SampleRateConverter {
   @Milky2018/moon_rodio.SampleRateConverter::new(input, from, to, num_channels)
 }

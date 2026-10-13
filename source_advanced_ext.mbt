@@ -106,13 +106,13 @@ pub fn[S : Source] automatic_gain_control(
   let src = to_dyn(source)
   {
     input: src,
-    target_level: @ref.new(settings.target_level),
-    absolute_max_gain: @ref.new(settings.absolute_max_gain),
-    current_gain: @ref.new(1.0),
-    floor: @ref.new(0.0),
-    attack_coeff: @ref.new(agc_coeff(settings.attack_time, src.sample_rate())),
-    release_coeff: @ref.new(agc_coeff(settings.release_time, src.sample_rate())),
-    agc_control: @ref.new(true),
+    target_level: Ref(settings.target_level),
+    absolute_max_gain: Ref(settings.absolute_max_gain),
+    current_gain: Ref(1.0),
+    floor: Ref(0.0),
+    attack_coeff: Ref(agc_coeff(settings.attack_time, src.sample_rate())),
+    release_coeff: Ref(agc_coeff(settings.release_time, src.sample_rate())),
+    agc_control: Ref(true),
   }
 }
 
@@ -314,7 +314,7 @@ pub impl Show for BltMode with fn output(self, logger) {
 pub struct BltFilter {
   input : DynSource
   mode : Ref[BltMode]
-  freq : Ref[Int]
+  freq : Ref[Int32]
   q : Ref[Sample]
   b0 : Ref[Sample]
   b1 : Ref[Sample]
@@ -331,7 +331,7 @@ pub struct BltFilter {
 fn compute_blt_coeffs(
   mode : BltMode,
   sample_rate : SampleRate,
-  freq : Int,
+  freq : Int32,
   q : Sample,
 ) -> (Sample, Sample, Sample, Sample, Sample) {
   let sr = if sample_rate <= 0 { 1 } else { sample_rate }
@@ -367,7 +367,7 @@ fn compute_blt_coeffs(
 fn[S : Source] blt_new(
   source : S,
   mode : BltMode,
-  freq : Int,
+  freq : Int32,
   q : Sample,
 ) -> BltFilter {
   let src = to_dyn(source)
@@ -379,18 +379,18 @@ fn[S : Source] blt_new(
   )
   {
     input: src,
-    mode: @ref.new(mode),
-    freq: @ref.new(freq),
-    q: @ref.new(q),
-    b0: @ref.new(b0),
-    b1: @ref.new(b1),
-    b2: @ref.new(b2),
-    a1: @ref.new(a1),
-    a2: @ref.new(a2),
-    x1: @ref.new(0.0),
-    x2: @ref.new(0.0),
-    y1: @ref.new(0.0),
-    y2: @ref.new(0.0),
+    mode: Ref(mode),
+    freq: Ref(freq),
+    q: Ref(q),
+    b0: Ref(b0),
+    b1: Ref(b1),
+    b2: Ref(b2),
+    a1: Ref(a1),
+    a2: Ref(a2),
+    x1: Ref(0.0),
+    x2: Ref(0.0),
+    y1: Ref(0.0),
+    y2: Ref(0.0),
   }
 }
 
@@ -410,19 +410,19 @@ pub fn BltFilter::into_inner(self : BltFilter) -> DynSource {
 }
 
 ///|
-pub fn[S : Source] low_pass(source : S, freq : Int) -> BltFilter {
+pub fn[S : Source] low_pass(source : S, freq : Int32) -> BltFilter {
   blt_new(source, LowPass, freq, 0.5)
 }
 
 ///|
-pub fn[S : Source] high_pass(source : S, freq : Int) -> BltFilter {
+pub fn[S : Source] high_pass(source : S, freq : Int32) -> BltFilter {
   blt_new(source, HighPass, freq, 0.5)
 }
 
 ///|
 pub fn[S : Source] low_pass_with_q(
   source : S,
-  freq : Int,
+  freq : Int32,
   q : Sample,
 ) -> BltFilter {
   blt_new(source, LowPass, freq, q)
@@ -431,7 +431,7 @@ pub fn[S : Source] low_pass_with_q(
 ///|
 pub fn[S : Source] high_pass_with_q(
   source : S,
-  freq : Int,
+  freq : Int32,
   q : Sample,
 ) -> BltFilter {
   blt_new(source, HighPass, freq, q)
@@ -441,7 +441,7 @@ pub fn[S : Source] high_pass_with_q(
 fn BltFilter::set_formula(
   self : BltFilter,
   mode : BltMode,
-  freq : Int,
+  freq : Int32,
   q : Sample,
 ) -> Unit {
   self.mode.val = mode
@@ -461,19 +461,19 @@ fn BltFilter::set_formula(
 }
 
 ///|
-pub fn BltFilter::to_low_pass(self : BltFilter, freq : Int) -> Unit {
+pub fn BltFilter::to_low_pass(self : BltFilter, freq : Int32) -> Unit {
   self.set_formula(LowPass, freq, 0.5)
 }
 
 ///|
-pub fn BltFilter::to_high_pass(self : BltFilter, freq : Int) -> Unit {
+pub fn BltFilter::to_high_pass(self : BltFilter, freq : Int32) -> Unit {
   self.set_formula(HighPass, freq, 0.5)
 }
 
 ///|
 pub fn BltFilter::to_low_pass_with_q(
   self : BltFilter,
-  freq : Int,
+  freq : Int32,
   q : Sample,
 ) -> Unit {
   self.set_formula(LowPass, freq, q)
@@ -482,7 +482,7 @@ pub fn BltFilter::to_low_pass_with_q(
 ///|
 pub fn BltFilter::to_high_pass_with_q(
   self : BltFilter,
-  freq : Int,
+  freq : Int32,
   q : Sample,
 ) -> Unit {
   self.set_formula(HighPass, freq, q)
@@ -560,7 +560,7 @@ pub struct LcgNoiseRng {
 
 ///|
 pub fn LcgNoiseRng::new(seed : UInt64) -> LcgNoiseRng {
-  { state: @ref.new(seed_or_default(seed)), }
+  { state: Ref(seed_or_default(seed)), }
 }
 
 ///|
@@ -689,7 +689,7 @@ pub fn Pink::new(sample_rate : SampleRate) -> Pink {
 ///|
 pub fn Pink::new_with_seed(sample_rate : SampleRate, seed : UInt64) -> Pink {
   guard sample_rate > 0 else { panic() }
-  { sample_rate, rng: seeded_rng_state(seed), prev: @ref.new(0.0), }
+  { sample_rate, rng: seeded_rng_state(seed), prev: Ref(0.0), }
 }
 
 ///|
@@ -698,7 +698,7 @@ pub fn[R : NoiseRng] Pink::new_with_rng(
   rng : R,
 ) -> Pink {
   guard sample_rate > 0 else { panic() }
-  { sample_rate, rng: custom_rng_state(rng), prev: @ref.new(0.0), }
+  { sample_rate, rng: custom_rng_state(rng), prev: Ref(0.0), }
 }
 
 ///|
@@ -932,9 +932,9 @@ pub fn[R : NoiseRng] Velvet::new_with_density_and_rng(
   {
     sample_rate,
     rng: state,
-    grid_size: @ref.new(grid_size),
-    grid_pos: @ref.new(0.0),
-    impulse_pos: @ref.new(impulse_pos),
+    grid_size: Ref(grid_size),
+    grid_pos: Ref(0.0),
+    impulse_pos: Ref(impulse_pos),
   }
 }
 
@@ -952,9 +952,9 @@ pub fn Velvet::new_with_density_and_seed(
   {
     sample_rate,
     rng: state,
-    grid_size: @ref.new(grid_size),
-    grid_pos: @ref.new(0.0),
-    impulse_pos: @ref.new(impulse_pos),
+    grid_size: Ref(grid_size),
+    grid_pos: Ref(0.0),
+    impulse_pos: Ref(impulse_pos),
   }
 }
 
@@ -1022,7 +1022,7 @@ pub fn Blue::new_with_seed(sample_rate : SampleRate, seed : UInt64) -> Blue {
   {
     sample_rate,
     white_noise: WhiteUniform::new_with_seed(sample_rate, seed),
-    prev_white: @ref.new(0.0),
+    prev_white: Ref(0.0),
   }
 }
 
@@ -1035,7 +1035,7 @@ pub fn[R : NoiseRng] Blue::new_with_rng(
   {
     sample_rate,
     white_noise: WhiteUniform::new_with_rng(sample_rate, rng),
-    prev_white: @ref.new(0.0),
+    prev_white: Ref(0.0),
   }
 }
 
@@ -1090,7 +1090,7 @@ pub fn Violet::new_with_seed(sample_rate : SampleRate, seed : UInt64) -> Violet 
   {
     sample_rate,
     blue_noise: Blue::new_with_seed(sample_rate, seed),
-    prev: @ref.new(0.0),
+    prev: Ref(0.0),
   }
 }
 
@@ -1103,7 +1103,7 @@ pub fn[R : NoiseRng] Violet::new_with_rng(
   {
     sample_rate,
     blue_noise: Blue::new_with_rng(sample_rate, rng),
-    prev: @ref.new(0.0),
+    prev: Ref(0.0),
   }
 }
 
@@ -1173,9 +1173,9 @@ pub fn Brownian::new_with_seed(
   {
     sample_rate,
     white_noise,
-    accumulator: @ref.new(0.0),
-    leak_factor: @ref.new(leak),
-    scale: @ref.new(scale),
+    accumulator: Ref(0.0),
+    leak_factor: Ref(leak),
+    scale: Ref(scale),
   }
 }
 
@@ -1198,9 +1198,9 @@ pub fn[R : NoiseRng] Brownian::new_with_rng(
   {
     sample_rate,
     white_noise,
-    accumulator: @ref.new(0.0),
-    leak_factor: @ref.new(leak),
-    scale: @ref.new(scale),
+    accumulator: Ref(0.0),
+    leak_factor: Ref(leak),
+    scale: Ref(scale),
   }
 }
 
@@ -1266,9 +1266,9 @@ pub fn Red::new_with_seed(sample_rate : SampleRate, seed : UInt64) -> Red {
   {
     sample_rate,
     white_noise,
-    accumulator: @ref.new(0.0),
-    leak_factor: @ref.new(leak),
-    scale: @ref.new(scale),
+    accumulator: Ref(0.0),
+    leak_factor: Ref(leak),
+    scale: Ref(scale),
   }
 }
 
@@ -1291,9 +1291,9 @@ pub fn[R : NoiseRng] Red::new_with_rng(
   {
     sample_rate,
     white_noise,
-    accumulator: @ref.new(0.0),
-    leak_factor: @ref.new(leak),
-    scale: @ref.new(scale),
+    accumulator: Ref(0.0),
+    leak_factor: Ref(leak),
+    scale: Ref(scale),
   }
 }
 

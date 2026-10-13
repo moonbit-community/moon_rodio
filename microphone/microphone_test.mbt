@@ -14,29 +14,29 @@
 
 ///|
 test "rodio::microphone::alias_error_types" {
-  let err : OpenError? = None
-  let open_err : OpenError? = None
-  let list_err : ListError? = None
+  let err : @microphone.OpenError? = None
+  let open_err : @microphone.OpenError? = None
+  let list_err : @microphone.ListError? = None
 
   let root_err : @Milky2018/moon_rodio.MicrophoneError? = err
   let root_open_err : @Milky2018/moon_rodio.MicrophoneError? = open_err
   let root_list_err : @Milky2018/moon_rodio.MicrophoneListError? = list_err
 
-  @debug.assert_eq(root_err, None)
-  @debug.assert_eq(root_open_err, None)
-  @debug.assert_eq(root_list_err, None)
+  assert_eq(root_err, None)
+  assert_eq(root_open_err, None)
+  assert_eq(root_list_err, None)
 }
 
 ///|
 test "rodio::microphone::marker_types_constructible" {
-  let _ : DeviceIsSet? = None
-  let _ : DeviceNotSet? = None
-  let _ : ConfigIsSet? = None
-  let _ : ConfigNotSet? = None
+  let _ : @microphone.DeviceIsSet? = None
+  let _ : @microphone.DeviceNotSet? = None
+  let _ : @microphone.ConfigIsSet? = None
+  let _ : @microphone.ConfigNotSet? = None
 }
 
 ///|
 test "rodio::microphone::builder_new_alias" {
-  let builder = new_builder()
+  let builder = @microphone.new_builder()
   let _ = builder
 }

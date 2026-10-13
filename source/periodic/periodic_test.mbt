@@ -14,31 +14,31 @@
 
 ///|
 test "rodio::source::periodic::aliases" {
-  let p1 = periodic_access(
+  let p1 = @periodic.periodic_access(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [1.0, 2.0, 3.0]),
     2,
     fn() {  },
   )
-  @debug.assert_eq(p1.channels(), 1)
-  @debug.assert_eq(p1.sample_rate(), 8)
-  @debug.assert_eq(p1.next(), Some(1.0))
-  @debug.assert_eq(p1.next(), Some(2.0))
+  assert_eq(p1.channels(), 1)
+  assert_eq(p1.sample_rate(), 8)
+  assert_eq(p1.next(), Some(1.0))
+  assert_eq(p1.next(), Some(2.0))
 
-  let p2 = periodic_access_with_source(
+  let p2 = @periodic.periodic_access_with_source(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [1.0, 2.0]),
     1,
-    fn(_ : DynSource) {  },
+    fn(_ : @periodic.DynSource) {  },
   )
-  @debug.assert_eq(p2.channels(), 1)
-  @debug.assert_eq(p2.sample_rate(), 8)
+  assert_eq(p2.channels(), 1)
+  assert_eq(p2.sample_rate(), 8)
   assert_true(p2.next() != None)
 
-  let p3 = periodic(
+  let p3 = @periodic.periodic(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [1.0, 2.0]),
     @moon_cpal.Duration::new((0 : UInt64), 100_000_000),
     fn() {  },
   )
-  @debug.assert_eq(p3.channels(), 1)
-  @debug.assert_eq(p3.sample_rate(), 8)
+  assert_eq(p3.channels(), 1)
+  assert_eq(p3.sample_rate(), 8)
   assert_true(p3.next() != None)
 }

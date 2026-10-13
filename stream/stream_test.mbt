@@ -14,21 +14,21 @@
 
 ///|
 test "rodio::stream::builder_aliases" {
-  let builder = DeviceSinkBuilder::default()
+  let builder = @stream.DeviceSinkBuilder::default()
     .with_channels(1)
     .with_sample_rate(22_050)
   let cfg = builder.config()
-  let _ : DeviceSinkConfig = cfg
+  let _ : @stream.DeviceSinkConfig = cfg
   let _ : @Milky2018/moon_rodio.OutputStreamConfig = cfg
-  @debug.assert_eq(cfg.channel_count, 1)
-  @debug.assert_eq(cfg.sample_rate, 22_050)
+  assert_eq(cfg.channel_count, 1)
+  assert_eq(cfg.sample_rate, 22_050)
 }
 
 ///|
 test "rodio::stream::play_reader_alias" {
   let (mix, _out) = @Milky2018/moon_rodio.mixer(1, 44_100)
   let failed = try {
-    ignore(play_reader(mix, Reader::from_bytes(b"not-audio")))
+    ignore(@stream.play_reader(mix, @stream.Reader::from_bytes(b"not-audio")))
     false
   } catch {
     _ => true

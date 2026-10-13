@@ -14,11 +14,11 @@
 
 ///|
 test "rodio::source::skip::aliases" {
-  let s = skip_duration(
+  let s = @skip.skip_duration(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 4, [1.0, 2.0, 3.0, 4.0]),
     @moon_cpal.Duration::from_secs((0 : UInt64)),
   )
-  @debug.assert_eq(s.channels(), 1)
-  @debug.assert_eq(s.sample_rate(), 4)
-  @debug.assert_eq(s.next(), Some(1.0))
+  assert_eq(s.channels(), 1)
+  assert_eq(s.sample_rate(), 4)
+  assert_eq(s.next(), Some(1.0))
 }

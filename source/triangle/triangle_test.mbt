@@ -14,8 +14,8 @@
 
 ///|
 test "rodio::source::triangle::aliases" {
-  let s = TriangleWave::new(440.0)
-  @debug.assert_eq(s.channels(), 1)
-  @debug.assert_eq(s.sample_rate(), 48_000)
+  let s = @triangle.TriangleWave::new(440.0)
+  assert_eq(s.channels(), 1)
+  assert_eq(s.sample_rate(), 48_000)
   assert_true(s.next() != None)
 }

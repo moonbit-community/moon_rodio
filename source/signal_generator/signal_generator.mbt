@@ -35,7 +35,7 @@ pub type TriangleWave = @Milky2018/moon_rodio.TriangleWave
 
 ///|
 pub fn with_function(
-  sample_rate : Int,
+  sample_rate : Int32,
   frequency : Double,
   function : Function,
 ) -> SignalGenerator {
@@ -44,7 +44,7 @@ pub fn with_function(
 
 ///|
 pub fn with_generator(
-  sample_rate : Int,
+  sample_rate : Int32,
   frequency : Double,
   function : GeneratorFunction,
 ) -> @Milky2018/moon_rodio.DynSource {

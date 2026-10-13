@@ -14,11 +14,11 @@
 
 ///|
 test "rodio::source::dither::bit_depth_new" {
-  let b16 = BitDepth::new(16)
-  @debug.assert_eq(b16.get(), 16)
+  let b16 = @moon_rodio.BitDepth::new(16)
+  assert_eq(b16.get(), 16)
 
   let invalid = try {
-    ignore(BitDepth::new(0))
+    ignore(@moon_rodio.BitDepth::new(0))
     false
   } catch {
     OutOfRange(0) => true
@@ -29,11 +29,11 @@ test "rodio::source::dither::bit_depth_new" {
 
 ///|
 test "rodio::source::dither::adds_small_noise" {
-  let bits = BitDepth::new(16)
-  let d = dither(
-    SamplesBuffer::new(1, 44_100, [0.25, 0.25, 0.25, 0.25]),
+  let bits = @moon_rodio.BitDepth::new(16)
+  let d = @moon_rodio.dither(
+    @moon_rodio.SamplesBuffer::new(1, 44_100, [0.25, 0.25, 0.25, 0.25]),
     bits,
-    DitherAlgorithm::rpdf(),
+    @moon_rodio.DitherAlgorithm::rpdf(),
   )
   let lsb = 1.0 / 32768.0
   let mut saw_non_zero = false
@@ -50,47 +50,51 @@ test "rodio::source::dither::adds_small_noise" {
 
 ///|
 test "rodio::source::dither::algorithm_switch_and_forwarding" {
-  let bits = BitDepth::new(16)
-  let d = dither(
-    SamplesBuffer::new(2, 2, [1.0, 2.0, 3.0, 4.0]),
+  let bits = @moon_rodio.BitDepth::new(16)
+  let d = @moon_rodio.dither(
+    @moon_rodio.SamplesBuffer::new(2, 2, [1.0, 2.0, 3.0, 4.0]),
     bits,
-    DitherAlgorithm::tpdf(),
+    @moon_rodio.DitherAlgorithm::tpdf(),
   )
-  @debug.assert_eq(d.algorithm(), DitherAlgorithm::tpdf())
-  d.set_algorithm(DitherAlgorithm::high_pass())
-  @debug.assert_eq(d.algorithm(), DitherAlgorithm::high_pass())
+  assert_eq(d.algorithm(), @moon_rodio.DitherAlgorithm::tpdf())
+  d.set_algorithm(@moon_rodio.DitherAlgorithm::high_pass())
+  assert_eq(d.algorithm(), @moon_rodio.DitherAlgorithm::high_pass())
 
-  @debug.assert_eq(d.channels(), 2)
-  @debug.assert_eq(d.sample_rate(), 2)
+  assert_eq(d.channels(), 2)
+  assert_eq(d.sample_rate(), 2)
   let dur = d.total_duration().unwrap()
-  @debug.assert_eq(dur.secs, (1 : UInt64))
-  @debug.assert_eq(dur.nanos, 0)
+  assert_eq(dur.secs, (1 : UInt64))
+  assert_eq(dur.nanos, 0)
 }
 
 ///|
 test "rodio::source::dither::seek_forwarding" {
-  let bits = BitDepth::new(16)
-  let d = dither(
-    SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0, 4.0]),
+  let bits = @moon_rodio.BitDepth::new(16)
+  let d = @moon_rodio.dither(
+    @moon_rodio.SamplesBuffer::new(1, 2, [1.0, 2.0, 3.0, 4.0]),
     bits,
-    DitherAlgorithm::gpdf(),
+    @moon_rodio.DitherAlgorithm::gpdf(),
   )
   d.try_seek(@moon_cpal.Duration::new((3 : UInt64), 0))
-  @debug.assert_eq(d.next(), None)
+  assert_eq(d.next(), None)
 }
 
 ///|
 test "rodio::source::dither::high_pass_multichannel_independence" {
-  let bits = BitDepth::new(16)
-  let d = dither(zero(2, 44_100), bits, DitherAlgorithm::high_pass())
+  let bits = @moon_rodio.BitDepth::new(16)
+  let d = @moon_rodio.dither(
+    @moon_rodio.zero(2, 44_100),
+    bits,
+    @moon_rodio.DitherAlgorithm::high_pass(),
+  )
 
-  let samples : Array[Sample] = []
+  let samples : Array[@moon_rodio.Sample] = []
   for _ in 0..<1_000 {
     samples.push(d.next().unwrap())
   }
 
-  let left : Array[Sample] = []
-  let right : Array[Sample] = []
+  let left : Array[@moon_rodio.Sample] = []
+  let right : Array[@moon_rodio.Sample] = []
   for i in 0..<500 {
     left.push(samples[i * 2])
     right.push(samples[i * 2 + 1])

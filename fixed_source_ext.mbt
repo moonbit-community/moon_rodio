@@ -110,7 +110,7 @@ pub struct FixedSamplesBuffer {
   channels : ChannelCount
   sample_rate : SampleRate
   samples : Array[Sample]
-  cursor : Ref[Int]
+  cursor : Ref[Int32]
   duration : @moon_cpal.Duration?
 }
 
@@ -127,7 +127,7 @@ pub fn FixedSamplesBuffer::new(
     channels,
     sample_rate,
   )
-  { channels, sample_rate, samples, cursor: @ref.new(0), duration, }
+  { channels, sample_rate, samples, cursor: Ref(0), duration, }
 }
 
 ///|

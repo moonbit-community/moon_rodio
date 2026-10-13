@@ -16,22 +16,22 @@
 test "rodio::source::amplify::aliases" {
   let base = @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [0.1, 0.2, 0.3])
 
-  let a = amplify(base, 2.0)
-  @debug.assert_eq(a.channels(), 1)
-  @debug.assert_eq(a.sample_rate(), 8)
+  let a = @amplify.amplify(base, 2.0)
+  assert_eq(a.channels(), 1)
+  assert_eq(a.sample_rate(), 8)
   assert_true(a.next() != None)
 
-  let b = amplify_decibel(
+  let b = @amplify.amplify_decibel(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [0.1]),
     6.0,
   )
-  @debug.assert_eq(b.channels(), 1)
+  assert_eq(b.channels(), 1)
   assert_true(b.next() != None)
 
-  let c = amplify_normalized(
+  let c = @amplify.amplify_normalized(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [0.1]),
     0.5,
   )
-  @debug.assert_eq(c.channels(), 1)
+  assert_eq(c.channels(), 1)
   assert_true(c.next() != None)
 }

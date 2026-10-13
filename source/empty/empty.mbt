@@ -19,6 +19,6 @@ pub type Empty = @Milky2018/moon_rodio.Empty
 pub type DynSource = @Milky2018/moon_rodio.DynSource
 
 ///|
-pub fn empty(channels : Int, sample_rate : Int) -> DynSource {
+pub fn empty(channels : Int32, sample_rate : Int32) -> DynSource {
   @Milky2018/moon_rodio.empty(channels, sample_rate)
 }

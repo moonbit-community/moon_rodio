@@ -149,7 +149,7 @@ pub type WhiteUniform = @Milky2018/moon_rodio.WhiteUniform
 
 ///|
 pub fn chirp(
-  sample_rate : Int,
+  sample_rate : Int32,
   start_frequency : Double,
   end_frequency : Double,
   duration : @moon_cpal.Duration,

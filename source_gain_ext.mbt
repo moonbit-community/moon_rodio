@@ -27,8 +27,8 @@ pub fn[S : Source] channel_volume(
   let src = to_dyn(source)
   let from_channels = src.channels()
   let out_channels = channel_factors.length()
-  let current_channel = @ref.new(out_channels)
-  let current_sample = @ref.new(None)
+  let current_channel = Ref(out_channels)
+  let current_sample = Ref(None)
 
   DynSource::new_dynamic(
     fn() {
@@ -78,9 +78,9 @@ pub fn[S : Source] linear_gain_ramp_with_clamp(
 ) -> DynSource {
   guard duration.secs > (0 : UInt64) || duration.nanos > 0 else { panic() }
   let src = to_dyn(source)
-  let elapsed_ns = @ref.new(0.0)
+  let elapsed_ns = Ref(0.0)
   let total_ns = gain_duration_to_nanos(duration)
-  let sample_idx = @ref.new(0)
+  let sample_idx = Ref(0)
 
   DynSource::new_dynamic(
     fn() {

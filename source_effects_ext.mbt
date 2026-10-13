@@ -111,13 +111,13 @@ pub fn[S : Source] reverb(
   for _ in 0..<delay_samples {
     delay_line.push(0.0)
   }
-  let write_idx = @ref.new(0)
-  let source_done = @ref.new(false)
-  let tail_remaining = @ref.new(0)
+  let write_idx = Ref(0)
+  let source_done = Ref(false)
+  let tail_remaining = Ref(0)
 
   fn step_delay_line(
     line : Array[Sample],
-    idx_ref : Ref[Int],
+    idx_ref : Ref[Int32],
     current : Sample,
     feedback_gain : Sample,
   ) -> Sample {

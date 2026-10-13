@@ -16,13 +16,13 @@
 #borrow(input, out_meta)
 extern "C" fn vorbis_decode_all_i16le(
   input : Bytes,
-  input_len : Int,
-  out_meta : FixedArray[UInt],
-  out_meta_len : Int,
+  input_len : Int32,
+  out_meta : FixedArray[UInt32],
+  out_meta_len : Int32,
 ) -> Bytes = "moon_rodio_vorbis_decode_all_i16le"
 
 ///|
-fn vorbis_read_i16_le(bytes : Bytes, offset : Int) -> Int {
+fn vorbis_read_i16_le(bytes : Bytes, offset : Int32) -> Int32 {
   let u = bytes[offset].to_int() | (bytes[offset + 1].to_int() << 8)
   if u >= 0x8000 {
     u - 0x10000
@@ -37,7 +37,7 @@ pub fn decode_vorbis_bytes(bytes : Bytes) -> DecodedSamples raise DecoderError {
     raise InvalidFormat("vorbis bytes are empty")
   }
 
-  let out_meta = FixedArray::make(3, (0 : UInt))
+  let out_meta = FixedArray::make(3, (0 : UInt32))
   let pcm = vorbis_decode_all_i16le(
     bytes,
     bytes.length(),

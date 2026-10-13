@@ -13,12 +13,12 @@
 // limitations under the License.
 
 ///|
-fn read_u16_le(bytes : Bytes, offset : Int) -> Int {
+fn read_u16_le(bytes : Bytes, offset : Int32) -> Int32 {
   bytes[offset].to_int() | (bytes[offset + 1].to_int() << 8)
 }
 
 ///|
-fn read_u32_le(bytes : Bytes, offset : Int) -> Int {
+fn read_u32_le(bytes : Bytes, offset : Int32) -> Int32 {
   bytes[offset].to_int() |
   (bytes[offset + 1].to_int() << 8) |
   (bytes[offset + 2].to_int() << 16) |
@@ -26,7 +26,7 @@ fn read_u32_le(bytes : Bytes, offset : Int) -> Int {
 }
 
 ///|
-fn read_i16_le(bytes : Bytes, offset : Int) -> Int {
+fn read_i16_le(bytes : Bytes, offset : Int32) -> Int32 {
   let u = read_u16_le(bytes, offset)
   if u >= 0x8000 {
     u - 0x10000
@@ -36,7 +36,7 @@ fn read_i16_le(bytes : Bytes, offset : Int) -> Int {
 }
 
 ///|
-fn read_i24_le(bytes : Bytes, offset : Int) -> Int {
+fn read_i24_le(bytes : Bytes, offset : Int32) -> Int32 {
   let u = bytes[offset].to_int() |
     (bytes[offset + 1].to_int() << 8) |
     (bytes[offset + 2].to_int() << 16)
@@ -48,12 +48,12 @@ fn read_i24_le(bytes : Bytes, offset : Int) -> Int {
 }
 
 ///|
-fn read_i32_le(bytes : Bytes, offset : Int) -> Int {
+fn read_i32_le(bytes : Bytes, offset : Int32) -> Int32 {
   read_u32_le(bytes, offset)
 }
 
 ///|
-fn pow2(exp : Int) -> Double {
+fn pow2(exp : Int32) -> Double {
   if exp >= 0 {
     let mut v = 1.0
     for _ in 0..<exp {
@@ -70,7 +70,7 @@ fn pow2(exp : Int) -> Double {
 }
 
 ///|
-fn decode_f32_bits(bits : Int) -> Double {
+fn decode_f32_bits(bits : Int32) -> Double {
   let sign = if bits < 0 { -1.0 } else { 1.0 }
   let exponent = (bits >> 23) & 0xff
   let fraction = bits & 0x7fffff
@@ -104,11 +104,11 @@ fn decode_f32_bits(bits : Int) -> Double {
 ///|
 fn bytes_eq4(
   bytes : Bytes,
-  offset : Int,
-  b0 : Int,
-  b1 : Int,
-  b2 : Int,
-  b3 : Int,
+  offset : Int32,
+  b0 : Int32,
+  b1 : Int32,
+  b2 : Int32,
+  b3 : Int32,
 ) -> Bool {
   offset + 4 <= bytes.length() &&
   bytes[offset].to_int() == b0 &&

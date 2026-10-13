@@ -78,9 +78,9 @@ Create an in-memory playback chain:
 ```mbt check
 ///|
 test "readme: in-memory playback chain" {
-  let (tx, rx) = mixer(1, 44_100)
-  let sink = Sink::connect_new(tx)
-  let source = SamplesBuffer::new(1, 44_100, [0.0, 0.25, 0.0, -0.25])
+  let (tx, rx) = @moon_rodio.mixer(1, 44_100)
+  let sink = @moon_rodio.Sink::connect_new(tx)
+  let source = @moon_rodio.SamplesBuffer::new(1, 44_100, [0.0, 0.25, 0.0, -0.25])
 
   sink.append(source)
   @debug.assert_eq(rx.next(), Some(0.0))
@@ -92,7 +92,7 @@ Decode audio bytes with the high-level decoder API:
 ```mbt check
 ///|
 test "readme: decoder builder" {
-  let decoder = Decoder::builder()
+  let decoder = @moon_rodio.Decoder::builder()
     .with_data(@decoder.mp3_ill2_mono_bytes())
     .with_hint("mp3")
     .with_seekable(true)
@@ -108,8 +108,8 @@ Play embedded bytes through a mixer:
 ```mbt check
 ///|
 test "readme: play bytes through mixer" {
-  let (tx, _rx) = mixer(1, 44_100)
-  let player = play_bytes(tx, @decoder.flac_pop_bytes())
+  let (tx, _rx) = @moon_rodio.mixer(1, 44_100)
+  let player = @moon_rodio.play_bytes(tx, @decoder.flac_pop_bytes())
 
   player.pause()
   player.play()

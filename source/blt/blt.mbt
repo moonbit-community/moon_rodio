@@ -18,7 +18,7 @@ pub type BltFilter = @Milky2018/moon_rodio.BltFilter
 ///|
 pub fn[S : @Milky2018/moon_rodio.Source] low_pass(
   source : S,
-  freq : Int,
+  freq : Int32,
 ) -> BltFilter {
   @Milky2018/moon_rodio.low_pass(source, freq)
 }
@@ -26,7 +26,7 @@ pub fn[S : @Milky2018/moon_rodio.Source] low_pass(
 ///|
 pub fn[S : @Milky2018/moon_rodio.Source] high_pass(
   source : S,
-  freq : Int,
+  freq : Int32,
 ) -> BltFilter {
   @Milky2018/moon_rodio.high_pass(source, freq)
 }
@@ -34,7 +34,7 @@ pub fn[S : @Milky2018/moon_rodio.Source] high_pass(
 ///|
 pub fn[S : @Milky2018/moon_rodio.Source] low_pass_with_q(
   source : S,
-  freq : Int,
+  freq : Int32,
   q : Double,
 ) -> BltFilter {
   @Milky2018/moon_rodio.low_pass_with_q(source, freq, q)
@@ -43,7 +43,7 @@ pub fn[S : @Milky2018/moon_rodio.Source] low_pass_with_q(
 ///|
 pub fn[S : @Milky2018/moon_rodio.Source] high_pass_with_q(
   source : S,
-  freq : Int,
+  freq : Int32,
   q : Double,
 ) -> BltFilter {
   @Milky2018/moon_rodio.high_pass_with_q(source, freq, q)

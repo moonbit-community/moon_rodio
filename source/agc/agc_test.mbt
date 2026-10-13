@@ -16,22 +16,22 @@
 test "rodio::source::agc::aliases" {
   let src = @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [0.2, 0.4, 0.8, 0.1])
 
-  let agc = automatic_gain_control(
+  let agc = @agc.automatic_gain_control(
     src,
-    AutomaticGainControlSettings::default().with_target_level(0.7),
+    @agc.AutomaticGainControlSettings::default().with_target_level(0.7),
   )
-  @debug.assert_eq(agc.channels(), 1)
-  @debug.assert_eq(agc.sample_rate(), 8)
+  assert_eq(agc.channels(), 1)
+  assert_eq(agc.sample_rate(), 8)
   assert_true(agc.next() != None)
 
-  let agc2 = automatic_gain_control_with_params(
+  let agc2 = @agc.automatic_gain_control_with_params(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [0.1, 0.2]),
     0.6,
     @moon_cpal.Duration::from_secs((1 : UInt64)),
     @moon_cpal.Duration::from_secs((1 : UInt64)),
     3.0,
   )
-  @debug.assert_eq(agc2.channels(), 1)
-  @debug.assert_eq(agc2.sample_rate(), 8)
+  assert_eq(agc2.channels(), 1)
+  assert_eq(agc2.sample_rate(), 8)
   assert_true(agc2.next() != None)
 }

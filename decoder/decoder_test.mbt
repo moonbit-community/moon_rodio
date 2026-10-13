@@ -13,25 +13,25 @@
 // limitations under the License.
 
 ///|
-fn ints_to_bytes(xs : Array[Int]) -> Bytes {
+fn ints_to_bytes(xs : Array[Int32]) -> Bytes {
   Bytes::makei(xs.length(), fn(i) { xs[i].to_byte() })
 }
 
 ///|
-fn push_u16_le(xs : Array[Int], v : Int) -> Unit {
+fn push_u16_le(xs : Array[Int32], v : Int32) -> Unit {
   xs.push(v & 0xff)
   xs.push((v >> 8) & 0xff)
 }
 
 ///|
-fn push_u24_le(xs : Array[Int], v : Int) -> Unit {
+fn push_u24_le(xs : Array[Int32], v : Int32) -> Unit {
   xs.push(v & 0xff)
   xs.push((v >> 8) & 0xff)
   xs.push((v >> 16) & 0xff)
 }
 
 ///|
-fn push_u32_le(xs : Array[Int], v : Int) -> Unit {
+fn push_u32_le(xs : Array[Int32], v : Int32) -> Unit {
   xs.push(v & 0xff)
   xs.push((v >> 8) & 0xff)
   xs.push((v >> 16) & 0xff)
@@ -40,9 +40,9 @@ fn push_u32_le(xs : Array[Int], v : Int) -> Unit {
 
 ///|
 fn append_pcm_sample(
-  xs : Array[Int],
-  sample : Int,
-  bits_per_sample : Int,
+  xs : Array[Int32],
+  sample : Int32,
+  bits_per_sample : Int32,
 ) -> Unit {
   match bits_per_sample {
     8 => xs.push(sample & 0xff)
@@ -60,7 +60,7 @@ fn append_pcm_sample(
 }
 
 ///|
-fn wav_mono_pcm(samples : Array[Int], bits_per_sample : Int) -> Bytes {
+fn wav_mono_pcm(samples : Array[Int32], bits_per_sample : Int32) -> Bytes {
   let channels = 1
   let bytes_per_sample = bits_per_sample / 8
   let data_len = samples.length() * bytes_per_sample
@@ -69,7 +69,7 @@ fn wav_mono_pcm(samples : Array[Int], bits_per_sample : Int) -> Bytes {
   let br = sr * channels * bytes_per_sample
   let block_align = channels * bytes_per_sample
 
-  let xs : Array[Int] = [0x52, 0x49, 0x46, 0x46]
+  let xs : Array[Int32] = [0x52, 0x49, 0x46, 0x46]
   push_u32_le(xs, riff_size)
   xs.push(0x57)
   xs.push(0x41)
@@ -100,7 +100,7 @@ fn wav_mono_pcm(samples : Array[Int], bits_per_sample : Int) -> Bytes {
 }
 
 ///|
-fn wav_mono_float32(float_bits : Array[Int]) -> Bytes {
+fn wav_mono_float32(float_bits : Array[Int32]) -> Bytes {
   let channels = 1
   let bits_per_sample = 32
   let bytes_per_sample = 4
@@ -110,7 +110,7 @@ fn wav_mono_float32(float_bits : Array[Int]) -> Bytes {
   let br = sr * channels * bytes_per_sample
   let block_align = channels * bytes_per_sample
 
-  let xs : Array[Int] = [0x52, 0x49, 0x46, 0x46]
+  let xs : Array[Int32] = [0x52, 0x49, 0x46, 0x46]
   push_u32_le(xs, riff_size)
   xs.push(0x57)
   xs.push(0x41)
@@ -143,9 +143,9 @@ fn wav_mono_float32(float_bits : Array[Int]) -> Bytes {
 ///|
 test "rodio::decoder::wav::decode_pcm16_mono" {
   let bytes = wav_mono_pcm([0, 32767, -32768], 16)
-  let src = decode_wav_bytes(bytes)
-  @debug.assert_eq(src.channels(), 1)
-  @debug.assert_eq(src.sample_rate(), 44_100)
+  let src = @decoder.decode_wav_bytes(bytes)
+  assert_eq(src.channels(), 1)
+  assert_eq(src.sample_rate(), 44_100)
   assert_true(src.next().unwrap() == 0.0)
   assert_true(src.next().unwrap() > 0.99)
   assert_true(src.next().unwrap() == -1.0)
@@ -155,7 +155,7 @@ test "rodio::decoder::wav::decode_pcm16_mono" {
 ///|
 test "rodio::decoder::wav::decode_pcm8_mono" {
   let bytes = wav_mono_pcm([0, 128, 255], 8)
-  let src = decode_wav_bytes(bytes)
+  let src = @decoder.decode_wav_bytes(bytes)
   assert_true(src.next().unwrap() <= -0.99)
   assert_true(src.next().unwrap() == 0.0)
   assert_true(src.next().unwrap() > 0.99)
@@ -165,7 +165,7 @@ test "rodio::decoder::wav::decode_pcm8_mono" {
 ///|
 test "rodio::decoder::wav::decode_pcm24_mono" {
   let bytes = wav_mono_pcm([0, 8_388_607, -8_388_608], 24)
-  let src = decode_wav_bytes(bytes)
+  let src = @decoder.decode_wav_bytes(bytes)
   assert_true(src.next().unwrap() == 0.0)
   assert_true(src.next().unwrap() > 0.99)
   assert_true(src.next().unwrap() == -1.0)
@@ -175,7 +175,7 @@ test "rodio::decoder::wav::decode_pcm24_mono" {
 ///|
 test "rodio::decoder::wav::decode_pcm32_mono" {
   let bytes = wav_mono_pcm([0, 2_147_483_647, -2_147_483_648], 32)
-  let src = decode_wav_bytes(bytes)
+  let src = @decoder.decode_wav_bytes(bytes)
   assert_true(src.next().unwrap() == 0.0)
   assert_true(src.next().unwrap() > 0.99)
   assert_true(src.next().unwrap() == -1.0)
@@ -185,7 +185,7 @@ test "rodio::decoder::wav::decode_pcm32_mono" {
 ///|
 test "rodio::decoder::wav::decode_float32_mono" {
   let bytes = wav_mono_float32([0, 1_056_964_608, -1_082_130_432])
-  let src = decode_wav_bytes(bytes)
+  let src = @decoder.decode_wav_bytes(bytes)
   assert_true(src.next().unwrap() == 0.0)
   assert_true(src.next().unwrap() == 0.5)
   assert_true(src.next().unwrap() == -1.0)
@@ -195,14 +195,14 @@ test "rodio::decoder::wav::decode_float32_mono" {
 ///|
 test "rodio::decoder::wav::reject_unsupported_format" {
   let bytes = wav_mono_pcm([0, 1], 16)
-  let ints : Array[Int] = []
+  let ints : Array[Int32] = []
   for i in 0..<bytes.length() {
     ints.push(bytes[i].to_int())
   }
   ints[20] = 0x02
   ints[21] = 0x00
   let unsupported = try {
-    ignore(decode_wav_bytes(ints_to_bytes(ints)))
+    ignore(@decoder.decode_wav_bytes(ints_to_bytes(ints)))
     false
   } catch {
     Unsupported(_) => true
@@ -213,11 +213,11 @@ test "rodio::decoder::wav::reject_unsupported_format" {
 
 ///|
 test "rodio::decoder::mp3::decode_ill2_mono" {
-  let bytes = mp3_ill2_mono_bytes()
-  let src = decode_mp3_bytes(bytes)
+  let bytes = @decoder.mp3_ill2_mono_bytes()
+  let src = @decoder.decode_mp3_bytes(bytes)
 
-  @debug.assert_eq(src.channels(), 1)
-  @debug.assert_eq(src.sample_rate(), 48_000)
+  assert_eq(src.channels(), 1)
+  assert_eq(src.sample_rate(), 48_000)
 
   let mut sample_259 = 0.0
   let mut sample_500 = 0.0
@@ -246,7 +246,7 @@ test "rodio::decoder::mp3::decode_ill2_mono" {
     }
   }
 
-  @debug.assert_eq(sample_count, 1152)
+  assert_eq(sample_count, 1152)
   assert_true(sample_259 < 0.0 && sample_259 > -0.0001)
   assert_true(sample_500 > 0.012 && sample_500 < 0.013)
   assert_true(sample_800 > 0.51 && sample_800 < 0.53)
@@ -256,7 +256,7 @@ test "rodio::decoder::mp3::decode_ill2_mono" {
 ///|
 test "rodio::decoder::mp3::reject_invalid_data" {
   let invalid = try {
-    ignore(decode_mp3_bytes(b"test"))
+    ignore(@decoder.decode_mp3_bytes(b"test"))
     false
   } catch {
     InvalidFormat(_) => true
@@ -267,10 +267,10 @@ test "rodio::decoder::mp3::reject_invalid_data" {
 
 ///|
 test "rodio::decoder::flac::decode_pop" {
-  let src = decode_flac_bytes(flac_pop_bytes())
+  let src = @decoder.decode_flac_bytes(@decoder.flac_pop_bytes())
 
-  @debug.assert_eq(src.channels(), 1)
-  @debug.assert_eq(src.sample_rate(), 44_100)
+  assert_eq(src.channels(), 1)
+  assert_eq(src.sample_rate(), 44_100)
 
   let mut sample_count = 0
   let mut s_1 = 0.0
@@ -299,7 +299,7 @@ test "rodio::decoder::flac::decode_pop" {
     }
   }
 
-  @debug.assert_eq(sample_count, 100)
+  assert_eq(sample_count, 100)
   assert_true(s_1 > 0.062 && s_1 < 0.063)
   assert_true(s_20 > 0.95 && s_20 < 0.951)
   assert_true(s_60 < -0.58 && s_60 > -0.581)
@@ -309,7 +309,7 @@ test "rodio::decoder::flac::decode_pop" {
 ///|
 test "rodio::decoder::flac::reject_invalid_data" {
   let invalid = try {
-    ignore(decode_flac_bytes(b"test"))
+    ignore(@decoder.decode_flac_bytes(b"test"))
     false
   } catch {
     InvalidFormat(_) => true
@@ -320,10 +320,10 @@ test "rodio::decoder::flac::reject_invalid_data" {
 
 ///|
 test "rodio::decoder::vorbis::decode_sine_48k_mono" {
-  let src = decode_vorbis_bytes(vorbis_sine_48k_mono_bytes())
+  let src = @decoder.decode_vorbis_bytes(@decoder.vorbis_sine_48k_mono_bytes())
 
-  @debug.assert_eq(src.channels(), 1)
-  @debug.assert_eq(src.sample_rate(), 48_000)
+  assert_eq(src.channels(), 1)
+  assert_eq(src.sample_rate(), 48_000)
 
   let mut sample_count = 0
   let mut s_0 = 0.0
@@ -356,7 +356,7 @@ test "rodio::decoder::vorbis::decode_sine_48k_mono" {
     }
   }
 
-  @debug.assert_eq(sample_count, 2400)
+  assert_eq(sample_count, 2400)
   assert_true(s_0 > 0.0018 && s_0 < 0.0019)
   assert_true(s_20 > 0.112 && s_20 < 0.113)
   assert_true(s_60 < -0.041 && s_60 > -0.043)
@@ -367,7 +367,7 @@ test "rodio::decoder::vorbis::decode_sine_48k_mono" {
 ///|
 test "rodio::decoder::vorbis::reject_invalid_data" {
   let invalid = try {
-    ignore(decode_vorbis_bytes(b"test"))
+    ignore(@decoder.decode_vorbis_bytes(b"test"))
     false
   } catch {
     InvalidFormat(_) => true
@@ -378,39 +378,41 @@ test "rodio::decoder::vorbis::reject_invalid_data" {
 
 ///|
 test "rodio::decoder::compat::backend_wrapper_types" {
-  let wav = WavDecoder::new(wav_mono_pcm([0, 32767, -32768], 16))
-  @debug.assert_eq(wav.channels(), 1)
-  @debug.assert_eq(wav.sample_rate(), 44_100)
+  let wav = @decoder.WavDecoder::new(wav_mono_pcm([0, 32767, -32768], 16))
+  assert_eq(wav.channels(), 1)
+  assert_eq(wav.sample_rate(), 44_100)
   assert_true(wav.next().unwrap() == 0.0)
   assert_true(wav.next().unwrap() > 0.99)
-  @debug.assert_eq(wav.into_inner().position(), 2)
+  assert_eq(wav.into_inner().position(), 2)
 
-  let mp3 = Mp3Decoder::new(mp3_ill2_mono_bytes())
-  @debug.assert_eq(mp3.channels(), 1)
-  @debug.assert_eq(mp3.sample_rate(), 48_000)
+  let mp3 = @decoder.Mp3Decoder::new(@decoder.mp3_ill2_mono_bytes())
+  assert_eq(mp3.channels(), 1)
+  assert_eq(mp3.sample_rate(), 48_000)
   assert_true(mp3.len() > 0)
 
-  let flac = FlacDecoder::new(flac_pop_bytes())
-  @debug.assert_eq(flac.channels(), 1)
-  @debug.assert_eq(flac.sample_rate(), 44_100)
+  let flac = @decoder.FlacDecoder::new(@decoder.flac_pop_bytes())
+  assert_eq(flac.channels(), 1)
+  assert_eq(flac.sample_rate(), 44_100)
   assert_true(flac.position() == 0)
   flac.seek_to(10)
-  @debug.assert_eq(flac.position(), 10)
+  assert_eq(flac.position(), 10)
 
-  let vorbis = VorbisDecoder::new(vorbis_sine_48k_mono_bytes())
-  @debug.assert_eq(vorbis.channels(), 1)
-  @debug.assert_eq(vorbis.sample_rate(), 48_000)
+  let vorbis = @decoder.VorbisDecoder::new(
+    @decoder.vorbis_sine_48k_mono_bytes(),
+  )
+  assert_eq(vorbis.channels(), 1)
+  assert_eq(vorbis.sample_rate(), 48_000)
   assert_true(vorbis.next() is Some(_))
 }
 
 ///|
 test "rodio::decoder::compat::read_seek_source_shape" {
-  let src = ReadSeekSource::from_bytes(b"abc")
+  let src = @decoder.ReadSeekSource::from_bytes(b"abc")
   assert_true(src.byte_len() is Some(3))
   assert_true(src.is_seekable())
-  @debug.assert_eq(src.into_inner(), b"abc")
+  assert_eq(src.into_inner(), b"abc")
 
-  let src2 = ReadSeekSource::from_bytes(
+  let src2 = @decoder.ReadSeekSource::from_bytes(
     b"abcdef",
     byte_len=Some(4),
     is_seekable=false,

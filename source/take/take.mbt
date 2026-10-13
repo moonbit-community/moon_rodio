@@ -21,7 +21,7 @@ pub type DynSource = @Milky2018/moon_rodio.DynSource
 ///|
 pub fn[S : @Milky2018/moon_rodio.Source] take(
   source : S,
-  count : Int,
+  count : Int32,
 ) -> DynSource {
   @Milky2018/moon_rodio.take(source, count)
 }

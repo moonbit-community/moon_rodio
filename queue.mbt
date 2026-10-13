@@ -13,10 +13,10 @@
 // limitations under the License.
 
 ///|
-let threshold : Int = 512
+let threshold : Int32 = 512
 
 ///|
-fn threshold_for_channels(channels : ChannelCount) -> Int {
+fn threshold_for_channels(channels : ChannelCount) -> Int32 {
   let ch = if channels > 0 { channels } else { 1 }
   (threshold + ch - 1) / ch * ch
 }
@@ -55,8 +55,8 @@ pub struct SourcesQueueOutput {
   prefetched : Ref[Sample?]
   has_prefetched : Ref[Bool]
   signal_after_end : Ref[QueueSignal?]
-  samples_consumed_in_span : Ref[Int]
-  padding_samples_remaining : Ref[Int]
+  samples_consumed_in_span : Ref[Int32]
+  padding_samples_remaining : Ref[Int32]
   input : SourcesQueueInput
 }
 
@@ -65,17 +65,17 @@ pub fn queue(
   keep_alive_if_empty : Bool,
 ) -> (SourcesQueueInput, SourcesQueueOutput) {
   let input = {
-    next_sounds: @ref.new([]),
-    keep_alive_if_empty: @ref.new(keep_alive_if_empty),
+    next_sounds: Ref([]),
+    keep_alive_if_empty: Ref(keep_alive_if_empty),
   }
   let output = {
-    current: @ref.new(make_empty_dyn_source(1, hz_44100)),
-    current_is_fallback: @ref.new(true),
-    prefetched: @ref.new(None),
-    has_prefetched: @ref.new(false),
-    signal_after_end: @ref.new(None),
-    samples_consumed_in_span: @ref.new(0),
-    padding_samples_remaining: @ref.new(0),
+    current: Ref(make_empty_dyn_source(1, hz_44100)),
+    current_is_fallback: Ref(true),
+    prefetched: Ref(None),
+    has_prefetched: Ref(false),
+    signal_after_end: Ref(None),
+    samples_consumed_in_span: Ref(0),
+    padding_samples_remaining: Ref(0),
     input,
   }
   (input, output)
@@ -94,7 +94,7 @@ pub fn[S : Source] SourcesQueueInput::append_with_signal(
   self : SourcesQueueInput,
   source : S,
 ) -> QueueSignal {
-  let signal = { done: @ref.new(false), }
+  let signal = { done: Ref(false), }
   self.next_sounds.val.push({ source: to_dyn(source), signal: Some(signal), })
   signal
 }
@@ -108,7 +108,7 @@ pub fn SourcesQueueInput::set_keep_alive_if_empty(
 }
 
 ///|
-pub fn SourcesQueueInput::clear(self : SourcesQueueInput) -> Int {
+pub fn SourcesQueueInput::clear(self : SourcesQueueInput) -> Int32 {
   let len = self.next_sounds.val.length()
   for entry in self.next_sounds.val {
     match entry.signal {

@@ -14,12 +14,12 @@
 
 ///|
 test "rodio::source::pausable::aliases" {
-  let p = pausable(
+  let p = @pausable.pausable(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [1.0, 2.0]),
     true,
   )
-  @debug.assert_eq(p.channels(), 1)
-  @debug.assert_eq(p.sample_rate(), 8)
+  assert_eq(p.channels(), 1)
+  assert_eq(p.sample_rate(), 8)
   let paused = p.next()
   assert_true(paused == None || paused == Some(0.0))
   p.set_paused(false)

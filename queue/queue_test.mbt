@@ -14,15 +14,15 @@
 
 ///|
 test "rodio::queue::aliases" {
-  let (tx, rx) = queue(false)
+  let (tx, rx) = @queue.queue(false)
   let signal = tx.append_with_signal(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [1.0, 2.0]),
   )
   assert_true(!signal.is_done())
-  @debug.assert_eq(rx.channels(), 1)
-  @debug.assert_eq(rx.sample_rate(), 8)
-  @debug.assert_eq(rx.next(), Some(1.0))
-  @debug.assert_eq(rx.next(), Some(2.0))
-  @debug.assert_eq(rx.next(), None)
+  assert_eq(rx.channels(), 1)
+  assert_eq(rx.sample_rate(), 8)
+  assert_eq(rx.next(), Some(1.0))
+  assert_eq(rx.next(), Some(2.0))
+  assert_eq(rx.next(), None)
   assert_true(signal.is_done())
 }

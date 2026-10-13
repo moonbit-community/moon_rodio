@@ -14,11 +14,11 @@
 
 ///|
 test "rodio::source::channel_volume::aliases" {
-  let cv = channel_volume(
+  let cv = @channel_volume.channel_volume(
     @Milky2018/moon_rodio.SamplesBuffer::new(2, 8, [0.5, 1.0, 0.5, 1.0]),
     [0.5, 1.0],
   )
-  @debug.assert_eq(cv.channels(), 2)
-  @debug.assert_eq(cv.sample_rate(), 8)
+  assert_eq(cv.channels(), 2)
+  assert_eq(cv.sample_rate(), 8)
   assert_true(cv.next() != None)
 }

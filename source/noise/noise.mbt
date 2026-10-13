@@ -46,11 +46,11 @@ pub type Red = @Milky2018/moon_rodio.Red
 pub type Velvet = @Milky2018/moon_rodio.Velvet
 
 ///|
-pub fn white(sample_rate : Int) -> WhiteUniform {
+pub fn white(sample_rate : Int32) -> WhiteUniform {
   @Milky2018/moon_rodio.white(sample_rate)
 }
 
 ///|
-pub fn pink(sample_rate : Int) -> Pink {
+pub fn pink(sample_rate : Int32) -> Pink {
   @Milky2018/moon_rodio.pink(sample_rate)
 }

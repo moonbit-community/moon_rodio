@@ -17,7 +17,7 @@ pub struct StaticSamplesBuffer {
   channels : ChannelCount
   sample_rate : SampleRate
   samples : Array[Sample]
-  cursor : Ref[Int]
+  cursor : Ref[Int32]
 }
 
 ///|
@@ -28,7 +28,7 @@ pub fn StaticSamplesBuffer::new(
 ) -> StaticSamplesBuffer {
   guard channels > 0 else { panic() }
   guard sample_rate > 0 else { panic() }
-  { channels, sample_rate, samples, cursor: @ref.new(0), }
+  { channels, sample_rate, samples, cursor: Ref(0), }
 }
 
 ///|

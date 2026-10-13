@@ -67,7 +67,7 @@ pub fn SignalGenerator::new(
 ) -> SignalGenerator {
   guard sample_rate > 0 else { panic() }
   guard frequency != 0.0 else { panic() }
-  { channels: 1, sample_rate, frequency, function, phase: @ref.new(0.0), }
+  { channels: 1, sample_rate, frequency, function, phase: Ref(0.0), }
 }
 
 ///|
@@ -385,11 +385,11 @@ pub fn zero(channels : ChannelCount, sample_rate : SampleRate) -> DynSource {
 pub fn zero_samples(
   channels : ChannelCount,
   sample_rate : SampleRate,
-  sample_count : Int,
+  sample_count : Int32,
 ) -> DynSource {
   guard channels > 0 else { panic() }
   guard sample_rate > 0 else { panic() }
-  let remaining = @ref.new(if sample_count < 0 { 0 } else { sample_count })
+  let remaining = Ref(if sample_count < 0 { 0 } else { sample_count })
   DynSource::new(
     fn() {
       if remaining.val <= 0 {
@@ -424,9 +424,9 @@ pub fn[S : Source] amplify(source : S, factor : Sample) -> DynSource {
 }
 
 ///|
-pub fn[S : Source] take(source : S, sample_count : Int) -> DynSource {
+pub fn[S : Source] take(source : S, sample_count : Int32) -> DynSource {
   let src = to_dyn(source)
-  let remaining = @ref.new(if sample_count < 0 { 0 } else { sample_count })
+  let remaining = Ref(if sample_count < 0 { 0 } else { sample_count })
   DynSource::new_dynamic(
     fn() {
       if remaining.val <= 0 {
@@ -515,7 +515,7 @@ pub fn SamplesBuffer::repeat_infinite(self : SamplesBuffer) -> DynSource {
   }
 
   let len = self.samples.length()
-  let idx = @ref.new(0)
+  let idx = Ref(0)
   let data = self.samples
   DynSource::new(
     fn() {

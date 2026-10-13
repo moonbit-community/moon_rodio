@@ -24,7 +24,7 @@ pub struct Mixer {
 pub struct MixerSource {
   current_sources : Ref[Array[DynSource]]
   input : Mixer
-  sample_count : Ref[Int]
+  sample_count : Ref[Int32]
 }
 
 ///|
@@ -36,16 +36,12 @@ pub fn mixer(
   guard sample_rate > 0 else { panic() }
 
   let input = {
-    has_pending: @ref.new(false),
-    pending_sources: @ref.new([]),
+    has_pending: Ref(false),
+    pending_sources: Ref([]),
     channels,
     sample_rate,
   }
-  let output = {
-    current_sources: @ref.new([]),
-    input,
-    sample_count: @ref.new(0),
-  }
+  let output = { current_sources: Ref([]), input, sample_count: Ref(0), }
   (input, output)
 }
 
@@ -80,7 +76,7 @@ fn MixerSource::start_pending_sources(self : MixerSource) -> Unit {
 }
 
 ///|
-fn MixerSource::sum_current_sources(self : MixerSource) -> (Sample, Int) {
+fn MixerSource::sum_current_sources(self : MixerSource) -> (Sample, Int32) {
   let mut sum = 0.0
   let still_current : Array[DynSource] = []
 

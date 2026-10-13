@@ -14,27 +14,27 @@
 
 ///|
 test "rodio::source::distortion::aliases" {
-  let a = distortion(
+  let a = @distortion.distortion(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [0.2, 0.4]),
     2.0,
     0.7,
   )
-  @debug.assert_eq(a.channels(), 1)
-  @debug.assert_eq(a.sample_rate(), 8)
+  assert_eq(a.channels(), 1)
+  assert_eq(a.sample_rate(), 8)
   assert_true(a.next() != None)
 
-  let b = distortion_threshold(
+  let b = @distortion.distortion_threshold(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [0.2, 0.4]),
     0.5,
   )
-  @debug.assert_eq(b.channels(), 1)
+  assert_eq(b.channels(), 1)
   assert_true(b.next() != None)
 
-  let c = distortion_with_gain(
+  let c = @distortion.distortion_with_gain(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [0.2, 0.4]),
     1.5,
     0.5,
   )
-  @debug.assert_eq(c.channels(), 1)
+  assert_eq(c.channels(), 1)
   assert_true(c.next() != None)
 }

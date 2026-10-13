@@ -454,7 +454,7 @@ pub fn SpeakersBuilder::prefer_channel_counts(
 ///|
 pub fn SpeakersBuilder::try_buffer_size(
   self : SpeakersBuilder,
-  buffer_size : Int,
+  buffer_size : Int32,
 ) -> SpeakersBuilder raise SpeakersError {
   let current = self.get_config()
   let next = {
@@ -468,7 +468,7 @@ pub fn SpeakersBuilder::try_buffer_size(
 ///|
 pub fn SpeakersBuilder::prefer_buffer_sizes(
   self : SpeakersBuilder,
-  buffer_sizes : Array[Int],
+  buffer_sizes : Array[Int32],
 ) -> SpeakersBuilder {
   let current = match self.config {
     None => return self

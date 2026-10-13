@@ -21,8 +21,8 @@ pub type DynSource = @Milky2018/moon_rodio.DynSource
 ///|
 pub fn[S : @Milky2018/moon_rodio.Source] uniform(
   source : S,
-  target_channels : Int,
-  target_sample_rate : Int,
+  target_channels : Int32,
+  target_sample_rate : Int32,
 ) -> DynSource {
   @Milky2018/moon_rodio.uniform(source, target_channels, target_sample_rate)
 }

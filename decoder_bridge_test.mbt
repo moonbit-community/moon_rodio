@@ -13,15 +13,15 @@
 // limitations under the License.
 
 ///|
-fn ints_to_bytes(xs : Array[Int]) -> Bytes {
+fn ints_to_bytes(xs : Array[Int32]) -> Bytes {
   Bytes::makei(xs.length(), fn(i) { xs[i].to_byte() })
 }
 
 ///|
 fn wav_mono_with_rate(
-  samples : Array[Int],
-  bits_per_sample : Int,
-  sample_rate : Int,
+  samples : Array[Int32],
+  bits_per_sample : Int32,
+  sample_rate : Int32,
 ) -> Bytes {
   guard sample_rate > 0 else { panic() }
   let channels = 1
@@ -89,15 +89,15 @@ fn wav_mono_with_rate(
 }
 
 ///|
-fn wav_mono(samples : Array[Int], bits_per_sample : Int) -> Bytes {
+fn wav_mono(samples : Array[Int32], bits_per_sample : Int32) -> Bytes {
   wav_mono_with_rate(samples, bits_per_sample, 44_100)
 }
 
 ///|
 fn wav_stereo_with_rate(
-  samples : Array[(Int, Int)],
-  bits_per_sample : Int,
-  sample_rate : Int,
+  samples : Array[(Int32, Int32)],
+  bits_per_sample : Int32,
+  sample_rate : Int32,
 ) -> Bytes {
   guard sample_rate > 0 else { panic() }
   let channels = 2
@@ -211,7 +211,7 @@ fn read_reference_asset(path : String) -> Bytes {
 }
 
 ///|
-fn abs_int(value : Int) -> Int {
+fn abs_int(value : Int32) -> Int32 {
   if value < 0 {
     -value
   } else {
@@ -220,7 +220,7 @@ fn abs_int(value : Int) -> Int {
 }
 
 ///|
-fn count_decoder_samples(decoder : Decoder) -> Int {
+fn count_decoder_samples(decoder : @moon_rodio.Decoder) -> Int32 {
   let mut total = 0
   while true {
     match decoder.next() {
@@ -232,8 +232,10 @@ fn count_decoder_samples(decoder : Decoder) -> Int {
 }
 
 ///|
-fn decode_all_samples(decoder : Decoder) -> Array[Sample] {
-  let samples : Array[Sample] = []
+fn decode_all_samples(
+  decoder : @moon_rodio.Decoder,
+) -> Array[@moon_rodio.Sample] {
+  let samples : Array[@moon_rodio.Sample] = []
   while true {
     match decoder.next() {
       Some(v) => samples.push(v)
@@ -245,15 +247,15 @@ fn decode_all_samples(decoder : Decoder) -> Array[Sample] {
 
 ///|
 fn assert_sample_near(
-  actual : Sample,
-  expected : Sample,
+  actual : @moon_rodio.Sample,
+  expected : @moon_rodio.Sample,
   tolerance : Double,
 ) -> Unit {
   guard (actual - expected).abs() <= tolerance else { panic() }
 }
 
 ///|
-fn assert_int_near(actual : Int, expected : Int, tolerance : Int) -> Unit {
+fn assert_int_near(actual : Int32, expected : Int32, tolerance : Int32) -> Unit {
   let diff = abs_int(actual - expected)
   guard diff <= tolerance else { panic() }
 }
@@ -261,10 +263,10 @@ fn assert_int_near(actual : Int, expected : Int, tolerance : Int) -> Unit {
 ///|
 fn collect_decoded_profile(
   decoded : @decoder.DecodedSamples,
-  checkpoint_indexes : Array[Int],
-  window_percents : Array[Int],
-  window_radius : Int,
-) -> (Int, Array[Sample], Array[(Double, Double)]) {
+  checkpoint_indexes : Array[Int32],
+  window_percents : Array[Int32],
+  window_radius : Int32,
+) -> (Int32, Array[@moon_rodio.Sample], Array[(Double, Double)]) {
   let len = decoded.len()
   let checkpoint_values = Array::make(checkpoint_indexes.length(), 0.0)
   let window_centers = Array::makei(window_percents.length(), fn(i) {
@@ -310,7 +312,7 @@ fn collect_decoded_profile(
 }
 
 ///|
-fn take_prefix(bytes : Bytes, prefix_len : Int) -> Bytes {
+fn take_prefix(bytes : Bytes, prefix_len : Int32) -> Bytes {
   let len = if prefix_len < bytes.length() {
     prefix_len
   } else {
@@ -320,7 +322,7 @@ fn take_prefix(bytes : Bytes, prefix_len : Int) -> Bytes {
 }
 
 ///|
-fn zeroed_bytes(len : Int) -> Bytes {
+fn zeroed_bytes(len : Int32) -> Bytes {
   Bytes::makei(len, fn(_) { Byte::default() })
 }
 
@@ -598,8 +600,11 @@ fn assert_mp4a_rejects_zeroed_reference_asset() -> Unit {
 }
 
 ///|
-fn[S : Source] collect_n_samples(source : S, n : Int) -> Array[Sample] {
-  let samples : Array[Sample] = []
+fn[S : Source] collect_n_samples(
+  source : S,
+  n : Int32,
+) -> Array[@moon_rodio.Sample] {
+  let samples : Array[@moon_rodio.Sample] = []
   for _ in 0..<n {
     match source.next() {
       Some(v) => samples.push(v)
@@ -611,9 +616,9 @@ fn[S : Source] collect_n_samples(source : S, n : Int) -> Array[Sample] {
 
 ///|
 fn duration_from_sample_count_test(
-  total_samples : Int,
-  channels : ChannelCount,
-  sample_rate : SampleRate,
+  total_samples : Int32,
+  channels : @moon_rodio.ChannelCount,
+  sample_rate : @moon_rodio.SampleRate,
 ) -> @moon_cpal.Duration {
   if total_samples <= 0 || channels <= 0 || sample_rate <= 0 {
     return @moon_cpal.Duration::from_secs((0 : UInt64))
@@ -627,12 +632,12 @@ fn duration_from_sample_count_test(
 }
 
 ///|
-fn duration_to_nanos_test(duration : @moon_cpal.Duration) -> Int {
+fn duration_to_nanos_test(duration : @moon_cpal.Duration) -> Int32 {
   duration.secs.to_int() * 1_000_000_000 + duration.nanos
 }
 
 ///|
-fn next_multiple_of(value : Int, n : Int) -> Int {
+fn next_multiple_of(value : Int32, n : Int32) -> Int32 {
   if n <= 0 {
     value
   } else {
@@ -647,9 +652,9 @@ fn next_multiple_of(value : Int, n : Int) -> Int {
 
 ///|
 fn second_channel_beep_range(
-  samples : Array[Sample],
-  channels : Int,
-) -> (Int, Int) {
+  samples : Array[@moon_rodio.Sample],
+  channels : Int32,
+) -> (Int32, Int32) {
   guard channels > 1 else { panic() }
   let window = 50
   let threshold = 0.1
@@ -697,9 +702,9 @@ fn second_channel_beep_range(
 
 ///|
 fn channel_is_silent(
-  samples : Array[Sample],
-  channels : ChannelCount,
-  channel : Int,
+  samples : Array[@moon_rodio.Sample],
+  channels : @moon_rodio.ChannelCount,
+  channel : Int32,
 ) -> Bool {
   guard samples.length() == 100 else { panic() }
   let mut sum = 0.0
@@ -717,7 +722,7 @@ fn channel_is_silent(
 ///|
 fn assert_total_duration_matches_counted(path : String) -> Unit {
   let full_path = resolve_reference_asset_path(path)
-  let d = try Decoder::try_from_file(full_path) catch {
+  let d = try @moon_rodio.Decoder::try_from_file(full_path) catch {
     _ => panic()
   } noraise {
     decoder => decoder
@@ -726,7 +731,7 @@ fn assert_total_duration_matches_counted(path : String) -> Unit {
   let channels = d.channels()
   let sample_rate = d.sample_rate()
 
-  let counted_source = try Decoder::try_from_file(full_path) catch {
+  let counted_source = try @moon_rodio.Decoder::try_from_file(full_path) catch {
     _ => panic()
   } noraise {
     decoder => decoder
@@ -745,7 +750,7 @@ fn assert_total_duration_matches_counted(path : String) -> Unit {
 ///|
 fn assert_seek_remaining_playtime(path : String) -> Unit {
   let full_path = resolve_reference_asset_path(path)
-  let base = try Decoder::try_from_file(full_path) catch {
+  let base = try @moon_rodio.Decoder::try_from_file(full_path) catch {
     _ => panic()
   } noraise {
     decoder => decoder
@@ -758,7 +763,7 @@ fn assert_seek_remaining_playtime(path : String) -> Unit {
   guard total_samples > target_remaining + channels else { panic() }
 
   let seek_target = total_samples - target_remaining
-  let d = try Decoder::try_from_file(full_path) catch {
+  let d = try @moon_rodio.Decoder::try_from_file(full_path) catch {
     _ => panic()
   } noraise {
     decoder => decoder
@@ -777,7 +782,7 @@ fn assert_seek_remaining_playtime(path : String) -> Unit {
 ///|
 fn assert_seek_keeps_channel_order(path : String) -> Unit {
   let full_path = resolve_reference_asset_path(path)
-  let scan = try Decoder::try_from_file(full_path) catch {
+  let scan = try @moon_rodio.Decoder::try_from_file(full_path) catch {
     _ => panic()
   } noraise {
     decoder => decoder
@@ -789,7 +794,7 @@ fn assert_seek_keeps_channel_order(path : String) -> Unit {
   let (beep_start, _beep_end) = second_channel_beep_range(all_samples, channels)
   let mut channel_offset = 0
 
-  let source = try Decoder::try_from_file(full_path) catch {
+  let source = try @moon_rodio.Decoder::try_from_file(full_path) catch {
     _ => panic()
   } noraise {
     decoder => decoder
@@ -814,34 +819,34 @@ fn assert_seek_keeps_channel_order(path : String) -> Unit {
 
 ///|
 test "rodio::decoder_api::new_wav" {
-  let d = Decoder::new(wav_mono([0, 32767, -32768], 16))
-  @debug.assert_eq(d.channels(), 1)
-  @debug.assert_eq(d.sample_rate(), 44_100)
-  @debug.assert_eq(d.next(), Some(0.0))
+  let d = @moon_rodio.Decoder::new(wav_mono([0, 32767, -32768], 16))
+  assert_eq(d.channels(), 1)
+  assert_eq(d.sample_rate(), 44_100)
+  assert_eq(d.next(), Some(0.0))
   assert_true(d.next().unwrap() > 0.99)
-  @debug.assert_eq(d.next(), Some(-1.0))
-  @debug.assert_eq(d.next(), None)
+  assert_eq(d.next(), Some(-1.0))
+  assert_eq(d.next(), None)
 }
 
 ///|
 test "rodio::decoder_api::new_mp3" {
-  let d = Decoder::new_mp3(@decoder.mp3_ill2_mono_bytes())
-  @debug.assert_eq(d.channels(), 1)
-  @debug.assert_eq(d.sample_rate(), 48_000)
+  let d = @moon_rodio.Decoder::new_mp3(@decoder.mp3_ill2_mono_bytes())
+  assert_eq(d.channels(), 1)
+  assert_eq(d.sample_rate(), 48_000)
 }
 
 ///|
 test "rodio::decoder_api::new_flac" {
-  let d = Decoder::new_flac(@decoder.flac_pop_bytes())
-  @debug.assert_eq(d.channels(), 1)
-  @debug.assert_eq(d.sample_rate(), 44_100)
+  let d = @moon_rodio.Decoder::new_flac(@decoder.flac_pop_bytes())
+  assert_eq(d.channels(), 1)
+  assert_eq(d.sample_rate(), 44_100)
 }
 
 ///|
 test "rodio::decoder_api::new_vorbis" {
-  let d = Decoder::new_vorbis(@decoder.vorbis_sine_48k_mono_bytes())
-  @debug.assert_eq(d.channels(), 1)
-  @debug.assert_eq(d.sample_rate(), 48_000)
+  let d = @moon_rodio.Decoder::new_vorbis(@decoder.vorbis_sine_48k_mono_bytes())
+  assert_eq(d.channels(), 1)
+  assert_eq(d.sample_rate(), 48_000)
 }
 
 ///|
@@ -850,33 +855,36 @@ test "rodio::decoder_api::mp4a_native_decode_and_builder_paths" {
   let bytes = read_reference_asset("monkeys.mp4a")
 
   let decode_supported = try {
-    let d = Decoder::new_mp4a(bytes)
+    let d = @moon_rodio.Decoder::new_mp4a(bytes)
     assert_true(d.channels() > 0)
     assert_true(d.sample_rate() > 0)
     assert_true(decoder_has_non_zero_sample(d))
     true
   } catch {
-    DecoderError::Backend(Unsupported(_)) => false
+    @moon_rodio.DecoderError::Backend(Unsupported(_)) => false
     _ => false
   }
 
   if decode_supported {
-    let aac = Decoder::new_aac(bytes)
+    let aac = @moon_rodio.Decoder::new_aac(bytes)
     assert_true(aac.channels() > 0)
     assert_true(aac.sample_rate() > 0)
     assert_true(decoder_has_non_zero_sample(aac))
 
-    let mp4 = Decoder::new_mp4(bytes)
+    let mp4 = @moon_rodio.Decoder::new_mp4(bytes)
     assert_true(mp4.channels() > 0)
     assert_true(mp4.sample_rate() > 0)
     assert_true(decoder_has_non_zero_sample(mp4))
 
-    let hinted = Decoder::builder().with_data(bytes).with_hint("m4a").build()
+    let hinted = @moon_rodio.Decoder::builder()
+      .with_data(bytes)
+      .with_hint("m4a")
+      .build()
     assert_true(hinted.channels() > 0)
     assert_true(hinted.sample_rate() > 0)
     assert_true(decoder_has_non_zero_sample(hinted))
 
-    let mime = Decoder::builder()
+    let mime = @moon_rodio.Decoder::builder()
       .with_data(bytes)
       .with_mime_type("audio/mp4")
       .build()
@@ -884,19 +892,21 @@ test "rodio::decoder_api::mp4a_native_decode_and_builder_paths" {
     assert_true(mime.sample_rate() > 0)
     assert_true(decoder_has_non_zero_sample(mime))
 
-    let auto = Decoder::new(bytes)
+    let auto = @moon_rodio.Decoder::new(bytes)
     assert_true(auto.channels() > 0)
     assert_true(auto.sample_rate() > 0)
     assert_true(decoder_has_non_zero_sample(auto))
 
-    let seekable = Decoder::new_mp4a(bytes)
+    let seekable = @moon_rodio.Decoder::new_mp4a(bytes)
     let total = seekable.total_duration().unwrap()
     assert_true(total.secs > (0 : UInt64) || total.nanos > 0)
     seekable.try_seek(@moon_cpal.Duration::new((0 : UInt64), 0))
     assert_true(decoder_has_non_zero_sample(seekable))
   } else {
     let hinted_fails = try {
-      ignore(Decoder::builder().with_data(bytes).with_hint("m4a").build())
+      ignore(
+        @moon_rodio.Decoder::builder().with_data(bytes).with_hint("m4a").build(),
+      )
       false
     } catch {
       UnrecognizedFormat => true
@@ -910,7 +920,7 @@ test "rodio::decoder_api::mp4a_native_decode_and_builder_paths" {
 ///|
 test "rodio::decoder_api::reject_unknown_format" {
   let bad = try {
-    ignore(Decoder::new(b"abc"))
+    ignore(@moon_rodio.Decoder::new(b"abc"))
     false
   } catch {
     UnrecognizedFormat => true
@@ -921,19 +931,22 @@ test "rodio::decoder_api::reject_unknown_format" {
 
 ///|
 test "rodio::decoder_api::play" {
-  let (tx, rx) = mixer(1, 44_100)
-  let sink = play(tx, Reader::from_bytes(@decoder.flac_pop_bytes()))
+  let (tx, rx) = @moon_rodio.mixer(1, 44_100)
+  let sink = @moon_rodio.play(
+    tx,
+    @moon_rodio.Reader::from_bytes(@decoder.flac_pop_bytes()),
+  )
 
   assert_true(!sink.empty())
-  @debug.assert_eq(rx.next(), Some(0.0))
+  assert_eq(rx.next(), Some(0.0))
   assert_true(rx.next().unwrap() > 0.06)
 }
 
 ///|
 test "rodio::decoder_api::play_decode_error_variant" {
-  let (tx, _rx) = mixer(1, 44_100)
+  let (tx, _rx) = @moon_rodio.mixer(1, 44_100)
   let got = try {
-    ignore(play(tx, Reader::from_bytes(b"not audio")))
+    ignore(@moon_rodio.play(tx, @moon_rodio.Reader::from_bytes(b"not audio")))
     false
   } catch {
     DecoderError(UnrecognizedFormat) => true
@@ -944,22 +957,22 @@ test "rodio::decoder_api::play_decode_error_variant" {
 
 ///|
 test "rodio::decoder_api::play_bytes_compat" {
-  let (tx, rx) = mixer(1, 44_100)
-  let player = play_bytes(tx, @decoder.flac_pop_bytes())
+  let (tx, rx) = @moon_rodio.mixer(1, 44_100)
+  let player = @moon_rodio.play_bytes(tx, @decoder.flac_pop_bytes())
 
   assert_true(!player.empty())
-  @debug.assert_eq(rx.next(), Some(0.0))
+  assert_eq(rx.next(), Some(0.0))
   assert_true(rx.next().unwrap() > 0.06)
 }
 
 ///|
 test "rodio::decoder_api::play_reader" {
-  let (tx, rx) = mixer(1, 44_100)
-  let reader = Reader::from_bytes(@decoder.flac_pop_bytes())
-  let player = play_reader(tx, reader)
+  let (tx, rx) = @moon_rodio.mixer(1, 44_100)
+  let reader = @moon_rodio.Reader::from_bytes(@decoder.flac_pop_bytes())
+  let player = @moon_rodio.play_reader(tx, reader)
 
   assert_true(!player.empty())
-  @debug.assert_eq(rx.next(), Some(0.0))
+  assert_eq(rx.next(), Some(0.0))
   assert_true(rx.next().unwrap() > 0.06)
 }
 
@@ -970,10 +983,10 @@ test "rodio::decoder_api::play_file" {
   remove_file_if_exists(path)
   write_file_bytes(path, wav_mono([0, 16000, -16000], 16))
 
-  let (tx, rx) = mixer(1, 44_100)
-  let player = play_file(tx, path)
+  let (tx, rx) = @moon_rodio.mixer(1, 44_100)
+  let player = @moon_rodio.play_file(tx, path)
   assert_true(!player.empty())
-  @debug.assert_eq(rx.next(), Some(0.0))
+  assert_eq(rx.next(), Some(0.0))
   assert_true(rx.next().unwrap() > 0.45)
 
   remove_file_if_exists(path)
@@ -981,38 +994,38 @@ test "rodio::decoder_api::play_file" {
 
 ///|
 test "rodio::decoder_api::builder_build" {
-  let decoder = Decoder::builder()
+  let decoder = @moon_rodio.Decoder::builder()
     .with_data(@decoder.mp3_ill2_mono_bytes())
     .with_hint("mp3")
     .with_gapless(true)
     .with_seekable(true)
     .build()
 
-  @debug.assert_eq(decoder.channels(), 1)
-  @debug.assert_eq(decoder.sample_rate(), 48_000)
+  assert_eq(decoder.channels(), 1)
+  assert_eq(decoder.sample_rate(), 48_000)
 }
 
 ///|
 test "rodio::decoder_api::builder_mime_and_hint_fallbacks" {
-  let from_mime = Decoder::builder()
+  let from_mime = @moon_rodio.Decoder::builder()
     .with_data(@decoder.flac_pop_bytes())
     .with_mime_type("audio/flac")
     .build()
-  @debug.assert_eq(from_mime.channels(), 1)
-  @debug.assert_eq(from_mime.sample_rate(), 44_100)
+  assert_eq(from_mime.channels(), 1)
+  assert_eq(from_mime.sample_rate(), 44_100)
 
-  let bad_hint_fallback = Decoder::builder()
+  let bad_hint_fallback = @moon_rodio.Decoder::builder()
     .with_data(@decoder.flac_pop_bytes())
     .with_hint("mp3")
     .build()
-  @debug.assert_eq(bad_hint_fallback.channels(), 1)
-  @debug.assert_eq(bad_hint_fallback.sample_rate(), 44_100)
+  assert_eq(bad_hint_fallback.channels(), 1)
+  assert_eq(bad_hint_fallback.sample_rate(), 44_100)
 }
 
 ///|
 test "rodio::decoder_api::builder_requires_data" {
   let failed = try {
-    ignore(Decoder::builder().build())
+    ignore(@moon_rodio.Decoder::builder().build())
     false
   } catch {
     UnrecognizedFormat => true
@@ -1023,24 +1036,24 @@ test "rodio::decoder_api::builder_requires_data" {
 
 ///|
 test "rodio::decoder_api::looped_decoder_repeats" {
-  let looped = Decoder::builder()
+  let looped = @moon_rodio.Decoder::builder()
     .with_data(wav_mono([0, 32767], 16))
     .with_hint("wav")
     .build_looped()
 
-  @debug.assert_eq(looped.channels(), 1)
-  @debug.assert_eq(looped.sample_rate(), 44_100)
-  @debug.assert_eq(looped.current_span_len(), Some(2))
-  @debug.assert_eq(looped.total_duration(), None)
-  @debug.assert_eq(looped.next(), Some(0.0))
+  assert_eq(looped.channels(), 1)
+  assert_eq(looped.sample_rate(), 44_100)
+  assert_eq(looped.current_span_len(), Some(2))
+  assert_eq(looped.total_duration(), None)
+  assert_eq(looped.next(), Some(0.0))
   assert_true(looped.next().unwrap() > 0.99)
-  @debug.assert_eq(looped.next(), Some(0.0))
+  assert_eq(looped.next(), Some(0.0))
   assert_true(looped.next().unwrap() > 0.99)
 }
 
 ///|
 test "rodio::decoder_api::builder_seekability_controls_try_seek" {
-  let non_seekable = Decoder::builder()
+  let non_seekable = @moon_rodio.Decoder::builder()
     .with_data(wav_mono([0, 10_000, 20_000, 30_000], 16))
     .build()
   let err = try {
@@ -1051,14 +1064,14 @@ test "rodio::decoder_api::builder_seekability_controls_try_seek" {
   }
   assert_true(err)
 
-  let seekable = Decoder::builder()
+  let seekable = @moon_rodio.Decoder::builder()
     .with_data(wav_mono([0, 10_000, 20_000, 30_000], 16))
     .with_seekable(true)
     .build()
   seekable.try_seek(@moon_cpal.Duration::from_secs((1 : UInt64)))
-  @debug.assert_eq(seekable.next(), None)
+  assert_eq(seekable.next(), None)
 
-  let disabled_again = Decoder::builder()
+  let disabled_again = @moon_rodio.Decoder::builder()
     .with_data(wav_mono([0, 10_000, 20_000, 30_000], 16))
     .with_byte_len(52)
     .with_seekable(false)
@@ -1076,7 +1089,7 @@ test "rodio::decoder_api::builder_seekability_controls_try_seek" {
 test "rodio::decoder_api::mp3_seek_without_byte_len_is_forward_only" {
   let bytes = @decoder.mp3_ill2_mono_bytes()
 
-  let forward_only = Decoder::builder()
+  let forward_only = @moon_rodio.Decoder::builder()
     .with_data(bytes)
     .with_hint("mp3")
     .with_seekable(true)
@@ -1090,7 +1103,7 @@ test "rodio::decoder_api::mp3_seek_without_byte_len_is_forward_only" {
   }
   assert_true(backward_blocked)
 
-  let random_access = Decoder::builder()
+  let random_access = @moon_rodio.Decoder::builder()
     .with_data(bytes)
     .with_hint("mp3")
     .with_byte_len(bytes.length())
@@ -1103,75 +1116,77 @@ test "rodio::decoder_api::mp3_seek_without_byte_len_is_forward_only" {
 
 ///|
 test "rodio::decoder_api::metadata_methods" {
-  let d = Decoder::new(wav_mono([0, 32767], 16))
-  @debug.assert_eq(d.current_span_len(), Some(2))
+  let d = @moon_rodio.Decoder::new(wav_mono([0, 32767], 16))
+  assert_eq(d.current_span_len(), Some(2))
   let total = d.total_duration().unwrap()
-  @debug.assert_eq(total.secs, (0 : UInt64))
-  @debug.assert_eq(d.next(), Some(0.0))
-  @debug.assert_eq(d.current_span_len(), Some(1))
+  assert_eq(total.secs, (0 : UInt64))
+  assert_eq(d.next(), Some(0.0))
+  assert_eq(d.current_span_len(), Some(1))
 }
 
 ///|
 test "rodio::decoder_api::seek_beyond_end_saturates" {
-  let d = Decoder::builder()
+  let d = @moon_rodio.Decoder::builder()
     .with_data(wav_mono([0, 10_000, 20_000, 30_000], 16))
     .with_seekable(true)
     .build()
 
   d.try_seek(@moon_cpal.Duration::from_secs((999 : UInt64)))
-  @debug.assert_eq(d.next(), None)
-  @debug.assert_eq(d.current_span_len(), Some(0))
+  assert_eq(d.next(), None)
+  assert_eq(d.current_span_len(), Some(0))
 }
 
 ///|
 test "rodio::decoder_api::seek_possible_after_exhausting_source" {
-  let d = Decoder::builder()
+  let d = @moon_rodio.Decoder::builder()
     .with_data(wav_mono([0, 12_000], 16))
     .with_seekable(true)
     .build()
 
-  @debug.assert_eq(d.next(), Some(0.0))
+  assert_eq(d.next(), Some(0.0))
   assert_true(d.next().unwrap() > 0.35)
-  @debug.assert_eq(d.next(), None)
+  assert_eq(d.next(), None)
 
   d.try_seek(@moon_cpal.Duration::from_secs((0 : UInt64)))
-  @debug.assert_eq(d.next(), Some(0.0))
+  assert_eq(d.next(), Some(0.0))
 }
 
 ///|
 test "rodio::decoder_api::seek_results_in_correct_remaining_playtime" {
-  let d = Decoder::builder()
+  let d = @moon_rodio.Decoder::builder()
     .with_data(wav_mono_with_rate([0, 10_000, 20_000, 30_000], 16, 1))
     .with_seekable(true)
     .build()
 
   let total = d.total_duration().unwrap()
-  @debug.assert_eq(total.secs, (4 : UInt64))
+  assert_eq(total.secs, (4 : UInt64))
   d.try_seek(@moon_cpal.Duration::from_secs((3 : UInt64)))
-  @debug.assert_eq(d.current_span_len(), Some(1))
+  assert_eq(d.current_span_len(), Some(1))
   assert_true(d.next().unwrap() > 0.9)
-  @debug.assert_eq(d.next(), None)
+  assert_eq(d.next(), None)
 }
 
 ///|
 test "rodio::decoder_api::total_duration_for_reference_formats" {
-  let mp3_total = Decoder::new_mp3(@decoder.mp3_ill2_mono_bytes())
+  let mp3_total = @moon_rodio.Decoder::new_mp3(@decoder.mp3_ill2_mono_bytes())
     .total_duration()
     .unwrap()
-  @debug.assert_eq(mp3_total.secs, (0 : UInt64))
-  @debug.assert_eq(mp3_total.nanos, 24_000_000)
+  assert_eq(mp3_total.secs, (0 : UInt64))
+  assert_eq(mp3_total.nanos, 24_000_000)
 
-  let flac_total = Decoder::new_flac(@decoder.flac_pop_bytes())
+  let flac_total = @moon_rodio.Decoder::new_flac(@decoder.flac_pop_bytes())
     .total_duration()
     .unwrap()
-  @debug.assert_eq(flac_total.secs, (0 : UInt64))
-  @debug.assert_eq(flac_total.nanos, 2_267_573)
+  assert_eq(flac_total.secs, (0 : UInt64))
+  assert_eq(flac_total.nanos, 2_267_573)
 
-  let vorbis_total = Decoder::new_vorbis(@decoder.vorbis_sine_48k_mono_bytes())
+  let vorbis_total = @moon_rodio.Decoder::new_vorbis(
+      @decoder.vorbis_sine_48k_mono_bytes(),
+    )
     .total_duration()
     .unwrap()
-  @debug.assert_eq(vorbis_total.secs, (0 : UInt64))
-  @debug.assert_eq(vorbis_total.nanos, 50_000_000)
+  assert_eq(vorbis_total.secs, (0 : UInt64))
+  assert_eq(vorbis_total.nanos, 50_000_000)
 }
 
 ///|
@@ -1181,22 +1196,25 @@ test "rodio::decoder_api::seek_preserves_stereo_channel_offset" {
     16,
     10,
   )
-  let d = Decoder::builder().with_data(stereo).with_seekable(true).build()
-  @debug.assert_eq(d.channels(), 2)
+  let d = @moon_rodio.Decoder::builder()
+    .with_data(stereo)
+    .with_seekable(true)
+    .build()
+  assert_eq(d.channels(), 2)
 
-  @debug.assert_eq(d.next(), Some(0.0))
+  assert_eq(d.next(), Some(0.0))
   assert_true(d.next().unwrap() > 0.9)
 
   // Consume a single sample to force an odd channel offset before seek.
-  @debug.assert_eq(d.next(), Some(0.0))
+  assert_eq(d.next(), Some(0.0))
   d.try_seek(@moon_cpal.Duration::new((0 : UInt64), 100_000_000))
   assert_true(d.next().unwrap() > 0.9)
-  @debug.assert_eq(d.next(), Some(0.0))
+  assert_eq(d.next(), Some(0.0))
 }
 
 ///|
 #cfg(target="native")
-fn decoder_has_non_zero_sample(decoder : Decoder) -> Bool {
+fn decoder_has_non_zero_sample(decoder : @moon_rodio.Decoder) -> Bool {
   let mut found = false
   let mut done = false
   while !done {
@@ -1221,7 +1239,7 @@ test "rodio::decoder_api::wav_encodings_reference_assets" {
   ]
   for path in files {
     let bytes = read_reference_asset(path)
-    let decoder = Decoder::new_wav(bytes)
+    let decoder = @moon_rodio.Decoder::new_wav(bytes)
     assert_true(decoder_has_non_zero_sample(decoder))
   }
 }
@@ -1229,19 +1247,19 @@ test "rodio::decoder_api::wav_encodings_reference_assets" {
 ///|
 #cfg(target="native")
 test "rodio::decoder_api::flac_encodings_reference_assets" {
-  let base = Decoder::new_flac(
+  let base = @moon_rodio.Decoder::new_flac(
     read_reference_asset("audacity16bit_level5.flac"),
   )
   assert_true(decoder_has_non_zero_sample(base))
-  @debug.assert_eq(base.total_duration().unwrap().secs, (3 : UInt64))
+  assert_eq(base.total_duration().unwrap().secs, (3 : UInt64))
 
   let files = [
     "audacity24bit_level0.flac", "audacity24bit_level5.flac", "audacity24bit_level8.flac",
   ]
   for path in files {
-    let decoder = Decoder::new_flac(read_reference_asset(path))
+    let decoder = @moon_rodio.Decoder::new_flac(read_reference_asset(path))
     assert_true(decoder_has_non_zero_sample(decoder))
-    @debug.assert_eq(decoder.total_duration().unwrap().secs, (3 : UInt64))
+    assert_eq(decoder.total_duration().unwrap().secs, (3 : UInt64))
   }
 }
 
@@ -1276,18 +1294,18 @@ test "rodio::decoder_api::try_from_file_variants" {
   remove_file_if_exists(path)
   write_file_bytes(path, wav_mono([0, 12000, -12000], 16))
 
-  let d = Decoder::try_from_file(path)
-  @debug.assert_eq(d.channels(), 1)
-  @debug.assert_eq(d.sample_rate(), 44_100)
-  @debug.assert_eq(d.next(), Some(0.0))
+  let d = @moon_rodio.Decoder::try_from_file(path)
+  assert_eq(d.channels(), 1)
+  assert_eq(d.sample_rate(), 44_100)
+  assert_eq(d.next(), Some(0.0))
 
-  let looped = Decoder::try_from_file_looped(path)
-  @debug.assert_eq(looped.channels(), 1)
-  @debug.assert_eq(looped.sample_rate(), 44_100)
-  @debug.assert_eq(looped.next(), Some(0.0))
+  let looped = @moon_rodio.Decoder::try_from_file_looped(path)
+  assert_eq(looped.channels(), 1)
+  assert_eq(looped.sample_rate(), 44_100)
+  assert_eq(looped.next(), Some(0.0))
   assert_true(looped.next().unwrap() > 0.35)
   assert_true(looped.next().unwrap() < -0.35)
-  @debug.assert_eq(looped.next(), Some(0.0))
+  assert_eq(looped.next(), Some(0.0))
 
   remove_file_if_exists(path)
 }

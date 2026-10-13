@@ -3,7 +3,7 @@ name = "Milky2018/moon_rodio"
 version = "0.3.5"
 
 import {
-  "moonbitlang/x@0.5.1",
+  "moonbitlang/x@0.5.5",
   "Milky2018/moon_cpal@0.11.8",
 }
 

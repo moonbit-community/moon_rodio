@@ -16,8 +16,8 @@
 pub fn lerp(
   first : Double,
   second : Double,
-  numerator : Int,
-  denominator : Int,
+  numerator : Int32,
+  denominator : Int32,
 ) -> Double {
   @Milky2018/moon_rodio.lerp(first, second, numerator, denominator)
 }

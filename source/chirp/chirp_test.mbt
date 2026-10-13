@@ -14,13 +14,13 @@
 
 ///|
 test "rodio::source::chirp::aliases" {
-  let c = chirp(
+  let c = @chirp.chirp(
     8_000,
     100.0,
     200.0,
     @moon_cpal.Duration::from_secs((1 : UInt64)),
   )
-  @debug.assert_eq(c.channels(), 1)
-  @debug.assert_eq(c.sample_rate(), 8_000)
+  assert_eq(c.channels(), 1)
+  assert_eq(c.sample_rate(), 8_000)
   assert_true(c.next() != None)
 }

@@ -14,21 +14,21 @@
 
 ///|
 test "rodio::speakers::builder::aliases" {
-  let b0 = new()
-  let b1 : Builder = b0
-  let b2 : SpeakersBuilder = b1
-  let b3 = SpeakersBuilder::new()
-  let b4 : Builder = b3
+  let b0 = @builder.new()
+  let b1 : @builder.Builder = b0
+  let b2 : @builder.SpeakersBuilder = b1
+  let b3 = @builder.SpeakersBuilder::new()
+  let b4 : @builder.Builder = b3
 
-  let e : BuilderError? = None
+  let e : @builder.BuilderError? = None
   let _root_e : @Milky2018/moon_rodio.SpeakersError? = e
-  let p : PlayError? = None
+  let p : @builder.PlayError? = None
   let _root_p : @Milky2018/moon_rodio.SpeakersPlayError? = p
 
-  let _ : DeviceIsSet? = None
-  let _ : DeviceNotSet? = None
-  let _ : ConfigIsSet? = None
-  let _ : ConfigNotSet? = None
+  let _ : @builder.DeviceIsSet? = None
+  let _ : @builder.DeviceNotSet? = None
+  let _ : @builder.ConfigIsSet? = None
+  let _ : @builder.ConfigNotSet? = None
 
   let no_config = try {
     ignore(b2.get_config())

@@ -14,18 +14,18 @@
 
 ///|
 test "rodio::microphone::builder::aliases" {
-  let b0 = new()
-  let b1 : Builder = b0
-  let b2 : MicrophoneBuilder = b1
-  let b3 = MicrophoneBuilder::new()
-  let b4 : Builder = b3
-  let e : BuilderError? = None
+  let b0 = @builder.new()
+  let b1 : @builder.Builder = b0
+  let b2 : @builder.MicrophoneBuilder = b1
+  let b3 = @builder.MicrophoneBuilder::new()
+  let b4 : @builder.Builder = b3
+  let e : @builder.BuilderError? = None
   let _root_e : @Milky2018/moon_rodio.MicrophoneError? = e
 
-  let _ : DeviceIsSet? = None
-  let _ : DeviceNotSet? = None
-  let _ : ConfigIsSet? = None
-  let _ : ConfigNotSet? = None
+  let _ : @builder.DeviceIsSet? = None
+  let _ : @builder.DeviceNotSet? = None
+  let _ : @builder.ConfigIsSet? = None
+  let _ : @builder.ConfigNotSet? = None
 
   let no_config = try {
     ignore(b2.get_config())

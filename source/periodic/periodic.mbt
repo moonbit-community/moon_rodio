@@ -21,7 +21,7 @@ pub type DynSource = @Milky2018/moon_rodio.DynSource
 ///|
 pub fn[S : @Milky2018/moon_rodio.Source] periodic_access(
   source : S,
-  every_samples : Int,
+  every_samples : Int32,
   callback : () -> Unit,
 ) -> PeriodicAccess {
   @Milky2018/moon_rodio.periodic_access(source, every_samples, callback)
@@ -30,7 +30,7 @@ pub fn[S : @Milky2018/moon_rodio.Source] periodic_access(
 ///|
 pub fn[S : @Milky2018/moon_rodio.Source] periodic_access_with_source(
   source : S,
-  every_samples : Int,
+  every_samples : Int32,
   callback : (DynSource) -> Unit,
 ) -> PeriodicAccess {
   @Milky2018/moon_rodio.periodic_access_with_source(

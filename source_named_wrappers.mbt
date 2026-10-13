@@ -20,7 +20,7 @@ pub struct Amplify {
 
 ///|
 pub fn[S : Source] Amplify::new(source : S, factor : Sample) -> Amplify {
-  { input: to_dyn(source), factor: @ref.new(factor), }
+  { input: to_dyn(source), factor: Ref(factor), }
 }
 
 ///|
@@ -77,7 +77,7 @@ pub fn Buffered::into_inner(self : Buffered) -> SamplesBuffer {
 pub struct ChannelVolume {
   input : DynSource
   channel_factors : Ref[Array[Sample]]
-  current_channel : Ref[Int]
+  current_channel : Ref[Int32]
   current_sample : Ref[Sample?]
 }
 
@@ -90,16 +90,16 @@ pub fn[S : Source] ChannelVolume::new(
   let out_channels = channel_factors.length()
   {
     input: to_dyn(source),
-    channel_factors: @ref.new(channel_factors),
-    current_channel: @ref.new(out_channels),
-    current_sample: @ref.new(None),
+    channel_factors: Ref(channel_factors),
+    current_channel: Ref(out_channels),
+    current_sample: Ref(None),
   }
 }
 
 ///|
 pub fn ChannelVolume::set_volume(
   self : ChannelVolume,
-  channel : Int,
+  channel : Int32,
   volume : Sample,
 ) -> Unit {
   guard channel >= 0 && channel < self.channel_factors.val.length() else {
@@ -193,11 +193,7 @@ pub fn[S : Source] Distortion::new(
   gain : Sample,
   threshold : Sample,
 ) -> Distortion {
-  {
-    input: to_dyn(source),
-    gain: @ref.new(gain),
-    threshold: @ref.new(threshold),
-  }
+  { input: to_dyn(source), gain: Ref(gain), threshold: Ref(threshold), }
 }
 
 ///|
@@ -324,14 +320,14 @@ pub fn FadeOut::into_inner(self : FadeOut) -> DynSource {
 }
 
 ///|
-fn duration_from_millis(ms : Int) -> @moon_cpal.Duration {
+fn duration_from_millis(ms : Int32) -> @moon_cpal.Duration {
   let secs = ms / 1000
   let nanos = ms % 1000 * 1_000_000
   @moon_cpal.Duration::new(secs.to_uint64(), nanos)
 }
 
 ///|
-fn duration_from_micros(us : Int) -> @moon_cpal.Duration {
+fn duration_from_micros(us : Int32) -> @moon_cpal.Duration {
   let secs = us / 1_000_000
   let nanos = us % 1_000_000 * 1_000
   @moon_cpal.Duration::new(secs.to_uint64(), nanos)
@@ -409,7 +405,7 @@ fn limit_reduction_db(
 
 ///|
 fn limit_max_peak(peaks : Array[Sample]) -> Sample {
-  let max_peak = @ref.new(0.0)
+  let max_peak = Ref(0.0)
   for peak in peaks {
     if peak > max_peak.val {
       max_peak.val = peak
@@ -551,7 +547,7 @@ pub struct Limit {
   release_coeff : Sample
   integrators : Ref[Array[Sample]]
   peaks : Ref[Array[Sample]]
-  position : Ref[Int]
+  position : Ref[Int32]
 }
 
 ///|
@@ -575,9 +571,9 @@ pub fn[S : Source] Limit::new(source : S, settings : LimitSettings) -> Limit {
       settings.release,
       input.sample_rate(),
     ),
-    integrators: @ref.new(integrators),
-    peaks: @ref.new(peaks),
-    position: @ref.new(0),
+    integrators: Ref(integrators),
+    peaks: Ref(peaks),
+    position: Ref(0),
   }
 }
 
@@ -776,7 +772,7 @@ pub struct Speed {
 ///|
 pub fn[S : Source] Speed::new(source : S, ratio : Double) -> Speed {
   guard ratio > 0.0 else { panic() }
-  { input: to_dyn(source), factor: @ref.new(ratio), }
+  { input: to_dyn(source), factor: Ref(ratio), }
 }
 
 ///|
@@ -804,8 +800,8 @@ pub fn Speed::into_inner(self : Speed) -> DynSource {
 pub struct TakeDuration {
   inner : DynSource
   requested_duration : @moon_cpal.Duration
-  requested_samples : Int
-  remaining_samples : Ref[Int]
+  requested_samples : Int32
+  remaining_samples : Ref[Int32]
   filter_fadeout : Ref[Bool]
 }
 
@@ -824,8 +820,8 @@ pub fn[S : Source] TakeDuration::new(
     inner,
     requested_duration: duration,
     requested_samples,
-    remaining_samples: @ref.new(requested_samples),
-    filter_fadeout: @ref.new(false),
+    remaining_samples: Ref(requested_samples),
+    filter_fadeout: Ref(false),
   }
 }
 
@@ -868,7 +864,7 @@ pub fn Zero::new(channels : ChannelCount, sample_rate : SampleRate) -> Zero {
 pub fn Zero::new_samples(
   channels : ChannelCount,
   sample_rate : SampleRate,
-  num_samples : Int,
+  num_samples : Int32,
 ) -> Zero {
   { inner: zero_samples(channels, sample_rate, num_samples), }
 }
@@ -1056,7 +1052,7 @@ pub fn SignalGenerator::with_generator(
   guard sample_rate > 0 else { panic() }
   guard frequency >= 0.0 else { panic() }
 
-  let phase = @ref.new(0.0)
+  let phase = Ref(0.0)
   DynSource::new(
     fn() {
       let current = phase.val

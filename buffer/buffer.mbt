@@ -17,8 +17,8 @@ pub type SamplesBuffer = @Milky2018/moon_rodio.SamplesBuffer
 
 ///|
 pub fn new(
-  channels : Int,
-  sample_rate : Int,
+  channels : Int32,
+  sample_rate : Int32,
   samples : Array[Double],
 ) -> SamplesBuffer {
   @Milky2018/moon_rodio.SamplesBuffer::new(channels, sample_rate, samples)

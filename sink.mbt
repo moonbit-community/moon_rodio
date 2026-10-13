@@ -16,10 +16,10 @@
 pub struct SinkControls {
   pause : Ref[Bool]
   stopped : Ref[Bool]
-  to_clear : Ref[Int]
+  to_clear : Ref[Int32]
   volume : Ref[Sample]
   speed : Ref[Sample]
-  sound_count : Ref[Int]
+  sound_count : Ref[Int32]
   position : Ref[@moon_cpal.Duration]
 }
 
@@ -39,8 +39,8 @@ pub struct Sink {
 }
 
 ///|
-fn with_done_count(source : DynSource, sound_count : Ref[Int]) -> DynSource {
-  let ended = @ref.new(false)
+fn with_done_count(source : DynSource, sound_count : Ref[Int32]) -> DynSource {
+  let ended = Ref(false)
   DynSource::new_dynamic(
     fn() {
       if ended.val {
@@ -106,7 +106,7 @@ fn speed_with_control(source : DynSource, speed : Ref[Sample]) -> DynSource {
 }
 
 ///|
-fn skip_one_sound(queue : SourcesQueueOutput, sound_count : Ref[Int]) -> Unit {
+fn skip_one_sound(queue : SourcesQueueOutput, sound_count : Ref[Int32]) -> Unit {
   if sound_count.val <= 0 {
     return
   }
@@ -221,21 +221,21 @@ pub impl Source for ControlledQueueSource with fn try_seek(
 pub fn Sink::new() -> (Sink, ControlledQueueSource) {
   let (queue_tx, queue_rx) = queue(true)
   let controls = {
-    pause: @ref.new(false),
-    stopped: @ref.new(false),
-    to_clear: @ref.new(0),
-    volume: @ref.new(1.0),
-    speed: @ref.new(1.0),
-    sound_count: @ref.new(0),
-    position: @ref.new(@moon_cpal.Duration::from_secs((0 : UInt64))),
+    pause: Ref(false),
+    stopped: Ref(false),
+    to_clear: Ref(0),
+    volume: Ref(1.0),
+    speed: Ref(1.0),
+    sound_count: Ref(0),
+    position: Ref(@moon_cpal.Duration::from_secs((0 : UInt64))),
   }
   (
     {
       queue_tx,
       queue_rx,
       controls,
-      detached: @ref.new(false),
-      last_signal: @ref.new(None),
+      detached: Ref(false),
+      last_signal: Ref(None),
     },
     { inner: queue_rx, controls, },
   )
@@ -359,7 +359,7 @@ pub fn Sink::empty(self : Sink) -> Bool {
 }
 
 ///|
-pub fn Sink::len(self : Sink) -> Int {
+pub fn Sink::len(self : Sink) -> Int32 {
   self.controls.sound_count.val
 }
 

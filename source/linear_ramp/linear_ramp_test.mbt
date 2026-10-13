@@ -14,23 +14,23 @@
 
 ///|
 test "rodio::source::linear_ramp::aliases" {
-  let a = linear_gain_ramp(
+  let a = @linear_ramp.linear_gain_ramp(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [1.0, 1.0]),
     0.0,
     1.0,
     @moon_cpal.Duration::from_secs((1 : UInt64)),
   )
-  @debug.assert_eq(a.channels(), 1)
-  @debug.assert_eq(a.sample_rate(), 8)
+  assert_eq(a.channels(), 1)
+  assert_eq(a.sample_rate(), 8)
   assert_true(a.next() != None)
 
-  let b = linear_gain_ramp_with_clamp(
+  let b = @linear_ramp.linear_gain_ramp_with_clamp(
     @Milky2018/moon_rodio.SamplesBuffer::new(1, 8, [1.0, 1.0]),
     -1.0,
     1.0,
     @moon_cpal.Duration::from_secs((1 : UInt64)),
     true,
   )
-  @debug.assert_eq(b.channels(), 1)
+  assert_eq(b.channels(), 1)
   assert_true(b.next() != None)
 }

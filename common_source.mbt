@@ -16,10 +16,10 @@
 pub type Sample = Double
 
 ///|
-pub type ChannelCount = Int
+pub type ChannelCount = Int32
 
 ///|
-pub type SampleRate = Int
+pub type SampleRate = Int32
 
 ///|
 let hz_44100 : SampleRate = 44_100
@@ -29,7 +29,7 @@ pub(open) trait Source {
   fn next(Self) -> Sample?
   fn channels(Self) -> ChannelCount
   fn sample_rate(Self) -> SampleRate
-  fn current_span_len(Self) -> Int?
+  fn current_span_len(Self) -> Int32?
   fn total_duration(Self) -> @moon_cpal.Duration?
   fn try_seek(Self, pos : @moon_cpal.Duration) -> Unit raise SeekError
 }
@@ -44,7 +44,7 @@ pub struct DynSource {
   next_sample : () -> Sample?
   channels_fn : () -> ChannelCount
   sample_rate_fn : () -> SampleRate
-  current_span_len_fn : () -> Int?
+  current_span_len_fn : () -> Int32?
   total_duration_fn : () -> @moon_cpal.Duration?
   try_seek_fn : (@moon_cpal.Duration) -> Result[Unit, SeekError]
 }
@@ -66,9 +66,9 @@ pub fn DynSource::new(
   next_sample : () -> Sample?,
   channels : ChannelCount,
   sample_rate : SampleRate,
-  current_span_len? : () -> Int? = source_default_current_span_len,
-  total_duration? : () -> @moon_cpal.Duration? = source_default_total_duration,
-  try_seek? : (@moon_cpal.Duration) -> Result[Unit, SeekError] = source_default_try_seek_result,
+  current_span_len~ : () -> Int32? = source_default_current_span_len,
+  total_duration~ : () -> @moon_cpal.Duration? = source_default_total_duration,
+  try_seek~ : (@moon_cpal.Duration) -> Result[Unit, SeekError] = source_default_try_seek_result,
 ) -> DynSource {
   guard channels > 0 else { panic() }
   guard sample_rate > 0 else { panic() }
@@ -87,9 +87,9 @@ pub fn DynSource::new_dynamic(
   next_sample : () -> Sample?,
   channels : () -> ChannelCount,
   sample_rate : () -> SampleRate,
-  current_span_len? : () -> Int? = source_default_current_span_len,
-  total_duration? : () -> @moon_cpal.Duration? = source_default_total_duration,
-  try_seek? : (@moon_cpal.Duration) -> Result[Unit, SeekError] = source_default_try_seek_result,
+  current_span_len~ : () -> Int32? = source_default_current_span_len,
+  total_duration~ : () -> @moon_cpal.Duration? = source_default_total_duration,
+  try_seek~ : (@moon_cpal.Duration) -> Result[Unit, SeekError] = source_default_try_seek_result,
 ) -> DynSource {
   guard channels() > 0 else { panic() }
   guard sample_rate() > 0 else { panic() }
@@ -119,7 +119,7 @@ pub fn DynSource::sample_rate(self : DynSource) -> SampleRate {
 }
 
 ///|
-pub fn DynSource::current_span_len(self : DynSource) -> Int? {
+pub fn DynSource::current_span_len(self : DynSource) -> Int32? {
   (self.current_span_len_fn)()
 }
 
@@ -196,7 +196,7 @@ pub struct SamplesBuffer {
   channels : ChannelCount
   sample_rate : SampleRate
   samples : Array[Sample]
-  cursor : Ref[Int]
+  cursor : Ref[Int32]
 }
 
 ///|
@@ -207,7 +207,7 @@ pub fn SamplesBuffer::new(
 ) -> SamplesBuffer {
   guard channels > 0 else { panic() }
   guard sample_rate > 0 else { panic() }
-  { channels, sample_rate, samples, cursor: @ref.new(0), }
+  { channels, sample_rate, samples, cursor: Ref(0), }
 }
 
 ///|
@@ -233,7 +233,7 @@ pub fn SamplesBuffer::next(self : SamplesBuffer) -> Sample? {
 
 ///|
 fn duration_from_sample_count(
-  total_samples : Int,
+  total_samples : Int32,
   channels : ChannelCount,
   sample_rate : SampleRate,
 ) -> @moon_cpal.Duration? {
@@ -253,7 +253,7 @@ fn sample_index_from_duration(
   pos : @moon_cpal.Duration,
   channels : ChannelCount,
   sample_rate : SampleRate,
-) -> Int {
+) -> Int32 {
   if channels <= 0 || sample_rate <= 0 {
     return 0
   }
@@ -302,7 +302,7 @@ fn duration_div_ratio_floor(
 }
 
 ///|
-fn duration_compare(a : @moon_cpal.Duration, b : @moon_cpal.Duration) -> Int {
+fn duration_compare(a : @moon_cpal.Duration, b : @moon_cpal.Duration) -> Int32 {
   if a.secs < b.secs {
     -1
   } else if a.secs > b.secs {
@@ -354,7 +354,7 @@ fn duration_saturating_sub(
 }
 
 ///|
-fn source_default_current_span_len() -> Int? {
+fn source_default_current_span_len() -> Int32? {
   None
 }
 
@@ -499,9 +499,9 @@ fn make_empty_dyn_source(
 fn make_zero_dyn_source(
   channels : ChannelCount,
   sample_rate : SampleRate,
-  sample_count : Int,
+  sample_count : Int32,
 ) -> DynSource {
-  let remaining = @ref.new(sample_count)
+  let remaining = Ref(sample_count)
   DynSource::new(
     fn() {
       if remaining.val <= 0 {
@@ -531,8 +531,8 @@ fn channel_convert(
     return input
   }
 
-  let sample_repeat = @ref.new(None)
-  let next_output_sample_pos = @ref.new(0)
+  let sample_repeat = Ref(None)
+  let next_output_sample_pos = Ref(0)
 
   DynSource::new(
     fn() {
@@ -595,12 +595,12 @@ fn sample_rate_convert(
     return input
   }
 
-  let left = @ref.new(read_frame(input, channels))
-  let right = @ref.new(read_frame(input, channels))
-  let base_index = @ref.new(0)
-  let output_index = @ref.new(0)
-  let pending = @ref.new([])
-  let pending_cursor = @ref.new(0)
+  let left = Ref(read_frame(input, channels))
+  let right = Ref(read_frame(input, channels))
+  let base_index = Ref(0)
+  let output_index = Ref(0)
+  let pending = Ref([])
+  let pending_cursor = Ref(0)
 
   DynSource::new(
     fn() {
@@ -679,7 +679,7 @@ fn uniform_source(
     let limited = match span_len {
       None => input
       Some(remaining0) => {
-        let remaining = @ref.new(remaining0)
+        let remaining = Ref(remaining0)
         DynSource::new_dynamic(
           fn() {
             if remaining.val <= 0 {
@@ -715,7 +715,7 @@ fn uniform_source(
     channel_convert(sampled, target_channels)
   }
 
-  let inner = @ref.new(bootstrap_uniform())
+  let inner = Ref(bootstrap_uniform())
 
   DynSource::new_dynamic(
     fn() {

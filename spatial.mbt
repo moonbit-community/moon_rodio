@@ -98,7 +98,7 @@ pub struct SpatialSource {
   right_gain : Ref[Sample]
   pending_mono : Ref[Sample]
   has_pending : Ref[Bool]
-  pending_channel : Ref[Int]
+  pending_channel : Ref[Int32]
 }
 
 ///|
@@ -115,14 +115,14 @@ pub fn[S : Source] SpatialSource::new(
 
   {
     input: to_dyn(input),
-    emitter_position: @ref.new(emitter),
-    left_ear: @ref.new(left),
-    right_ear: @ref.new(right),
-    left_gain: @ref.new(lg),
-    right_gain: @ref.new(rg),
-    pending_mono: @ref.new(0.0),
-    has_pending: @ref.new(false),
-    pending_channel: @ref.new(0),
+    emitter_position: Ref(emitter),
+    left_ear: Ref(left),
+    right_ear: Ref(right),
+    left_gain: Ref(lg),
+    right_gain: Ref(rg),
+    pending_mono: Ref(0.0),
+    has_pending: Ref(false),
+    pending_channel: Ref(0),
   }
 }
 
@@ -320,9 +320,9 @@ pub fn SpatialSink::connect_new(
 ) -> SpatialSink {
   {
     sink: Sink::connect_new(mixer),
-    emitter_position: @ref.new(clone_vec3(emitter_position)),
-    left_ear: @ref.new(clone_vec3(left_ear)),
-    right_ear: @ref.new(clone_vec3(right_ear)),
+    emitter_position: Ref(clone_vec3(emitter_position)),
+    left_ear: Ref(clone_vec3(left_ear)),
+    right_ear: Ref(clone_vec3(right_ear)),
   }
 }
 
@@ -427,7 +427,7 @@ pub fn SpatialSink::empty(self : SpatialSink) -> Bool {
 }
 
 ///|
-pub fn SpatialSink::len(self : SpatialSink) -> Int {
+pub fn SpatialSink::len(self : SpatialSink) -> Int32 {
   self.sink.len()
 }
 
