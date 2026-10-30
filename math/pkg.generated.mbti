@@ -4,7 +4,7 @@ package "Milky2018/moon_rodio/math"
 // Values
 pub fn db_to_linear(Double) -> Double
 
-pub fn lerp(Double, Double, Int, Int) -> Double
+pub fn lerp(Double, Double, Int32, Int32) -> Double
 
 pub fn linear_to_db(Double) -> Double
 

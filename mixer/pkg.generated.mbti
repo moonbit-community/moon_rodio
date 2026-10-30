@@ -6,7 +6,7 @@ import {
 }
 
 // Values
-pub fn mixer(Int, Int) -> (@moon_rodio.Mixer, @moon_rodio.MixerSource)
+pub fn mixer(Int32, Int32) -> (@moon_rodio.Mixer, @moon_rodio.MixerSource)
 
 // Errors
 

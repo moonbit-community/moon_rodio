@@ -6,9 +6,9 @@ import {
 }
 
 // Values
-pub fn pink(Int) -> @moon_rodio.Pink
+pub fn pink(Int32) -> @moon_rodio.Pink
 
-pub fn white(Int) -> @moon_rodio.WhiteUniform
+pub fn white(Int32) -> @moon_rodio.WhiteUniform
 
 // Errors
 

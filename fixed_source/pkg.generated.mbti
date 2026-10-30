@@ -8,7 +8,7 @@ import {
 // Values
 pub fn[S : @moon_rodio.FixedSource] adapt(S) -> @moon_rodio.FixedSourceAdapter
 
-pub fn new_samples_buffer(Int, Int, Array[Double]) -> @moon_rodio.FixedSamplesBuffer
+pub fn new_samples_buffer(Int32, Int32, Array[Double]) -> @moon_rodio.FixedSamplesBuffer
 
 // Errors
 

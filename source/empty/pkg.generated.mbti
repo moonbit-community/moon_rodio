@@ -6,7 +6,7 @@ import {
 }
 
 // Values
-pub fn empty(Int, Int) -> @moon_rodio.DynSource
+pub fn empty(Int32, Int32) -> @moon_rodio.DynSource
 
 // Errors
 

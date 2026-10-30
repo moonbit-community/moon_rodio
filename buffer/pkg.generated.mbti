@@ -6,7 +6,7 @@ import {
 }
 
 // Values
-pub fn new(Int, Int, Array[Double]) -> @moon_rodio.SamplesBuffer
+pub fn new(Int32, Int32, Array[Double]) -> @moon_rodio.SamplesBuffer
 
 pub fn[S : @moon_rodio.Source] record_source(S) -> @moon_rodio.SamplesBuffer
 
