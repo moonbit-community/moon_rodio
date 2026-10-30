@@ -6,9 +6,9 @@ import {
 }
 
 // Values
-pub fn with_function(Int, Double, @moon_rodio.Function) -> @moon_rodio.SignalGenerator
+pub fn with_function(Int32, Double, @moon_rodio.Function) -> @moon_rodio.SignalGenerator
 
-pub fn with_generator(Int, Double, @moon_rodio.GeneratorFunction) -> @moon_rodio.DynSource
+pub fn with_generator(Int32, Double, @moon_rodio.GeneratorFunction) -> @moon_rodio.DynSource
 
 // Errors
 

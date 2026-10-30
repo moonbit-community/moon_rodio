@@ -50,6 +50,8 @@ pub struct DynSource {
 }
 
 ///|
+// DynSource stores seek outcomes in a non-raising callback for API compatibility.
+#warnings("-result_error_return")
 fn source_default_try_seek_result(
   pos : @moon_cpal.Duration,
 ) -> Result[Unit, SeekError] {

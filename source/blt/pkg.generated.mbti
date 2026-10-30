@@ -6,13 +6,13 @@ import {
 }
 
 // Values
-pub fn[S : @moon_rodio.Source] high_pass(S, Int) -> @moon_rodio.BltFilter
+pub fn[S : @moon_rodio.Source] high_pass(S, Int32) -> @moon_rodio.BltFilter
 
-pub fn[S : @moon_rodio.Source] high_pass_with_q(S, Int, Double) -> @moon_rodio.BltFilter
+pub fn[S : @moon_rodio.Source] high_pass_with_q(S, Int32, Double) -> @moon_rodio.BltFilter
 
-pub fn[S : @moon_rodio.Source] low_pass(S, Int) -> @moon_rodio.BltFilter
+pub fn[S : @moon_rodio.Source] low_pass(S, Int32) -> @moon_rodio.BltFilter
 
-pub fn[S : @moon_rodio.Source] low_pass_with_q(S, Int, Double) -> @moon_rodio.BltFilter
+pub fn[S : @moon_rodio.Source] low_pass_with_q(S, Int32, Double) -> @moon_rodio.BltFilter
 
 // Errors
 

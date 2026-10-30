@@ -6,7 +6,7 @@ import {
 }
 
 // Values
-pub fn[S : @moon_rodio.Source] uniform(S, Int, Int) -> @moon_rodio.DynSource
+pub fn[S : @moon_rodio.Source] uniform(S, Int32, Int32) -> @moon_rodio.DynSource
 
 // Errors
 

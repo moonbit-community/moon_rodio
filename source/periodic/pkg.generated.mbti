@@ -9,9 +9,9 @@ import {
 // Values
 pub fn[S : @moon_rodio.Source] periodic(S, @core.Duration, () -> Unit) -> @moon_rodio.PeriodicAccess
 
-pub fn[S : @moon_rodio.Source] periodic_access(S, Int, () -> Unit) -> @moon_rodio.PeriodicAccess
+pub fn[S : @moon_rodio.Source] periodic_access(S, Int32, () -> Unit) -> @moon_rodio.PeriodicAccess
 
-pub fn[S : @moon_rodio.Source] periodic_access_with_source(S, Int, (@moon_rodio.DynSource) -> Unit) -> @moon_rodio.PeriodicAccess
+pub fn[S : @moon_rodio.Source] periodic_access_with_source(S, Int32, (@moon_rodio.DynSource) -> Unit) -> @moon_rodio.PeriodicAccess
 
 pub fn[S : @moon_rodio.Source] periodic_with_source(S, @core.Duration, (@moon_rodio.DynSource) -> Unit) -> @moon_rodio.PeriodicAccess
 

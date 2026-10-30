@@ -7,7 +7,7 @@ import {
 }
 
 // Values
-pub fn chirp(Int, Double, Double, @core.Duration) -> @moon_rodio.Chirp
+pub fn chirp(Int32, Double, Double, @core.Duration) -> @moon_rodio.Chirp
 
 pub fn[S : @moon_rodio.Source] from_factory(() -> S?) -> @moon_rodio.FromFactoryIter[S]
 
